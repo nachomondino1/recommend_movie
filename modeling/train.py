@@ -62,12 +62,15 @@ class OverviewEmbedder(BaseEstimator, TransformerMixin):
 def make_preprocessor(groups: dict, target_type: str) -> ColumnTransformer:
     overview_vec = OverviewEmbedder(n_components=25, min_df=3)
     keyword_vec = CountVectorizer(min_df=4, binary=True)
+    # CV sembrado: sin esto, TargetEncoder (sklearn >=1.9) mezcla los folds sin
+    # semilla y las predicciones cambian entre corridas.
+    te_cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
     return ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), groups["numeric"]),
             ("oh", OneHotEncoder(handle_unknown="ignore"), groups["onehot"]),
-            ("dir", TargetEncoder(target_type=target_type, cv=5), groups["target_enc"]),
+            ("dir", TargetEncoder(target_type=target_type, cv=te_cv), groups["target_enc"]),
             ("ovw", overview_vec, groups["overview"]),
             ("kw", keyword_vec, groups["keywords"]),
             ("gen", "passthrough", groups["genre"]),

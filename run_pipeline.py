@@ -21,6 +21,7 @@ STEPS = [
     ("Modeling - comparar modelos (CV)", "modeling/train.py"),
     ("Modeling - curva de aprendizaje", "modeling/learning_curve.py"),
     ("Deployment - puntuar watchlist", "deployment/predict_watchlist.py"),
+    ("Deployment - dashboard HTML", "deployment/build_dashboard.py"),
 ]
 
 

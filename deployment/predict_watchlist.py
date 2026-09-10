@@ -49,7 +49,8 @@ def main() -> None:
     wl["pred_rating"] = (X_wl["IMDb Rating"].to_numpy() + reg.predict(X_wl)).clip(1, 10)
     wl["p_like"] = clf.predict_proba(X_wl)[:, 1]
 
-    out_cols = ["Title", "Year", "Title Type", "IMDb Rating", "Genres",
+    wl["Directors"] = wl["Directors"].fillna("")
+    out_cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
                 "pred_rating", "p_like"]
     result = (wl[out_cols].sort_values("pred_rating", ascending=False)
               .round({"pred_rating": 1, "p_like": 2}).reset_index(drop=True))

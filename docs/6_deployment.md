@@ -8,6 +8,12 @@
 2. Aplica ambos a los 159 títulos de la watchlist.
 3. Escribe `outputs/watchlist_scored.csv` ordenado por `pred_rating` desc.
 
+`deployment/build_dashboard.py`:
+- Convierte ese CSV en `outputs/watchlist_dashboard.html`: archivo autocontenido
+  (sin servidor, sin dependencias) con tabla buscable/ordenable (por título,
+  director o género), nota predicha coloreada y gráfico de distribución.
+- Se abre con doble clic. Se regenera con `run_pipeline.py`.
+
 ## Cómo usarlo
 ```bash
 ./venv/bin/python data_preparation/enrich_tmdb.py   # solo si cambió la watchlist
@@ -21,7 +27,10 @@ Después abrir `outputs/watchlist_scored.csv` y mirar el top como cola de reprod
 - Confiar en el **orden general** (tercio de arriba vs tercio de abajo), no en el número exacto.
 
 ## Pendiente para una v2
-- Re-entrenar automáticamente al actualizar `ratings.csv`.
-- Un único score coherente (ensemble de los dos modelos).
+- **Predecir un título suelto por nombre**: buscar en TMDB en vivo (`/search`),
+  refactorizar `build_features` para aceptar 1 título, y devolver la predicción.
+  Requiere un modelo con más señal (hoy AUC 0.63) para que valga la pena.
+- Un único score coherente (ensemble de los dos modelos; hoy `pred_rating` y
+  `p_like` pueden no concordar).
 - Guardar el modelo entrenado (`joblib`) en vez de re-entrenar en cada corrida.
-- Script que tome un título suelto (por URL o nombre) y devuelva la predicción.
+- Re-entrenar automáticamente al actualizar `ratings.csv`.
