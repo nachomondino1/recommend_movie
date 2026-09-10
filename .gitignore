@@ -15,3 +15,10 @@ __pycache__/
 
 # Salidas generadas (gráficos, reportes)
 outputs/
+
+# Credenciales
+.env
+
+# Caché de TMDB (se regenera con data_preparation/enrich_tmdb.py)
+data/external/tmdb/
+data/processed/
