@@ -8,6 +8,11 @@ la watchlist.
 Aprendizaje supervisado. Variable respuesta: `Your Rating` (1–10 en IMDb).
 Dos formulaciones: regresión de la nota y clasificación binaria "me gustó" (≥ 7).
 
+## Documentos / Links utiles
+Fuente de datos:
+- https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/?ref_=exp_t_1: ratings.csv y watchlist.csv
+- https://www.themoviedb.org/settings/api: Para generar API key de TMDB y obtener data de peliculas y series.
+
 ## Estructura (CRISP-DM)
 | Carpeta | Fase | Contenido |
 |---|---|---|
@@ -29,11 +34,23 @@ cp .env.example .env      # y completar TMDB_TOKEN
 
 ## Correr el pipeline
 ```bash
+./venv/bin/python run_pipeline.py            # todo de punta a punta
+./venv/bin/python run_pipeline.py --skip-tmdb   # sin re-bajar TMDB
+```
+O paso a paso:
+```bash
 ./venv/bin/python data_understanding/eda.py            # análisis exploratorio
 ./venv/bin/python data_preparation/enrich_tmdb.py      # baja datos de TMDB (cachea)
 ./venv/bin/python modeling/train.py                    # compara modelos con CV
+./venv/bin/python modeling/learning_curve.py           # ¿ayudaría tener más datos?
 ./venv/bin/python deployment/predict_watchlist.py      # puntúa la watchlist
 ```
+
+## Cómo sumar datos (opción D)
+1. Puntuar títulos nuevos en IMDb (idealmente pelis/series ya vistas).
+2. Re-exportar el `ratings.csv` desde la [página de ratings](https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/)
+   y reemplazar `data/raw/ratings.csv`.
+3. `./venv/bin/python run_pipeline.py` y mirar si la curva de aprendizaje sube.
 
 ## Estado actual
 - Mejor regresión: RandomForest sobre el desvío vs IMDb, MAE 1.26 (baseline 1.31).

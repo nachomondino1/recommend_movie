@@ -34,8 +34,27 @@ BINARIO (>=7)   baseline 55%
 - **El cuello de botella es la cantidad de datos, no las features.** Tres
   expansiones de features no movieron el techo por encima de AUC ~0.63.
 
+## Curva de aprendizaje (`modeling/learning_curve.py`)
+Entrenando con subconjuntos crecientes de los 126 títulos:
+
+| n entrenamiento | MAE regresión | AUC binario |
+|---|---|---|
+| 25  | 1.35 | 0.46 |
+| 46  | 1.44 | 0.59 |
+| 67  | 1.33 | 0.61 |
+| 89  | 1.33 | 0.62 |
+| 100 | 1.30 | 0.65 |
+
+- **El binario NO saturó**: la AUC sube de forma sostenida y sin amesetarse de
+  n≈45 a n≈100 (0.59 → 0.65). Extrapolando (con cautela), n≈200–300 podría
+  acercarse a AUC 0.72–0.78.
+- La regresión mejora más despacio y con más ruido, pero también tiende a la baja.
+- **Conclusión: el modelo está limitado por datos, no por sesgo.** Más ratings es
+  la inversión con mejor retorno esperado.
+
 ## Próximos pasos candidatos
-- **Más ratings** (opción D): de 126 a 300+ habilitaría que las features de texto
-  entrenen de verdad.
+- **Más ratings** (opción D, prioritario): re-exportar `ratings.csv` de IMDb cada
+  vez que se puntúen títulos nuevos y re-correr el pipeline + la curva.
 - Ensemble regresión-desvío + clasificador para un score único y coherente.
-- Probar embeddings de sinopsis (sentence-transformers) en lugar de TF-IDF.
+- Probar embeddings de sinopsis (sentence-transformers) en lugar de TF-IDF, recién
+  cuando haya más datos.
