@@ -25,6 +25,19 @@ entrenamiento, n, mtime de `ratings.csv` y scores de CV.
 ```
 Después abrir `outputs/watchlist_dashboard.html` (doble clic) o el CSV.
 
+## Publicar en GitHub Pages (acceso desde el teléfono)
+`build_dashboard.py` escribe también `docs/index.html` (+ `docs/.nojekyll`).
+
+Alta (una sola vez): repo en GitHub → **Settings → Pages** → *Source: Deploy from
+a branch* → **Branch: `main` / carpeta `/docs`** → Save. En ~1 min queda en
+`https://nachomondino1.github.io/recommend_movie/`.
+
+Actualizar: `run_pipeline.py` && `git add docs/ && git commit && git push`.
+Pages redepliega solo.
+
+Nota: el repo es público, así que el dashboard (y `data/raw/*.csv`) son visibles.
+El `.env` con el token TMDB está en `.gitignore` y no se publica.
+
 ## Cómo interpretar
 - `pred_rating`: nota estimada 1–10. Error típico ±1.3 → un 7.4 vs 7.0 es ruido.
 - `p_like`: probabilidad estimada de que le pongas ≥ 7. Para ordenar, no como sí/no.

@@ -1,9 +1,12 @@
 """
 Fase Deployment - dashboard HTML de la watchlist puntuada.
 
-Lee outputs/watchlist_scored.csv y genera outputs/watchlist_dashboard.html:
-un archivo autocontenido (sin servidor, sin dependencias) con una tabla
-buscable / ordenable y un gráfico de distribución de las notas predichas.
+Lee outputs/watchlist_scored.csv y genera un HTML autocontenido (sin servidor,
+sin dependencias) con tabla buscable / ordenable y gráfico de distribución.
+
+Escribe en dos lados:
+    outputs/watchlist_dashboard.html  - copia local (git-ignored)
+    docs/index.html                   - versión que publica GitHub Pages
 
 Uso:
     ./venv/bin/python deployment/predict_watchlist.py   # primero, genera el CSV
@@ -18,10 +21,10 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import OUTPUTS
+from common import OUTPUTS, ROOT
 
 SRC = OUTPUTS / "watchlist_scored.csv"
-DEST = OUTPUTS / "watchlist_dashboard.html"
+DESTS = [OUTPUTS / "watchlist_dashboard.html", ROOT / "docs" / "index.html"]
 
 TEMPLATE = """<!doctype html>
 <html lang="es">
@@ -50,7 +53,14 @@ TEMPLATE = """<!doctype html>
   .bar {{ fill: var(--accent); }}
   .bar-label {{ fill: var(--muted); font-size: 11px; }}
   input[type=search] {{ width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: var(--card); }}
+    border-radius: 8px; font-size: 16px; margin-bottom: 12px; background: var(--card);
+    position: sticky; top: 8px; z-index: 5; }}
+  @media (max-width: 640px) {{
+    body {{ padding: 12px; }}
+    h1 {{ font-size: 18px; }}
+    #chart {{ padding: 10px; }}
+    .card {{ min-width: 46%; flex: 1; }}
+  }}
   .tablewrap {{ overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }}
   table {{ width: 100%; border-collapse: collapse; background: var(--card);
     min-width: 720px; }}
@@ -192,9 +202,13 @@ def main() -> None:
         n_lt5=int((df["pred_rating"] < 5).sum()),
         data_json=json.dumps(records, ensure_ascii=False),
     )
-    DEST.write_text(html, encoding="utf-8")
-    print(f"Dashboard: {DEST}")
-    print("Abrilo con doble clic (no necesita servidor).")
+    for dest in DESTS:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(html, encoding="utf-8")
+        print(f"Dashboard: {dest}")
+    # .nojekyll: evita que GitHub Pages procese el sitio con Jekyll
+    (ROOT / "docs" / ".nojekyll").touch()
+    print("Local: abrir con doble clic. Pages: commit + push de docs/ y se actualiza.")
 
 
 if __name__ == "__main__":
