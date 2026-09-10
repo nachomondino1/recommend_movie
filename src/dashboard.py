@@ -1,30 +1,22 @@
 """
-Fase Deployment - dashboard HTML de la watchlist puntuada.
+CRISP-DM: Deployment - dashboard HTML de la watchlist puntuada.
 
-Lee outputs/watchlist_scored.csv y genera un HTML autocontenido (sin servidor,
-sin dependencias) con tabla buscable / ordenable y gráfico de distribución.
+Lee outputs/watchlist_scored.csv (lo genera src.model si falta) y escribe un HTML
+autocontenido (sin servidor, sin dependencias) en:
+    outputs/watchlist_dashboard.html  - copia local
+    docs/index.html                   - lo que publica GitHub Pages
 
-Escribe en dos lados:
-    outputs/watchlist_dashboard.html  - copia local (git-ignored)
-    docs/index.html                   - versión que publica GitHub Pages
-
-Uso:
-    ./venv/bin/python deployment/predict_watchlist.py   # primero, genera el CSV
-    ./venv/bin/python deployment/build_dashboard.py
+    python -m src.dashboard
 """
 
 import json
-import sys
 from datetime import date
-from pathlib import Path
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import OUTPUTS, ROOT
+from src.config import DOCS, OUTPUTS, SCORED_CSV
 
-SRC = OUTPUTS / "watchlist_scored.csv"
-DESTS = [OUTPUTS / "watchlist_dashboard.html", ROOT / "docs" / "index.html"]
+DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
 
 TEMPLATE = """<!doctype html>
 <html lang="es">
@@ -113,7 +105,6 @@ const DATA = {data_json};
 let sortKey = "pred_rating", sortAsc = false;
 
 function colorFor(v) {{
-  // 3 (rojo) -> 6 (amarillo) -> 8+ (verde)
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
   const hue = t * 120;               // 0=rojo, 120=verde
   return `hsl(${{hue}}, 62%, 42%)`;
@@ -187,29 +178,27 @@ render();
 """
 
 
-def main() -> None:
-    if not SRC.exists():
-        sys.exit(f"No existe {SRC}. Corré antes: deployment/predict_watchlist.py")
+def build_html() -> None:
+    if not SCORED_CSV.exists():
+        from src.model import score_watchlist
+        score_watchlist()
 
-    df = pd.read_csv(SRC)
-    records = json.loads(df.to_json(orient="records"))
-
+    df = pd.read_csv(SCORED_CSV)
     html = TEMPLATE.format(
         generated=date.today().isoformat(),
         n=len(df),
         mean_pred=round(df["pred_rating"].mean(), 1),
         n_ge7=int((df["pred_rating"] >= 7).sum()),
         n_lt5=int((df["pred_rating"] < 5).sum()),
-        data_json=json.dumps(records, ensure_ascii=False),
+        data_json=json.dumps(json.loads(df.to_json(orient="records")), ensure_ascii=False),
     )
     for dest in DESTS:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(html, encoding="utf-8")
         print(f"Dashboard: {dest}")
-    # .nojekyll: evita que GitHub Pages procese el sitio con Jekyll
-    (ROOT / "docs" / ".nojekyll").touch()
-    print("Local: abrir con doble clic. Pages: commit + push de docs/ y se actualiza.")
+    (DOCS / ".nojekyll").touch()
+    print("Local: abrir con doble clic. Pages: 'make publish' actualiza el sitio.")
 
 
 if __name__ == "__main__":
-    main()
+    build_html()

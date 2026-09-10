@@ -11,14 +11,17 @@ Validación cruzada 5-fold (`KFold` para regresión, `StratifiedKFold` para
 binario). Con 126 filas un solo split train/test es demasiado ruidoso.
 
 ## Iteraciones de features
+Cada iteración sumó features y se volvió a medir. El código de las iteraciones 1–3B
+se descartó (aportaban menos que la iteración C); acá quedan el qué y el resultado.
+
 | Iteración | Qué agregó | Mejor binario (ROC AUC) | Mejor MAE |
 |---|---|---|---|
-| v1 (`modeling/model.py`) | géneros + numéricas IMDb | — | 1.42 (no gana) |
-| 3A (`modeling/classify.py`) | reformulación binaria | 0.61 | — |
-| 3B (`modeling/model_v2.py`) | director (TE), franquicia, antigüedad | 0.62 | 1.36 (no gana) |
-| C (`modeling/train.py`) | sinopsis (TF-IDF+SVD), keywords, idioma, métricas TMDB | 0.63 | **1.26** (desvío + RF) |
+| v1 | géneros + numéricas de IMDb (nota IMDb, duración, año, votos) | — | 1.42 (no gana al baseline) |
+| 3A | reformular el objetivo a binario (`Your Rating ≥ 7`) | 0.61 | — |
+| 3B | director (target encoding), flag de secuela, antigüedad al puntuar | 0.62 | 1.36 (no gana) |
+| C | sinopsis (TF-IDF+SVD), keywords y métricas de TMDB, idioma original | 0.63 | **1.26** (desvío + RandomForest) |
 
-## Resultado actual (`modeling/train.py`)
+## Resultado actual (`make eval`)
 ```
 REGRESIÓN
   Baseline: media de tu nota          MAE 1.31
@@ -34,7 +37,7 @@ BINARIO (>=7)   baseline 55%
 - **El cuello de botella es la cantidad de datos, no las features.** Tres
   expansiones de features no movieron el techo por encima de AUC ~0.63.
 
-## Curva de aprendizaje (`modeling/learning_curve.py`)
+## Curva de aprendizaje (`make eval`)
 Entrenando con subconjuntos crecientes de los 126 títulos:
 
 | n entrenamiento | MAE regresión | AUC binario |

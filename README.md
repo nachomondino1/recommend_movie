@@ -4,55 +4,62 @@ Recomendador personal de películas y series: entrena con las notas que puse en
 IMDb y predice qué nota le pondría a un título que todavía no vi, para priorizar
 la watchlist.
 
-## Objetivo
-Aprendizaje supervisado. Variable respuesta: `Your Rating` (1–10 en IMDb).
-Dos formulaciones: regresión de la nota y clasificación binaria "me gustó" (≥ 7).
+**Dashboard en vivo:** https://nachomondino1.github.io/recommend_movie/
 
-## Documentos / Links utiles
-Fuente de datos:
-- https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/?ref_=exp_t_1: ratings.csv y watchlist.csv
-- https://www.themoviedb.org/settings/api: Para generar API key de TMDB y obtener data de peliculas y series.
+## Uso
 
-## Estructura (CRISP-DM)
-| Carpeta | Fase | Contenido |
-|---|---|---|
-| `docs/` | — | Documentación por fase (`1_business_understanding.md` … `6_deployment.md`) |
-| `data/raw/` | — | Exportaciones de IMDb: `ratings.csv`, `watchlist.csv` |
-| `data/external/`, `data/processed/` | — | Caché de TMDB y tablas derivadas (git-ignored) |
-| `data_understanding/` | Data Understanding | `eda.py` |
-| `data_preparation/` | Data Preparation | `tmdb_client.py`, `enrich_tmdb.py`, `build_features.py` |
-| `modeling/` | Modeling | `train.py` (actual) + `model.py`, `model_v2.py`, `classify.py` (iteraciones previas) |
-| `deployment/` | Deployment | `predict_watchlist.py` |
-| `common.py` | — | Paths compartidos y carga de `.env` |
+Actualizás los datos y regenerás todo con **un comando**:
 
-## Setup
 ```bash
-python3 -m venv venv
-./venv/bin/pip install -r requirements.txt
-cp .env.example .env      # y completar TMDB_TOKEN
+# 1. bajar ratings.csv y watchlist.csv de IMDb y ponerlos en data/
+#    (https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/)
+make update      # enriquece con TMDB, entrena, puntúa la watchlist, regenera el dashboard
+make publish     # sube el dashboard a GitHub Pages
 ```
 
-## Correr el pipeline
-```bash
-./venv/bin/python run_pipeline.py            # todo de punta a punta
-./venv/bin/python run_pipeline.py --skip-tmdb   # sin re-bajar TMDB
+| Comando | Qué hace |
+|---|---|
+| `make setup` | Crear venv e instalar dependencias (una sola vez). Después completar `TMDB_TOKEN` en `.env`. |
+| `make update` | `src.data` (TMDB) → `src.model` (entrena + guarda + puntúa) → `src.dashboard` (HTML). |
+| `make publish` | `git add docs/ && commit && push` → Pages se redespliega. |
+| `make eval` | Diagnósticos: comparación de modelos (CV) + curva de aprendizaje. |
+| `make explore` | Análisis exploratorio (gráficos en `outputs/`). |
+
+No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
+en ambos casos es `make update`.
+
+## Estructura
+
 ```
-O paso a paso:
-```bash
-./venv/bin/python data_understanding/eda.py            # análisis exploratorio
-./venv/bin/python data_preparation/enrich_tmdb.py      # baja datos de TMDB (cachea)
-./venv/bin/python modeling/train.py                    # compara modelos con CV
-./venv/bin/python modeling/learning_curve.py           # ¿ayudaría tener más datos?
-./venv/bin/python deployment/predict_watchlist.py      # puntúa la watchlist
+data/
+  ratings.csv, watchlist.csv     exportaciones de IMDb (versionadas)
+  cache/                          TMDB json + tabla (regenerable, git-ignored)
+src/
+  config.py      paths y carga de .env
+  data.py        cargar CSVs + cliente TMDB + enriquecimiento
+  features.py    matriz de features (IMDb + TMDB)
+  model.py       pipeline, entrenar/guardar, cargar, puntuar watchlist, diagnósticos
+  dashboard.py   generar el HTML (outputs/ + docs/index.html)
+notebooks/
+  exploration.py análisis exploratorio (one-off)
+docs/            narrativa CRISP-DM (1..6) + index.html publicado por Pages
+models/          modelos entrenados (git-ignored)
+outputs/         gráficos y CSVs locales (git-ignored)
 ```
 
-## Cómo sumar datos (opción D)
-1. Puntuar títulos nuevos en IMDb (idealmente pelis/series ya vistas).
-2. Re-exportar el `ratings.csv` desde la [página de ratings](https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/)
-   y reemplazar `data/raw/ratings.csv`.
-3. `./venv/bin/python run_pipeline.py` y mirar si la curva de aprendizaje sube.
+La metodología sigue CRISP-DM; cada fase está documentada en `docs/` y el código
+en `src/` está ordenado en ese mismo flujo.
 
 ## Estado actual
-- Mejor regresión: RandomForest sobre el desvío vs IMDb, MAE 1.26 (baseline 1.31).
-- Mejor binario (≥7): Gradient Boosting, ROC AUC 0.63 (baseline 0.50).
-- Cuello de botella: cantidad de datos (126 títulos). Ver `docs/4_modeling.md`.
+
+- Mejor regresión: RandomForest sobre el desvío vs IMDb, **MAE 1.26** (baseline 1.31).
+- Mejor binario (≥7): Gradient Boosting, **ROC AUC 0.63** (baseline 0.50).
+- Cuello de botella: cantidad de datos (126 títulos puntuados). La curva de
+  aprendizaje no saturó → más ratings es la mejora con mejor retorno. Ver
+  [`docs/4_modeling.md`](docs/4_modeling.md).
+
+## Links
+
+- Datos: https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/
+- API TMDB: https://www.themoviedb.org/settings/api (token v4 → `.env`)
+- Deploy: https://nachomondino1.github.io/recommend_movie/

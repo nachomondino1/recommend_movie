@@ -1,14 +1,21 @@
 # 6. Deployment
 
 ## Arquitectura
-`modeling/pipeline.py` define **un único** pipeline (preprocesado + modelo), que
-comparten las tres etapas:
+`src/model.py` define **un único** pipeline (preprocesado + modelo) y todo lo que
+lo rodea:
 
-| Script | Rol |
+| Función (`src/model.py`) | Rol |
 |---|---|
-| `modeling/fit_final.py` | Entrena los 2 modelos finales con **todos** los ratings y los guarda en `models/` (`regressor.joblib`, `classifier.joblib`, `meta.json`). |
-| `deployment/predict_watchlist.py` | **Carga** los modelos de `models/`. Si faltan, los entrena. Si `ratings.csv` es más nuevo que el modelo guardado, re-entrena y avisa. Puntúa la watchlist → `outputs/watchlist_scored.csv`. |
-| `deployment/build_dashboard.py` | Convierte ese CSV en `outputs/watchlist_dashboard.html`: archivo autocontenido (sin servidor) con tabla buscable/ordenable (título, director, género), nota predicha coloreada y gráfico de distribución. |
+| `build_regressor` / `build_classifier` | Definición del pipeline final. |
+| `fit_and_save()` | Entrena los 2 modelos con **todos** los ratings y los guarda en `models/` (`regressor.joblib`, `classifier.joblib`, `meta.json`). |
+| `load_models()` | Carga de `models/`. Si faltan, entrena. Si `ratings.csv` es más nuevo que el modelo guardado, re-entrena y avisa. |
+| `score_watchlist()` | Puntúa la watchlist → `outputs/watchlist_scored.csv`. |
+| `compare_models()`, `learning_curve_report()` | Diagnósticos (`make eval`). |
+
+`src/dashboard.py` convierte el CSV puntuado en un HTML autocontenido (sin
+servidor) con tabla buscable/ordenable (título, director, género), nota predicha
+coloreada y gráfico de distribución. Lo escribe en `outputs/watchlist_dashboard.html`
+y en `docs/index.html` (lo que publica Pages).
 
 Modelos:
 - **Regresión** `RandomForestRegressor` sobre el desvío vs IMDb → `pred_rating = IMDb + desvío`.
@@ -19,23 +26,17 @@ entrenamiento, n, mtime de `ratings.csv` y scores de CV.
 
 ## Cómo usarlo
 ```bash
-./venv/bin/python run_pipeline.py         # todo; re-entrena si hace falta
-# o, si sólo cambió la watchlist y el modelo está al día:
-./venv/bin/python run_pipeline.py --skip-tmdb
+make update      # src.data -> src.model -> src.dashboard
+make publish     # git add docs/ && commit && push -> Pages redepliega
 ```
-Después abrir `outputs/watchlist_dashboard.html` (doble clic) o el CSV.
+Para mirar local: abrir `outputs/watchlist_dashboard.html` con doble clic.
 
-## Publicar en GitHub Pages (acceso desde el teléfono)
-`build_dashboard.py` escribe también `docs/index.html` (+ `docs/.nojekyll`).
-
+## GitHub Pages (acceso desde el teléfono)
 Alta (una sola vez): repo en GitHub → **Settings → Pages** → *Source: Deploy from
-a branch* → **Branch: `main` / carpeta `/docs`** → Save. En ~1 min queda en
+a branch* → **Branch `main` / carpeta `/docs`** → Save. En ~1 min queda en
 `https://nachomondino1.github.io/recommend_movie/`.
 
-Actualizar: `run_pipeline.py` && `git add docs/ && git commit && git push`.
-Pages redepliega solo.
-
-Nota: el repo es público, así que el dashboard (y `data/raw/*.csv`) son visibles.
+Nota: el repo es público, así que el dashboard (y `data/*.csv`) son visibles.
 El `.env` con el token TMDB está en `.gitignore` y no se publica.
 
 ## Cómo interpretar
@@ -44,10 +45,8 @@ El `.env` con el token TMDB está en `.gitignore` y no se publica.
 - Confiar en el **orden general** (tercio de arriba vs tercio de abajo).
 
 ## Pendiente para una v2
-- **Predecir un título suelto por nombre**: `/search` de TMDB en vivo, refactor de
-  `build_features` para 1 título, cargar `models/` y devolver la predicción.
+- **Predecir un título suelto por nombre**: `/search` de TMDB en vivo, adaptar
+  `src.features.build()` para 1 título, cargar `models/` y devolver la predicción.
   Requiere un modelo con más señal (hoy AUC 0.63) para que valga la pena.
 - Un único score coherente (ensemble de los dos modelos; hoy `pred_rating` y
   `p_like` pueden no concordar).
-- Re-entrenar automáticamente al actualizar `ratings.csv` (hoy lo detecta
-  `predict_watchlist.py` por mtime y avisa/re-entrena).

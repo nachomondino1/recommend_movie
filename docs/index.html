@@ -85,7 +85,6 @@ const DATA = [{"Title": "The Godfather Part II", "Year": 1974, "Title Type": "Mo
 let sortKey = "pred_rating", sortAsc = false;
 
 function colorFor(v) {
-  // 3 (rojo) -> 6 (amarillo) -> 8+ (verde)
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
   const hue = t * 120;               // 0=rojo, 120=verde
   return `hsl(${hue}, 62%, 42%)`;

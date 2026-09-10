@@ -13,15 +13,14 @@ __pycache__/
 # Sistema
 .DS_Store
 
-# Salidas generadas (gráficos, reportes)
-outputs/
-
 # Credenciales
 .env
 
-# Caché de TMDB (se regenera con data_preparation/enrich_tmdb.py)
-data/external/tmdb/
-data/processed/
+# Caché de TMDB (regenera src/data.py)
+data/cache/
 
-# Modelos entrenados (se regeneran con modeling/fit_final.py)
+# Modelos entrenados (regenera src/model.py)
 models/
+
+# Gráficos y CSVs locales
+outputs/
