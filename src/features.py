@@ -39,8 +39,31 @@ def _franchise_flag(titles: pd.Series) -> pd.Series:
 
 
 def build(csv: Path = RATINGS_CSV) -> tuple[pd.DataFrame, pd.Series | None]:
-    """(X, y). y es None si el CSV no trae 'Your Rating' (p. ej. la watchlist)."""
+    """(X, y) a partir de un CSV de IMDb (ratings o watchlist), mergeado con TMDB.
+    y es None si el CSV no trae 'Your Rating' (p. ej. la watchlist)."""
     df = pd.read_csv(csv).merge(tmdb_table(), left_on="Const", right_on="imdb_id", how="left")
+    return _engineer(df)
+
+
+def build_row(record: dict) -> pd.DataFrame:
+    """X (1 fila) para un título suelto. `record` combina las columnas de IMDb
+    (Title, Year, Title Type, Genres, Num Votes...) con las de TMDB (overview,
+    keywords, director, tmdb_*...). Usado por src/predict.py."""
+    X, _ = _engineer(pd.DataFrame([record]))
+    return X
+
+
+_NUM_SOURCE = ["IMDb Rating", "Num Votes", "Runtime (mins)", "Year",
+               "tmdb_vote_average", "tmdb_vote_count", "tmdb_popularity",
+               "budget", "n_seasons", "n_episodes", "tmdb_runtime"]
+
+
+def _engineer(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series | None]:
+    # coerción numérica: con 1 sola fila (src/predict.py) estas columnas pueden
+    # llegar como object y romper los np.log10 de abajo.
+    for col in _NUM_SOURCE:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # --- numéricas IMDb ---
     df["IMDb Rating"] = (df["IMDb Rating"].fillna(df["tmdb_vote_average"])
@@ -49,7 +72,8 @@ def build(csv: Path = RATINGS_CSV) -> tuple[pd.DataFrame, pd.Series | None]:
     df["runtime_missing"] = df["Runtime (mins)"].isna().astype(int)
     df["Runtime (mins)"] = df["Runtime (mins)"].fillna(df["Runtime (mins)"].median())
     df["n_genres"] = df["Genres"].fillna("").str.split(", ").str.len()
-    rated_year = pd.to_datetime(df.get("Date Rated"), errors="coerce").dt.year
+    rated = df["Date Rated"] if "Date Rated" in df.columns else pd.Series(pd.NaT, index=df.index)
+    rated_year = pd.to_datetime(rated, errors="coerce").dt.year
     df["years_since_release"] = (rated_year - df["Year"]).clip(lower=0)
     df["is_franchise"] = _franchise_flag(df["Title"])
 

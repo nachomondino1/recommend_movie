@@ -1,0 +1,2 @@
+date,n_train,cv_mae_rating,cv_roc_auc_like
+2026-09-10,126,1.26,0.625

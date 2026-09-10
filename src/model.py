@@ -16,83 +16,23 @@ from datetime import datetime, timezone
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import (balanced_accuracy_score, mean_absolute_error,
                              roc_auc_score)
 from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
                                      learning_curve)
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, TargetEncoder
 
-from src.config import MODELS, OUTPUTS, RATINGS_CSV, SCORED_CSV, WATCHLIST_CSV
+from src.config import (METRICS_CSV, MODELS, OUTPUTS, RATINGS_CSV, SCORED_CSV,
+                        WATCHLIST_CSV)
 from src.features import build, feature_groups
+from src.pipeline import (LIKE_THRESHOLD, OverviewEmbedder, build_classifier,  # noqa: F401
+                          build_regressor, make_preprocessor)
 
-LIKE_THRESHOLD = 7
 REG_PATH = MODELS / "regressor.joblib"
 CLF_PATH = MODELS / "classifier.joblib"
-
-
-# --------------------------------------------------------------------------- #
-# Pipeline
-# --------------------------------------------------------------------------- #
-class OverviewEmbedder(BaseEstimator, TransformerMixin):
-    """TF-IDF de la sinopsis + TruncatedSVD, con n_components adaptativo.
-
-    Con pocos títulos el vocabulario puede ser menor que n_components y el SVD
-    falla; acá se recorta a lo disponible.
-    """
-
-    def __init__(self, n_components: int = 25, min_df: int = 3):
-        self.n_components = n_components
-        self.min_df = min_df
-
-    @staticmethod
-    def _flat(X):
-        return np.asarray(X).ravel()
-
-    def fit(self, X, y=None):
-        self.tfidf_ = TfidfVectorizer(stop_words="english", ngram_range=(1, 2),
-                                      min_df=self.min_df, max_features=800)
-        Z = self.tfidf_.fit_transform(self._flat(X))
-        k = max(2, min(self.n_components, Z.shape[1] - 1))
-        self.svd_ = TruncatedSVD(n_components=k, random_state=42)
-        self.svd_.fit(Z)
-        return self
-
-    def transform(self, X):
-        return self.svd_.transform(self.tfidf_.transform(self._flat(X)))
-
-
-def make_preprocessor(groups: dict, target_type: str) -> ColumnTransformer:
-    # CV sembrado: sin esto, TargetEncoder (sklearn >=1.9) mezcla los folds sin
-    # semilla y las predicciones cambian entre corridas.
-    te_cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    return ColumnTransformer([
-        ("num", StandardScaler(), groups["numeric"]),
-        ("oh", OneHotEncoder(handle_unknown="ignore"), groups["onehot"]),
-        ("dir", TargetEncoder(target_type=target_type, cv=te_cv), groups["target_enc"]),
-        ("ovw", OverviewEmbedder(n_components=25, min_df=3), groups["overview"]),
-        ("kw", CountVectorizer(min_df=4, binary=True), groups["keywords"]),
-        ("gen", "passthrough", groups["genre"]),
-    ])
-
-
-def build_regressor(groups: dict) -> Pipeline:
-    """OJO: el target es el DESVÍO (Your Rating - IMDb). Reconstruir con
-    pred_nota = IMDb Rating + pipe.predict(X)."""
-    return Pipeline([("pre", make_preprocessor(groups, "continuous")),
-                     ("m", RandomForestRegressor(n_estimators=400, random_state=42))])
-
-
-def build_classifier(groups: dict) -> Pipeline:
-    return Pipeline([("pre", make_preprocessor(groups, "binary")),
-                     ("m", GradientBoostingClassifier(random_state=42))])
 
 
 # --------------------------------------------------------------------------- #
@@ -125,10 +65,22 @@ def fit_and_save() -> None:
         "like_threshold": LIKE_THRESHOLD,
         "cv_mae_rating": round(float(cv_mae), 3),
         "cv_roc_auc_like": round(float(cv_auc), 3),
+        "feature_columns": list(X.columns),
     }
     (MODELS / "meta.json").write_text(json.dumps(meta, indent=2))
+    _append_history(meta)
     print(f"Modelos guardados en {MODELS}/  "
           f"(n={meta['n_train']}, CV MAE={meta['cv_mae_rating']}, CV AUC={meta['cv_roc_auc_like']})")
+
+
+def _append_history(meta: dict) -> None:
+    """Registra la trayectoria real de scores: una fila por tamaño de dataset."""
+    row = {"date": meta["trained_at"][:10], "n_train": meta["n_train"],
+           "cv_mae_rating": meta["cv_mae_rating"], "cv_roc_auc_like": meta["cv_roc_auc_like"]}
+    hist = pd.read_csv(METRICS_CSV) if METRICS_CSV.exists() else pd.DataFrame()
+    hist = pd.concat([hist, pd.DataFrame([row])], ignore_index=True)
+    hist = hist.drop_duplicates("n_train", keep="last").sort_values("n_train")
+    hist.to_csv(METRICS_CSV, index=False)
 
 
 def load_models():
@@ -147,13 +99,21 @@ def load_models():
 def score_watchlist() -> pd.DataFrame:
     reg, clf = load_models()
     X_tr, _ = build()
-    X_wl, _ = build(WATCHLIST_CSV)
-    X_wl = X_wl.reindex(columns=X_tr.columns, fill_value=0)
 
     wl = pd.read_csv(WATCHLIST_CSV)
+    rated = set(pd.read_csv(RATINGS_CSV)["Const"].dropna())
+    keep = ~wl["Const"].isin(rated)          # sacar los que ya viste y puntuaste
+    n_drop = int((~keep).sum())
+    wl = wl[keep].reset_index(drop=True)
+
+    X_wl, _ = build(WATCHLIST_CSV)
+    X_wl = X_wl[keep.to_numpy()].reset_index(drop=True).reindex(columns=X_tr.columns, fill_value=0)
+
     wl["pred_rating"] = (X_wl["IMDb Rating"].to_numpy() + reg.predict(X_wl)).clip(1, 10)
     wl["p_like"] = clf.predict_proba(X_wl)[:, 1]
     wl["Directors"] = wl["Directors"].fillna("")
+    if n_drop:
+        print(f"({n_drop} títulos de la watchlist ya estaban puntuados; se omiten)")
 
     cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
             "pred_rating", "p_like"]
@@ -249,10 +209,38 @@ def learning_curve_report() -> None:
     print(f"Gráfico: {OUTPUTS / 'learning_curve.png'}")
 
 
+def plot_history() -> None:
+    """Trayectoria REAL de los scores CV según fue creciendo ratings.csv
+    (metrics_history.csv). Distinta de la curva de aprendizaje, que es simulada."""
+    if not METRICS_CSV.exists():
+        return
+    hist = pd.read_csv(METRICS_CSV)
+    if len(hist) < 2:
+        print(f"\n(metrics_history.csv tiene {len(hist)} punto; hacen falta ≥2 para el gráfico)")
+        return
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax1 = plt.subplots(figsize=(8, 4.5))
+    ax2 = ax1.twinx()
+    ax1.plot(hist["n_train"], hist["cv_mae_rating"], "o-", color="tab:red", label="MAE")
+    ax2.plot(hist["n_train"], hist["cv_roc_auc_like"], "s-", color="tab:blue", label="AUC")
+    ax1.set(xlabel="ratings en el dataset", ylabel="MAE (CV)", title="Trayectoria real de los scores")
+    ax2.set_ylabel("ROC AUC (CV)")
+    ax1.legend(loc="upper left"); ax2.legend(loc="upper right")
+    fig.tight_layout()
+    fig.savefig(OUTPUTS / "metrics_history.png", dpi=120)
+    print(f"\n--- TRAYECTORIA REAL ({len(hist)} puntos) ---")
+    print(hist.to_string(index=False))
+    print(f"Gráfico: {OUTPUTS / 'metrics_history.png'}")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--eval", action="store_true",
-                    help="además: comparación de modelos (CV) y curva de aprendizaje")
+                    help="además: comparación de modelos (CV), curva de aprendizaje y trayectoria")
     args = ap.parse_args()
 
     fit_and_save()
@@ -260,3 +248,4 @@ if __name__ == "__main__":
     if args.eval:
         compare_models()
         learning_curve_report()
+        plot_history()

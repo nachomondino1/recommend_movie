@@ -21,8 +21,9 @@ make publish     # sube el dashboard a GitHub Pages
 |---|---|
 | `make setup` | Crear venv e instalar dependencias (una sola vez). Después completar `TMDB_TOKEN` en `.env`. |
 | `make update` | `src.data` (TMDB) → `src.model` (entrena + guarda + puntúa) → `src.dashboard` (HTML). |
+| `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
 | `make publish` | `git add docs/ && commit && push` → Pages se redespliega. |
-| `make eval` | Diagnósticos: comparación de modelos (CV) + curva de aprendizaje. |
+| `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores. |
 | `make explore` | Análisis exploratorio (gráficos en `outputs/`). |
 
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
@@ -37,14 +38,17 @@ data/
 src/
   config.py      paths y carga de .env
   data.py        cargar CSVs + cliente TMDB + enriquecimiento
-  features.py    matriz de features (IMDb + TMDB)
-  model.py       pipeline, entrenar/guardar, cargar, puntuar watchlist, diagnósticos
+  features.py    matriz de features (IMDb + TMDB); build() y build_row() (1 título)
+  pipeline.py    definición del pipeline (preprocesado + estimadores)
+  model.py       entrenar/guardar, cargar, puntuar watchlist, diagnósticos
+  predict.py     nota predicha para un título por nombre (make predict)
   dashboard.py   generar el HTML (outputs/ + docs/index.html)
 notebooks/
   exploration.py análisis exploratorio (one-off)
 docs/            narrativa CRISP-DM (1..6) + index.html publicado por Pages
 models/          modelos entrenados (git-ignored)
 outputs/         gráficos y CSVs locales (git-ignored)
+metrics_history.csv   scores CV por tamaño de dataset (versionado; crece con make update)
 ```
 
 La metodología sigue CRISP-DM; cada fase está documentada en `docs/` y el código

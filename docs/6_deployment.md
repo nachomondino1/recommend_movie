@@ -15,7 +15,16 @@ lo rodea:
 `src/dashboard.py` convierte el CSV puntuado en un HTML autocontenido (sin
 servidor) con tabla buscable/ordenable (título, director, género), nota predicha
 coloreada y gráfico de distribución. Lo escribe en `outputs/watchlist_dashboard.html`
-y en `docs/index.html` (lo que publica Pages).
+y en `docs/index.html` (lo que publica Pages). Los títulos de la watchlist que ya
+figuran puntuados en `ratings.csv` se omiten.
+
+`src/predict.py` (`make predict TITLE="X"`) resuelve un título por nombre con
+`/search/multi` de TMDB, arma la fila con `features.build_row()` y aplica los
+modelos guardados. Sirve para evaluar algo que no está en la watchlist.
+
+`metrics_history.csv` (versionado) acumula una fila por tamaño de dataset con la
+fecha y los scores de CV. `make eval` grafica esa **trayectoria real** en
+`outputs/metrics_history.png` (distinta de la curva de aprendizaje, que es simulada).
 
 Modelos:
 - **Regresión** `RandomForestRegressor` sobre el desvío vs IMDb → `pred_rating = IMDb + desvío`.
@@ -45,8 +54,9 @@ El `.env` con el token TMDB está en `.gitignore` y no se publica.
 - Confiar en el **orden general** (tercio de arriba vs tercio de abajo).
 
 ## Pendiente para una v2
-- **Predecir un título suelto por nombre**: `/search` de TMDB en vivo, adaptar
-  `src.features.build()` para 1 título, cargar `models/` y devolver la predicción.
-  Requiere un modelo con más señal (hoy AUC 0.63) para que valga la pena.
 - Un único score coherente (ensemble de los dos modelos; hoy `pred_rating` y
   `p_like` pueden no concordar).
+- Embeddings de sinopsis (sentence-transformers) en lugar de TF-IDF, cuando haya
+  más ratings.
+- `make predict` toma sólo el primer resultado de TMDB; con títulos ambiguos
+  convendría mostrar candidatos y elegir.

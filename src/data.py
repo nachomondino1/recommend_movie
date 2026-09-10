@@ -79,11 +79,29 @@ class TMDBClient:
             data = {"imdb_id": imdb_id, "tmdb_found": False}
             cache.write_text(json.dumps(data))
             return data
+        return self._detail(media_type, tmdb_id, imdb_id)
 
-        detail = self._get(f"/{media_type}/{tmdb_id}", append_to_response="credits,keywords")
+    def _detail(self, media_type: str, tmdb_id: int, imdb_id: str | None) -> dict:
+        detail = self._get(f"/{media_type}/{tmdb_id}",
+                           append_to_response="credits,keywords,external_ids")
+        imdb_id = imdb_id or (detail.get("external_ids") or {}).get("imdb_id")
         detail.update(imdb_id=imdb_id, media_type=media_type, tmdb_found=True)
-        cache.write_text(json.dumps(detail, ensure_ascii=False))
+        if imdb_id:
+            (TMDB_DIR / f"{imdb_id}.json").write_text(json.dumps(detail, ensure_ascii=False))
         return detail
+
+    def search(self, query: str) -> list[dict]:
+        """Resultados de /search/multi filtrados a películas y series."""
+        res = self._get("/search/multi", query=query, include_adult="false")
+        return [r for r in res.get("results", []) if r.get("media_type") in ("movie", "tv")]
+
+    def fetch_by_name(self, query: str) -> dict:
+        """Busca por nombre y devuelve el detalle crudo del primer resultado."""
+        hits = self.search(query)
+        if not hits:
+            raise TMDBError(f"TMDB no encontró nada para: {query!r}")
+        top = hits[0]
+        return self._detail(top["media_type"], top["id"], imdb_id=None)
 
 
 # --------------------------------------------------------------------------- #
@@ -93,7 +111,8 @@ def _join(values, sep="|") -> str:
     return sep.join(str(v) for v in values if v)
 
 
-def _parse(detail: dict) -> dict:
+def parse_detail(detail: dict) -> dict:
+    """Aplana el JSON crudo de TMDB a las columnas de data/cache/tmdb.csv."""
     if not detail.get("tmdb_found"):
         return {"imdb_id": detail.get("imdb_id"), "tmdb_found": False}
 
@@ -145,7 +164,7 @@ def enrich(force: bool = False) -> pd.DataFrame:
 
     rows, missing = [], []
     for i, imdb_id in enumerate(ids, 1):
-        row = _parse(client.fetch(imdb_id, force=force))
+        row = parse_detail(client.fetch(imdb_id, force=force))
         rows.append(row)
         if not row["tmdb_found"]:
             missing.append(imdb_id)

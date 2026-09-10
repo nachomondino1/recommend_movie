@@ -20,6 +20,7 @@ RATINGS_CSV = DATA / "ratings.csv"
 WATCHLIST_CSV = DATA / "watchlist.csv"
 TMDB_CSV = CACHE / "tmdb.csv"
 SCORED_CSV = OUTPUTS / "watchlist_scored.csv"
+METRICS_CSV = ROOT / "metrics_history.csv"   # versionado: trayectoria real de scores
 
 for _d in (CACHE, TMDB_DIR, MODELS, OUTPUTS):
     _d.mkdir(parents=True, exist_ok=True)
