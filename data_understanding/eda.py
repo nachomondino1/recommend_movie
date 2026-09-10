@@ -17,8 +17,9 @@ matplotlib.use("Agg")  # backend sin ventana: solo guarda archivos
 import matplotlib.pyplot as plt
 import pandas as pd
 
-DATA = Path("data/ratings.csv")
-OUT = Path("outputs")
+_ROOT = Path(__file__).resolve().parents[1]
+DATA = _ROOT / "data" / "raw" / "ratings.csv"
+OUT = _ROOT / "outputs"
 OUT.mkdir(exist_ok=True)
 
 

@@ -20,7 +20,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-DATA = Path("data/ratings.csv")
+DATA = Path(__file__).resolve().parents[1] / "data" / "raw" / "ratings.csv"
 
 NUMERIC = ["IMDb Rating", "Runtime (mins)", "Year", "log_votes"]
 CATEGORICAL = ["Title Type"]

@@ -1,13 +1,41 @@
+# recommend_movie
 
-# OBJETIVO
-El objetivo a largo plazo es construir un recomendador de peliculas y series basado en las notas que yo mismo puse en IMDB a peliculas y series que vi. Luego poder pasarle una nueva pelicula o serie y que prediga la nota que le pondria en IMDB, de manera de saber antes de verla, si la pelicula, serie me va a gustar o no.
+Recomendador personal de películas y series: entrena con las notas que puse en
+IMDb y predice qué nota le pondría a un título que todavía no vi, para priorizar
+la watchlist.
 
-# Metodologia
-ML Aprendizaje supervisado (variable respuesta: nota del 1 al 10 en IMDB probablemente la podamos considerar y discreta)
+## Objetivo
+Aprendizaje supervisado. Variable respuesta: `Your Rating` (1–10 en IMDb).
+Dos formulaciones: regresión de la nota y clasificación binaria "me gustó" (≥ 7).
 
-Posibles modelos:
-1. Naive Bayes
-2. Redes Bayesianas
-3. Arboles de decisión
-4. K vecinos mas cercanos (KNN)
-5. SVM
+## Estructura (CRISP-DM)
+| Carpeta | Fase | Contenido |
+|---|---|---|
+| `docs/` | — | Documentación por fase (`1_business_understanding.md` … `6_deployment.md`) |
+| `data/raw/` | — | Exportaciones de IMDb: `ratings.csv`, `watchlist.csv` |
+| `data/external/`, `data/processed/` | — | Caché de TMDB y tablas derivadas (git-ignored) |
+| `data_understanding/` | Data Understanding | `eda.py` |
+| `data_preparation/` | Data Preparation | `tmdb_client.py`, `enrich_tmdb.py`, `build_features.py` |
+| `modeling/` | Modeling | `train.py` (actual) + `model.py`, `model_v2.py`, `classify.py` (iteraciones previas) |
+| `deployment/` | Deployment | `predict_watchlist.py` |
+| `common.py` | — | Paths compartidos y carga de `.env` |
+
+## Setup
+```bash
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
+cp .env.example .env      # y completar TMDB_TOKEN
+```
+
+## Correr el pipeline
+```bash
+./venv/bin/python data_understanding/eda.py            # análisis exploratorio
+./venv/bin/python data_preparation/enrich_tmdb.py      # baja datos de TMDB (cachea)
+./venv/bin/python modeling/train.py                    # compara modelos con CV
+./venv/bin/python deployment/predict_watchlist.py      # puntúa la watchlist
+```
+
+## Estado actual
+- Mejor regresión: RandomForest sobre el desvío vs IMDb, MAE 1.26 (baseline 1.31).
+- Mejor binario (≥7): Gradient Boosting, ROC AUC 0.63 (baseline 0.50).
+- Cuello de botella: cantidad de datos (126 títulos). Ver `docs/4_modeling.md`.

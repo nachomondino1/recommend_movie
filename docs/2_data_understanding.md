@@ -5,8 +5,8 @@
 |---|---|---|
 | `data/raw/ratings.csv` | 126 | Exportación de IMDb: títulos vistos y puntuados. Columna objetivo: `Your Rating`. |
 | `data/raw/watchlist.csv` | 159 | Exportación de IMDb: títulos por ver (sin nota). Es el set sobre el que se predice al final. |
-| `data/external/tmdb/*.json` | ~285 | Detalle crudo de TMDB por título (caché). |
-| `data/processed/tmdb.csv` | ~285 | Campos de TMDB aplanados: sinopsis, keywords, elenco, director, idioma, país, etc. |
+| `data/external/tmdb/*.json` | 275 | Detalle crudo de TMDB por título (caché). |
+| `data/processed/tmdb.csv` | 275 | Campos de TMDB aplanados: sinopsis, keywords, elenco, director, idioma, país, etc. |
 
 ## Columnas de ratings.csv
 `Const` (id IMDb), `Your Rating` (1–10), `Date Rated`, `Title`, `Title Type`
