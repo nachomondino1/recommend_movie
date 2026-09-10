@@ -20,6 +20,7 @@ STEPS = [
     ("Data Preparation - enriquecer con TMDB", "data_preparation/enrich_tmdb.py"),
     ("Modeling - comparar modelos (CV)", "modeling/train.py"),
     ("Modeling - curva de aprendizaje", "modeling/learning_curve.py"),
+    ("Modeling - entrenar y guardar modelo final", "modeling/fit_final.py"),
     ("Deployment - puntuar watchlist", "deployment/predict_watchlist.py"),
     ("Deployment - dashboard HTML", "deployment/build_dashboard.py"),
 ]

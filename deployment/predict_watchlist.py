@@ -1,9 +1,9 @@
 """
 Fase Deployment - aplicar el modelo a la watchlist.
 
-Entrena con los 126 títulos puntuados y predice, para cada título de la
-watchlist:
-    - pred_rating : nota estimada (IMDb Rating + desvío predicho por RandomForest)
+Carga los modelos guardados en models/ (los entrena si no existen) y predice,
+para cada título de la watchlist:
+    - pred_rating : nota estimada (IMDb Rating + desvío predicho, RandomForest)
     - p_like      : probabilidad estimada de que le pongas >= 7 (GradientBoosting)
 
 Salida: outputs/watchlist_scored.csv, ordenada por pred_rating desc.
@@ -12,44 +12,48 @@ Uso:
     ./venv/bin/python deployment/predict_watchlist.py
 """
 
+import runpy
 import sys
 from pathlib import Path
 
+import joblib
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
-from sklearn.pipeline import Pipeline
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import OUTPUTS, WATCHLIST_CSV
-from data_preparation.build_features import build, feature_groups
-from modeling.train import make_preprocessor
+from common import OUTPUTS, RATINGS_CSV, ROOT, WATCHLIST_CSV
+from data_preparation.build_features import build
+
+MODELS = ROOT / "models"
+REG_PATH = MODELS / "regressor.joblib"
+CLF_PATH = MODELS / "classifier.joblib"
+
+
+def _fit_final() -> None:
+    print(">> Entrenando modelos finales (modeling/fit_final.py)...")
+    runpy.run_path(str(ROOT / "modeling" / "fit_final.py"), run_name="__main__")
+
+
+def load_models():
+    if not REG_PATH.exists() or not CLF_PATH.exists():
+        _fit_final()
+    elif RATINGS_CSV.stat().st_mtime > REG_PATH.stat().st_mtime:
+        print("!! ratings.csv es más nuevo que el modelo guardado -> re-entreno.")
+        _fit_final()
+    return joblib.load(REG_PATH), joblib.load(CLF_PATH)
 
 
 def main() -> None:
-    X_tr, y = build()
-    groups = feature_groups(X_tr)
-    imdb_tr = X_tr["IMDb Rating"].to_numpy()
-    resid = y.to_numpy() - imdb_tr
-    like = (y >= 7).astype(int)
+    reg, clf = load_models()
 
+    X_tr, _ = build()  # sólo para alinear columnas
     X_wl, _ = build(WATCHLIST_CSV)
-    X_wl = X_wl.reindex(columns=X_tr.columns, fill_value=0)  # alinear columnas
-
-    reg = Pipeline([
-        ("pre", make_preprocessor(groups, target_type="continuous")),
-        ("m", RandomForestRegressor(n_estimators=400, random_state=42)),
-    ]).fit(X_tr, resid)
-
-    clf = Pipeline([
-        ("pre", make_preprocessor(groups, target_type="binary")),
-        ("m", GradientBoostingClassifier(random_state=42)),
-    ]).fit(X_tr, like)
+    X_wl = X_wl.reindex(columns=X_tr.columns, fill_value=0)
 
     wl = pd.read_csv(WATCHLIST_CSV)
     wl["pred_rating"] = (X_wl["IMDb Rating"].to_numpy() + reg.predict(X_wl)).clip(1, 10)
     wl["p_like"] = clf.predict_proba(X_wl)[:, 1]
-
     wl["Directors"] = wl["Directors"].fillna("")
+
     out_cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
                 "pred_rating", "p_like"]
     result = (wl[out_cols].sort_values("pred_rating", ascending=False)
@@ -57,7 +61,7 @@ def main() -> None:
 
     dest = OUTPUTS / "watchlist_scored.csv"
     result.to_csv(dest, index=False)
-    print(f"Guardado: {dest}  ({len(result)} títulos)\n")
+    print(f"\nGuardado: {dest}  ({len(result)} títulos)\n")
     print("TOP 15 recomendados:")
     print(result.head(15).to_string())
     print("\nBOTTOM 5 (mejor saltear):")

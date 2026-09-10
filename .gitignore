@@ -22,3 +22,6 @@ outputs/
 # Caché de TMDB (se regenera con data_preparation/enrich_tmdb.py)
 data/external/tmdb/
 data/processed/
+
+# Modelos entrenados (se regeneran con modeling/fit_final.py)
+models/
