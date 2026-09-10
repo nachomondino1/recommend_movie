@@ -26,7 +26,7 @@ from sklearn.pipeline import Pipeline
 
 from model import build_features, make_preprocessor
 
-DATA = Path(__file__).resolve().parents[1] / "data" / "raw" / "ratings.csv"
+DATA = Path(__file__).resolve().parents[2] / "data" / "raw" / "ratings.csv"
 
 
 def evaluate(name, pipe, X, y, cv):

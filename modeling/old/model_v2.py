@@ -32,7 +32,7 @@ from sklearn.model_selection import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, TargetEncoder
 
-DATA = Path(__file__).resolve().parents[1] / "data" / "raw" / "ratings.csv"
+DATA = Path(__file__).resolve().parents[2] / "data" / "raw" / "ratings.csv"
 
 NUMERIC = [
     "IMDb Rating",
