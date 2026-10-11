@@ -99,6 +99,9 @@ TEMPLATE = """<!doctype html>
     background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }}
   .btn-pick:hover {{ opacity: 0.9; }}
   tr.picked td {{ background: #eaf2fb; }}
+  @media (max-height: 480px) {{
+    .controls {{ position: static; }}
+  }}
   @media (max-width: 640px) {{
     .controls {{ position: static; }}
     .filter-bar {{ flex-direction: column; align-items: stretch; }}
@@ -155,6 +158,7 @@ TEMPLATE = """<!doctype html>
   @media (max-width: 640px) {{
     table {{ min-width: 0; }}
     .tablewrap {{ overflow-x: hidden; }}
+    th, td {{ padding-left: 4px; padding-right: 4px; }}
     th {{ white-space: normal; }}
     .mobile-chips .provider-pill {{ white-space: normal; }}
     .col-year, .col-type, .col-imdb, .col-director, .col-duration,
