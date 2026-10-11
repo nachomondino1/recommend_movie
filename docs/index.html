@@ -32,7 +32,7 @@
   .filter-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
     margin-top: 12px; }
   .filter-group { display: flex; flex-direction: column; gap: 4px; }
-  .filter-group label { font-size: 11px; font-weight: 600; color: var(--muted);
+  .filter-group > label { font-size: 11px; font-weight: 600; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.03em; }
   .filter-group select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
     font-size: 14px; background: var(--bg); color: var(--ink); min-width: 150px; }
@@ -40,11 +40,22 @@
     background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
     text-decoration: underline; margin-left: auto; }
   .btn-clear:hover { color: var(--ink); }
-  .genre-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px;
-    padding-top: 14px; border-top: 1px solid var(--border); }
-  .filter-label { font-size: 11px; font-weight: 600; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; padding-top: 4px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+  .multiselect { position: relative; }
+  .ms-toggle { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; background: var(--bg); color: var(--ink); min-width: 150px;
+    text-align: left; cursor: pointer; display: flex; align-items: center;
+    justify-content: space-between; gap: 8px; }
+  .ms-toggle::after { content: "\25be"; color: var(--muted); font-size: 11px; }
+  .ms-menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 10; min-width: 220px;
+    max-height: 280px; overflow-y: auto; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); padding: 6px; }
+  .ms-menu[hidden] { display: none; }
+  .ms-option { display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    border-radius: 6px; font-size: 13px; cursor: pointer; user-select: none; }
+  .ms-option:hover { background: #f0f0ec; }
+  .ms-option input { margin: 0; }
+  .ms-all { font-weight: 600; }
+  .ms-divider { height: 1px; background: var(--border); margin: 4px 2px; }
   .chip { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px;
     border: 1px solid var(--border); background: var(--card); color: var(--muted);
     cursor: pointer; user-select: none; }
@@ -55,11 +66,11 @@
   .btn-pick:hover { opacity: 0.9; }
   tr.picked td { background: #eaf2fb; }
   @media (max-width: 640px) {
-    .filter-bar { align-items: stretch; }
-    .filter-group select { width: 100%; min-width: 0; }
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-group select, .ms-toggle { width: 100%; min-width: 0; }
+    .ms-menu { left: 0; right: 0; min-width: 0; }
     .btn-clear { margin-left: 0; text-align: left; }
     .btn-pick { width: 100%; }
-    .genre-row { flex-direction: column; }
   }
   @media (max-width: 640px) {
     body { padding: 12px; }
@@ -144,12 +155,15 @@
           <label for="fPlatform">Plataforma</label>
           <select id="fPlatform"><option value="">Todas</option></select>
         </div>
+        <div class="filter-group">
+          <label id="fGenreLabel" for="fGenreBtn">G&eacute;nero</label>
+          <div class="multiselect" id="genreSelect">
+            <button type="button" id="fGenreBtn" class="ms-toggle">Todos</button>
+            <div id="fGenreMenu" class="ms-menu" hidden></div>
+          </div>
+        </div>
         <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
         <button type="button" id="pickForMe" class="btn-pick">Eleg&iacute; por m&iacute;</button>
-      </div>
-      <div class="genre-row">
-        <span class="filter-label">G&eacute;nero</span>
-        <div id="fGenres" class="chips"></div>
       </div>
     </div>
 
@@ -186,10 +200,16 @@ const activeGenres = new Set();
 
 function toggleGenre(g) {
   if (activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
-  document.querySelectorAll("#fGenres .chip").forEach(c => {
-    c.classList.toggle("active", activeGenres.has(c.dataset.genre));
-  });
+  const cb = document.querySelector(`#fGenreMenu input[data-genre="${CSS.escape(g)}"]`);
+  if (cb) cb.checked = activeGenres.has(g);
+  updateGenreButton();
   render();
+}
+
+function updateGenreButton() {
+  const n = activeGenres.size;
+  document.getElementById("fGenreBtn").textContent =
+    n === 0 ? "Todos" : n === 1 ? [...activeGenres][0] : `${n} géneros`;
 }
 
 function colorFor(v) {
@@ -352,14 +372,30 @@ function initFilters() {
   });
 
   const genres = [...new Set(DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
-  const box = document.getElementById("fGenres");
+  const menu = document.getElementById("fGenreMenu");
+  const allOpt = document.createElement("div");
+  allOpt.className = "ms-option ms-all";
+  allOpt.textContent = "Todos";
+  allOpt.addEventListener("click", () => {
+    activeGenres.clear();
+    menu.querySelectorAll("input[data-genre]").forEach(cb => cb.checked = false);
+    updateGenreButton();
+    render();
+  });
+  menu.appendChild(allOpt);
+  const divider = document.createElement("div");
+  divider.className = "ms-divider";
+  menu.appendChild(divider);
   genres.forEach(g => {
-    const chip = document.createElement("span");
-    chip.className = "chip";
-    chip.textContent = g;
-    chip.dataset.genre = g;
-    chip.addEventListener("click", () => toggleGenre(g));
-    box.appendChild(chip);
+    const opt = document.createElement("label");
+    opt.className = "ms-option";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.dataset.genre = g;
+    cb.addEventListener("change", () => toggleGenre(g));
+    opt.appendChild(cb);
+    opt.appendChild(document.createTextNode(g));
+    menu.appendChild(opt);
   });
 }
 
@@ -381,8 +417,18 @@ document.getElementById("clearFilters").addEventListener("click", () => {
   document.getElementById("fType").value = "";
   document.getElementById("fPlatform").value = "";
   activeGenres.clear();
-  document.querySelectorAll("#fGenres .chip").forEach(c => c.classList.remove("active"));
+  document.querySelectorAll("#fGenreMenu input[data-genre]").forEach(cb => cb.checked = false);
+  updateGenreButton();
   render();
+});
+document.getElementById("fGenreBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  document.getElementById("fGenreMenu").hidden = !document.getElementById("fGenreMenu").hidden;
+});
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("genreSelect").contains(e.target)) {
+    document.getElementById("fGenreMenu").hidden = true;
+  }
 });
 document.getElementById("pickForMe").addEventListener("click", () => {
   if (!currentRows.length) return;
