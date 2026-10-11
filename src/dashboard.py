@@ -14,7 +14,7 @@ from datetime import date
 
 import pandas as pd
 
-from src.config import CATALOG_SCORED_CSV, DOCS, OUTPUTS, SCORED_CSV
+from src.config import CATALOG_SCORED_CSV, DOCS, METRICS_CSV, OUTPUTS, SCORED_CSV
 
 DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
 
@@ -44,6 +44,19 @@ TEMPLATE = """<!doctype html>
     padding: 16px; margin-bottom: 20px; }}
   .bar {{ fill: var(--accent); }}
   .bar-label {{ fill: var(--muted); font-size: 11px; }}
+  .traj-line {{ fill: none; stroke: var(--accent); stroke-width: 2; }}
+  .traj-dot {{ fill: var(--accent); }}
+  .traj-head {{ font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; color: var(--muted); margin: 0 0 10px; }}
+  .traj-grid {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }}
+  .chart-card {{ flex: 1; min-width: 260px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; }}
+  .traj-title {{ font-size: 12px; color: var(--muted); margin-bottom: 8px; }}
+  .traj-single {{ display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }}
+  .traj-value {{ font-size: 28px; font-weight: 700; }}
+  .traj-sub {{ font-size: 12px; color: var(--muted); }}
+  .traj-hint {{ font-size: 11px; color: var(--muted); margin-top: 10px; }}
+  .traj-empty {{ font-size: 13px; color: var(--muted); }}
   .controls {{ position: sticky; top: 0; z-index: 5; background: var(--card);
     border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 14px;
     margin: 0 0 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); }}
@@ -87,6 +100,7 @@ TEMPLATE = """<!doctype html>
   .btn-pick:hover {{ opacity: 0.9; }}
   tr.picked td {{ background: #eaf2fb; }}
   @media (max-width: 640px) {{
+    .controls {{ position: static; }}
     .filter-bar {{ flex-direction: column; align-items: stretch; }}
     .filter-group select, .ms-toggle {{ width: 100%; min-width: 0; }}
     .ms-menu {{ left: 0; right: 0; min-width: 0; }}
@@ -180,6 +194,12 @@ TEMPLATE = """<!doctype html>
     </div>
 
     <div id="chart"></div>
+
+    <div class="traj-head">Evoluci&oacute;n del modelo</div>
+    <div class="traj-grid">
+      <div class="chart-card"><div id="chartMae"></div></div>
+      <div class="chart-card"><div id="chartAuc"></div></div>
+    </div>
   </div>
 
   <div id="panel-tabla" class="panel">
@@ -245,6 +265,7 @@ TEMPLATE = """<!doctype html>
 
 <script>
 const DATA = {data_json};
+const METRICS = {metrics_json};
 let sortKey = "pred_rating", sortAsc = false;
 let currentRows = [];
 const activeGenres = new Set();
@@ -450,6 +471,47 @@ function drawChart(rows) {{
   document.getElementById("chart").innerHTML = svg;
 }}
 
+function drawTrajectoryChart(containerId, points, opts) {{
+  const el = document.getElementById(containerId);
+  if (!points.length) {{
+    el.innerHTML = `<div class="traj-title">${{opts.title}}</div>
+      <div class="traj-empty">A&uacute;n no hay historial de entrenamientos.</div>`;
+    return;
+  }}
+  if (points.length === 1) {{
+    const p = points[0];
+    el.innerHTML = `
+      <div class="traj-title">${{opts.title}}</div>
+      <div class="traj-single">
+        <span class="traj-value">${{p.value.toFixed(opts.decimals)}}</span>
+        <span class="traj-sub">con ${{p.n_train}} ratings &middot; ${{p.date}}</span>
+      </div>
+      <div class="traj-hint">El gr&aacute;fico de evoluci&oacute;n aparece a partir del
+        segundo entrenamiento con un tama&ntilde;o de dataset distinto.</div>`;
+    return;
+  }}
+  const W = 320, H = 150, pad = 30;
+  const xs = points.map(p => p.n_train), ys = points.map(p => p.value);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  let yMin = Math.min(...ys), yMax = Math.max(...ys);
+  if (yMin === yMax) {{ yMin -= 0.05; yMax += 0.05; }}
+  const yPad = (yMax - yMin) * 0.2;
+  const xScale = n => xMax === xMin ? W / 2 : pad + (W - pad * 2) * (n - xMin) / (xMax - xMin);
+  const yScale = v => H - pad - (H - pad * 2) * (v - (yMin - yPad)) / ((yMax + yPad) - (yMin - yPad));
+  const coords = points.map(p => [xScale(p.n_train), yScale(p.value)]);
+  const path = coords.map((c, i) => `${{i === 0 ? "M" : "L"}}${{c[0].toFixed(1)}},${{c[1].toFixed(1)}}`).join(" ");
+  let svg = `<svg viewBox="0 0 ${{W}} ${{H}}" width="100%" height="${{H}}">`;
+  svg += `<path d="${{path}}" class="traj-line"/>`;
+  coords.forEach(([x, y], i) => {{
+    svg += `<circle cx="${{x}}" cy="${{y}}" r="3.5" class="traj-dot"/>`;
+    svg += `<text class="bar-label" x="${{x}}" y="${{y - 8}}" text-anchor="middle">${{points[i].value.toFixed(opts.decimals)}}</text>`;
+  }});
+  svg += `<text class="bar-label" x="${{pad}}" y="${{H - 8}}" text-anchor="start">${{xMin}}</text>`;
+  svg += `<text class="bar-label" x="${{W - pad}}" y="${{H - 8}}" text-anchor="end">${{xMax}} ratings</text>`;
+  svg += `</svg>`;
+  el.innerHTML = `<div class="traj-title">${{opts.title}}</div>${{svg}}`;
+}}
+
 function initFilters() {{
   const types = [...new Set(DATA.map(r => r["Title Type"]).filter(Boolean))].sort();
   const sel = document.getElementById("fType");
@@ -573,6 +635,12 @@ document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click
 
 initFilters();
 render();
+drawTrajectoryChart("chartMae",
+  METRICS.map(r => ({{n_train: r.n_train, value: r.cv_mae_rating, date: r.date}})),
+  {{title: "MAE &mdash; error promedio (menor es mejor)", decimals: 2}});
+drawTrajectoryChart("chartAuc",
+  METRICS.map(r => ({{n_train: r.n_train, value: r.cv_roc_auc_like, date: r.date}})),
+  {{title: "ROC AUC &mdash; &iquest;te va a gustar? (mayor es mejor)", decimals: 3}});
 </script>
 </body>
 </html>
@@ -592,6 +660,8 @@ def build_html() -> None:
         cat["in_watchlist"] = False
     combined = pd.concat([df, cat], ignore_index=True) if not cat.empty else df
 
+    hist = pd.read_csv(METRICS_CSV) if METRICS_CSV.exists() else pd.DataFrame()
+
     html = TEMPLATE.format(
         generated=date.today().isoformat(),
         n=len(df),
@@ -600,6 +670,8 @@ def build_html() -> None:
         n_ge7=int((df["pred_rating"] >= 7).sum()),
         n_lt5=int((df["pred_rating"] < 5).sum()),
         data_json=json.dumps(json.loads(combined.to_json(orient="records")), ensure_ascii=False),
+        metrics_json=json.dumps(json.loads(hist.to_json(orient="records")), ensure_ascii=False)
+        if not hist.empty else "[]",
     )
     for dest in DESTS:
         dest.parent.mkdir(parents=True, exist_ok=True)
