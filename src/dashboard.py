@@ -51,11 +51,16 @@ TEMPLATE = """<!doctype html>
   .filters {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }}
   .filters select {{ padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
     font-size: 14px; background: var(--card); color: var(--ink); }}
-  .chips {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+  .chips {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }}
   .chip {{ display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px;
     border: 1px solid var(--border); background: var(--card); color: var(--muted);
     cursor: pointer; user-select: none; }}
   .chip.active {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
+  .chip.mini {{ padding: 2px 7px; font-size: 11px; margin: 1px 3px 1px 0; }}
+  .btn-pick {{ padding: 7px 14px; border-radius: 8px; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; font-size: 14px; cursor: pointer; }}
+  .btn-pick:hover {{ opacity: 0.9; }}
+  tr.picked td {{ background: #eaf2fb; }}
   @media (max-width: 640px) {{
     body {{ padding: 12px; }}
     h1 {{ font-size: 18px; }}
@@ -106,8 +111,10 @@ TEMPLATE = """<!doctype html>
     <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
     <div class="filters">
       <select id="fType"><option value="">Todos los tipos</option></select>
-      <div id="fGenres" class="chips"></div>
+      <select id="fPlatform"><option value="">Todas las plataformas</option></select>
+      <button type="button" id="pickForMe" class="btn-pick">Elegí por mí</button>
     </div>
+    <div id="fGenres" class="chips"></div>
   </div>
   <div class="tablewrap"><table id="t"><thead><tr>
     <th class="nosort">Poster</th>
@@ -131,7 +138,16 @@ TEMPLATE = """<!doctype html>
 <script>
 const DATA = {data_json};
 let sortKey = "pred_rating", sortAsc = false;
+let currentRows = [];
 const activeGenres = new Set();
+
+function toggleGenre(g) {{
+  if (activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
+  document.querySelectorAll("#fGenres .chip").forEach(c => {{
+    c.classList.toggle("active", activeGenres.has(c.dataset.genre));
+  }});
+  render();
+}}
 
 function colorFor(v) {{
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
@@ -160,14 +176,33 @@ function providerPills(r) {{
   return list.map(p => `<span class="provider-pill">${{p}}</span>`).join("");
 }}
 
+function genreChips(r) {{
+  const list = (r.Genres || "").split(", ").filter(Boolean);
+  return list.map(g => `<span class="chip mini${{activeGenres.has(g) ? " active" : ""}}"
+    data-genre="${{g}}">${{g}}</span>`).join("");
+}}
+
+function pickWeighted(rows) {{
+  const weights = rows.map(r => Math.max(0.01, r.pred_rating) ** 2);
+  const total = weights.reduce((a, b) => a + b, 0);
+  let x = Math.random() * total;
+  for (let i = 0; i < rows.length; i++) {{
+    x -= weights[i];
+    if (x <= 0) return rows[i];
+  }}
+  return rows[rows.length - 1];
+}}
+
 function render() {{
   const q = document.getElementById("q").value.trim().toLowerCase();
   const typeSel = document.getElementById("fType").value;
+  const platformSel = document.getElementById("fPlatform").value;
   let rows = DATA.filter(r => !q
     || r.Title.toLowerCase().includes(q)
     || (r.Genres || "").toLowerCase().includes(q)
     || (r.Directors || "").toLowerCase().includes(q));
   if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
+  if (platformSel) rows = rows.filter(r => (r.providers_flatrate || "").split("|").includes(platformSel));
   if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
 
   rows.sort((a, b) => {{
@@ -176,9 +211,10 @@ function render() {{
     return (x < y ? -1 : x > y ? 1 : 0) * (sortAsc ? 1 : -1);
   }});
 
+  currentRows = rows;
   const tb = document.querySelector("#t tbody");
   tb.innerHTML = rows.map(r => `
-    <tr>
+    <tr data-key="${{r.Title}}|${{r.Year}}">
       <td>${{posterCell(r)}}</td>
       <td><a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a></td>
       <td class="num">${{r.Year ?? ""}}</td>
@@ -188,7 +224,7 @@ function render() {{
       <td class="genres">${{durationLabel(r)}}</td>
       <td class="num"><span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span></td>
       <td class="num">${{(r.p_like * 100).toFixed(0)}}%</td>
-      <td class="genres">${{r.Genres ?? ""}}</td>
+      <td>${{genreChips(r)}}</td>
       <td>${{providerPills(r)}}</td>
     </tr>`).join("");
 
@@ -229,17 +265,22 @@ function initFilters() {{
     sel.appendChild(opt);
   }});
 
+  const platforms = [...new Set(DATA.flatMap(r => (r.providers_flatrate || "").split("|").filter(Boolean)))].sort();
+  const psel = document.getElementById("fPlatform");
+  platforms.forEach(p => {{
+    const opt = document.createElement("option");
+    opt.value = p; opt.textContent = p;
+    psel.appendChild(opt);
+  }});
+
   const genres = [...new Set(DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
   const box = document.getElementById("fGenres");
   genres.forEach(g => {{
     const chip = document.createElement("span");
     chip.className = "chip";
     chip.textContent = g;
-    chip.addEventListener("click", () => {{
-      chip.classList.toggle("active");
-      if (activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
-      render();
-    }});
+    chip.dataset.genre = g;
+    chip.addEventListener("click", () => toggleGenre(g));
     box.appendChild(chip);
   }});
 }}
@@ -252,6 +293,21 @@ document.querySelectorAll("#t th[data-k]").forEach(th => th.addEventListener("cl
 }}));
 document.getElementById("q").addEventListener("input", render);
 document.getElementById("fType").addEventListener("change", render);
+document.getElementById("fPlatform").addEventListener("change", render);
+document.querySelector("#t tbody").addEventListener("click", (e) => {{
+  const chip = e.target.closest(".chip[data-genre]");
+  if (chip) toggleGenre(chip.dataset.genre);
+}});
+document.getElementById("pickForMe").addEventListener("click", () => {{
+  if (!currentRows.length) return;
+  const pick = pickWeighted(currentRows);
+  const row = document.querySelector(`#t tbody tr[data-key="${{CSS.escape(pick.Title + "|" + pick.Year)}}"]`);
+  if (row) {{
+    row.scrollIntoView({{behavior: "smooth", block: "center"}});
+    row.classList.add("picked");
+    setTimeout(() => row.classList.remove("picked"), 2500);
+  }}
+}});
 
 initFilters();
 render();
