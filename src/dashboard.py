@@ -172,8 +172,11 @@ TEMPLATE = """<!doctype html>
           <select id="fType"><option value="">Todos</option></select>
         </div>
         <div class="filter-group">
-          <label for="fPlatform">Plataforma</label>
-          <select id="fPlatform"><option value="">Todas</option></select>
+          <label id="fPlatformLabel" for="fPlatformBtn">Plataforma</label>
+          <div class="multiselect" id="platformSelect">
+            <button type="button" id="fPlatformBtn" class="ms-toggle">Todas</button>
+            <div id="fPlatformMenu" class="ms-menu" hidden></div>
+          </div>
         </div>
         <div class="filter-group">
           <label id="fGenreLabel" for="fGenreBtn">G&eacute;nero</label>
@@ -217,6 +220,7 @@ const DATA = {data_json};
 let sortKey = "pred_rating", sortAsc = false;
 let currentRows = [];
 const activeGenres = new Set();
+const activePlatforms = new Set();
 
 function toggleGenre(g) {{
   if (activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
@@ -230,6 +234,20 @@ function updateGenreButton() {{
   const n = activeGenres.size;
   document.getElementById("fGenreBtn").textContent =
     n === 0 ? "Todos" : n === 1 ? [...activeGenres][0] : `${{n}} géneros`;
+}}
+
+function togglePlatform(p) {{
+  if (activePlatforms.has(p)) activePlatforms.delete(p); else activePlatforms.add(p);
+  const cb = document.querySelector(`#fPlatformMenu input[data-platform="${{CSS.escape(p)}}"]`);
+  if (cb) cb.checked = activePlatforms.has(p);
+  updatePlatformButton();
+  render();
+}}
+
+function updatePlatformButton() {{
+  const n = activePlatforms.size;
+  document.getElementById("fPlatformBtn").textContent =
+    n === 0 ? "Todas" : n === 1 ? [...activePlatforms][0] : `${{n}} plataformas`;
 }}
 
 function colorFor(v) {{
@@ -310,17 +328,16 @@ function renderReco(rows) {{
 function render() {{
   const q = document.getElementById("q").value.trim().toLowerCase();
   const typeSel = document.getElementById("fType").value;
-  const platformSel = document.getElementById("fPlatform").value;
   let rows = DATA.filter(r => !q
     || r.Title.toLowerCase().includes(q)
     || (r.Genres || "").toLowerCase().includes(q)
     || (r.Directors || "").toLowerCase().includes(q));
   if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
-  if (platformSel) rows = rows.filter(r => (r.providers_flatrate || "").split("|").includes(platformSel));
+  if (activePlatforms.size) rows = rows.filter(r => (r.providers_flatrate || "").split("|").some(p => activePlatforms.has(p)));
   if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
 
   document.getElementById("clearFilters").hidden =
-    !(q || typeSel || platformSel || activeGenres.size);
+    !(q || typeSel || activePlatforms.size || activeGenres.size);
 
   rows.sort((a, b) => {{
     let x = a[sortKey], y = b[sortKey];
@@ -384,11 +401,30 @@ function initFilters() {{
   }});
 
   const platforms = [...new Set(DATA.flatMap(r => (r.providers_flatrate || "").split("|").filter(Boolean)))].sort();
-  const psel = document.getElementById("fPlatform");
+  const pmenu = document.getElementById("fPlatformMenu");
+  const pAllOpt = document.createElement("div");
+  pAllOpt.className = "ms-option ms-all";
+  pAllOpt.textContent = "Todas";
+  pAllOpt.addEventListener("click", () => {{
+    activePlatforms.clear();
+    pmenu.querySelectorAll("input[data-platform]").forEach(cb => cb.checked = false);
+    updatePlatformButton();
+    render();
+  }});
+  pmenu.appendChild(pAllOpt);
+  const pDivider = document.createElement("div");
+  pDivider.className = "ms-divider";
+  pmenu.appendChild(pDivider);
   platforms.forEach(p => {{
-    const opt = document.createElement("option");
-    opt.value = p; opt.textContent = p;
-    psel.appendChild(opt);
+    const opt = document.createElement("label");
+    opt.className = "ms-option";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.dataset.platform = p;
+    cb.addEventListener("change", () => togglePlatform(p));
+    opt.appendChild(cb);
+    opt.appendChild(document.createTextNode(p));
+    pmenu.appendChild(opt);
   }});
 
   const genres = [...new Set(DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
@@ -427,7 +463,6 @@ document.querySelectorAll("#t th[data-k]").forEach(th => th.addEventListener("cl
 }}));
 document.getElementById("q").addEventListener("input", render);
 document.getElementById("fType").addEventListener("change", render);
-document.getElementById("fPlatform").addEventListener("change", render);
 document.querySelector("#t tbody").addEventListener("click", (e) => {{
   const chip = e.target.closest(".chip[data-genre]");
   if (chip) toggleGenre(chip.dataset.genre);
@@ -435,7 +470,9 @@ document.querySelector("#t tbody").addEventListener("click", (e) => {{
 document.getElementById("clearFilters").addEventListener("click", () => {{
   document.getElementById("q").value = "";
   document.getElementById("fType").value = "";
-  document.getElementById("fPlatform").value = "";
+  activePlatforms.clear();
+  document.querySelectorAll("#fPlatformMenu input[data-platform]").forEach(cb => cb.checked = false);
+  updatePlatformButton();
   activeGenres.clear();
   document.querySelectorAll("#fGenreMenu input[data-genre]").forEach(cb => cb.checked = false);
   updateGenreButton();
@@ -445,9 +482,16 @@ document.getElementById("fGenreBtn").addEventListener("click", (e) => {{
   e.stopPropagation();
   document.getElementById("fGenreMenu").hidden = !document.getElementById("fGenreMenu").hidden;
 }});
+document.getElementById("fPlatformBtn").addEventListener("click", (e) => {{
+  e.stopPropagation();
+  document.getElementById("fPlatformMenu").hidden = !document.getElementById("fPlatformMenu").hidden;
+}});
 document.addEventListener("click", (e) => {{
   if (!document.getElementById("genreSelect").contains(e.target)) {{
     document.getElementById("fGenreMenu").hidden = true;
+  }}
+  if (!document.getElementById("platformSelect").contains(e.target)) {{
+    document.getElementById("fPlatformMenu").hidden = true;
   }}
 }});
 document.getElementById("pickForMe").addEventListener("click", () => {{
