@@ -67,6 +67,18 @@
     #chart { padding: 10px; }
     .card { min-width: 46%; flex: 1; }
   }
+  .reco { margin: 0 0 16px; }
+  .reco h2 { font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; color: var(--muted); margin: 0 0 10px; }
+  .reco-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .reco-card { flex: 0 0 112px; cursor: pointer; }
+  .reco-poster { width: 112px; height: 168px; object-fit: cover; border-radius: 8px;
+    display: block; background: var(--border); }
+  .reco-card .reco-title { font-size: 12px; font-weight: 600; margin-top: 6px;
+    line-height: 1.3; }
+  .reco-card .reco-meta { font-size: 11px; color: var(--muted); margin-top: 4px;
+    display: flex; align-items: center; gap: 6px; }
+  .reco-empty { color: var(--muted); font-size: 13px; }
   .tablewrap { overflow: auto; max-height: 70vh; border: 1px solid var(--border);
     border-radius: 10px; }
   table { width: 100%; border-collapse: collapse; background: var(--card);
@@ -140,6 +152,12 @@
         <div id="fGenres" class="chips"></div>
       </div>
     </div>
+
+    <div class="reco">
+      <h2>Te recomendamos</h2>
+      <div id="recoRow" class="reco-row"></div>
+    </div>
+
     <div class="tablewrap"><table id="t"><thead><tr>
       <th class="nosort">Poster</th>
       <th data-k="Title">T&iacute;tulo</th>
@@ -218,6 +236,37 @@ function pickWeighted(rows) {
   return rows[rows.length - 1];
 }
 
+function highlightRow(key) {
+  const row = document.querySelector(`#t tbody tr[data-key="${CSS.escape(key)}"]`);
+  if (row) {
+    row.scrollIntoView({behavior: "smooth", block: "center"});
+    row.classList.add("picked");
+    setTimeout(() => row.classList.remove("picked"), 2500);
+  }
+}
+
+const RECO_N = 8;
+
+function renderReco(rows) {
+  const box = document.getElementById("recoRow");
+  if (!rows.length) {
+    box.innerHTML = '<span class="reco-empty">Ning&uacute;n t&iacute;tulo cumple los filtros activos.</span>';
+    return;
+  }
+  const top = [...rows].sort((a, b) => b.pred_rating - a.pred_rating).slice(0, RECO_N);
+  box.innerHTML = top.map(r => `
+    <div class="reco-card" data-key="${r.Title}|${r.Year}">
+      ${r.poster_path
+        ? `<img class="reco-poster" src="https://image.tmdb.org/t/p/w154${r.poster_path}" alt="" loading="lazy">`
+        : `<div class="reco-poster"></div>`}
+      <div class="reco-title">${r.Title}</div>
+      <div class="reco-meta">
+        <span class="pill" style="background:${colorFor(r.pred_rating)}">${r.pred_rating.toFixed(1)}</span>
+        ${r.Year ?? ""}
+      </div>
+    </div>`).join("");
+}
+
 function render() {
   const q = document.getElementById("q").value.trim().toLowerCase();
   const typeSel = document.getElementById("fType").value;
@@ -261,6 +310,7 @@ function render() {
     if (th.dataset.k === sortKey) th.classList.add(sortAsc ? "asc" : "sorted");
   });
 
+  renderReco(rows);
   drawChart(rows);
 }
 
@@ -337,12 +387,11 @@ document.getElementById("clearFilters").addEventListener("click", () => {
 document.getElementById("pickForMe").addEventListener("click", () => {
   if (!currentRows.length) return;
   const pick = pickWeighted(currentRows);
-  const row = document.querySelector(`#t tbody tr[data-key="${CSS.escape(pick.Title + "|" + pick.Year)}"]`);
-  if (row) {
-    row.scrollIntoView({behavior: "smooth", block: "center"});
-    row.classList.add("picked");
-    setTimeout(() => row.classList.remove("picked"), 2500);
-  }
+  highlightRow(pick.Title + "|" + pick.Year);
+});
+document.getElementById("recoRow").addEventListener("click", (e) => {
+  const card = e.target.closest(".reco-card");
+  if (card) highlightRow(card.dataset.key);
 });
 
 document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
