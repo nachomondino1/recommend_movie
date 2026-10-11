@@ -44,20 +44,32 @@ TEMPLATE = """<!doctype html>
     padding: 16px; margin-bottom: 20px; }}
   .bar {{ fill: var(--accent); }}
   .bar-label {{ fill: var(--muted); font-size: 11px; }}
+  .controls {{ position: sticky; top: 0; z-index: 5; background: var(--bg);
+    padding: 8px 0 12px; margin-top: -8px; }}
   input[type=search] {{ width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 16px; margin-bottom: 12px; background: var(--card);
-    position: sticky; top: 8px; z-index: 5; }}
+    border-radius: 8px; font-size: 16px; background: var(--card); }}
+  .filters {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }}
+  .filters select {{ padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; background: var(--card); color: var(--ink); }}
+  .chips {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+  .chip {{ display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px;
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    cursor: pointer; user-select: none; }}
+  .chip.active {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
   @media (max-width: 640px) {{
     body {{ padding: 12px; }}
     h1 {{ font-size: 18px; }}
     #chart {{ padding: 10px; }}
     .card {{ min-width: 46%; flex: 1; }}
   }}
-  .tablewrap {{ overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }}
+  .tablewrap {{ overflow: auto; max-height: 70vh; border: 1px solid var(--border);
+    border-radius: 10px; }}
   table {{ width: 100%; border-collapse: collapse; background: var(--card);
     min-width: 720px; }}
   th, td {{ padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }}
-  th {{ background: #f0f0ec; cursor: pointer; user-select: none; white-space: nowrap; }}
+  th {{ background: #f0f0ec; cursor: pointer; user-select: none; white-space: nowrap;
+    position: sticky; top: 0; z-index: 4; }}
+  th.nosort {{ cursor: default; }}
   th.sorted::after {{ content: " \\25be"; }}
   th.asc::after {{ content: " \\25b4"; }}
   td.num, th.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
@@ -65,6 +77,10 @@ TEMPLATE = """<!doctype html>
   .pill {{ display: inline-block; padding: 2px 8px; border-radius: 999px; font-weight: 600;
     color: #fff; font-variant-numeric: tabular-nums; }}
   .genres {{ color: var(--muted); font-size: 12px; }}
+  .poster {{ width: 40px; height: 60px; object-fit: cover; border-radius: 4px; display: block;
+    background: var(--border); }}
+  a.title-link {{ color: var(--ink); text-decoration: none; }}
+  a.title-link:hover {{ text-decoration: underline; }}
   .foot {{ color: var(--muted); font-size: 12px; margin-top: 16px; }}
 </style>
 </head>
@@ -83,13 +99,21 @@ TEMPLATE = """<!doctype html>
 
   <div id="chart"></div>
 
-  <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
+  <div class="controls">
+    <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
+    <div class="filters">
+      <select id="fType"><option value="">Todos los tipos</option></select>
+      <div id="fGenres" class="chips"></div>
+    </div>
+  </div>
   <div class="tablewrap"><table id="t"><thead><tr>
+    <th class="nosort">Poster</th>
     <th data-k="Title">T&iacute;tulo</th>
     <th data-k="Year" class="num">A&ntilde;o</th>
     <th data-k="Title Type">Tipo</th>
     <th data-k="IMDb Rating" class="num">IMDb</th>
     <th data-k="Directors">Director</th>
+    <th class="nosort">Duraci&oacute;n</th>
     <th data-k="pred_rating" class="num">Nota predicha</th>
     <th data-k="p_like" class="num">P(&ge;7)</th>
     <th data-k="Genres">G&eacute;neros</th>
@@ -103,6 +127,7 @@ TEMPLATE = """<!doctype html>
 <script>
 const DATA = {data_json};
 let sortKey = "pred_rating", sortAsc = false;
+const activeGenres = new Set();
 
 function colorFor(v) {{
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
@@ -110,12 +135,30 @@ function colorFor(v) {{
   return `hsl(${{hue}}, 62%, 42%)`;
 }}
 
+function posterCell(r) {{
+  if (!r.poster_path) return "";
+  return `<img class="poster" src="https://image.tmdb.org/t/p/w92${{r.poster_path}}" alt="" loading="lazy">`;
+}}
+
+function durationLabel(r) {{
+  const isTV = (r["Title Type"] || "").toLowerCase().includes("tv");
+  if (isTV && r.n_seasons) {{
+    const eps = r.n_episodes ? ` &middot; ${{r.n_episodes}} ep` : "";
+    return `${{r.n_seasons}} temp${{eps}}`;
+  }}
+  if (r.tmdb_runtime) return `${{Math.round(r.tmdb_runtime)}} min`;
+  return "";
+}}
+
 function render() {{
   const q = document.getElementById("q").value.trim().toLowerCase();
+  const typeSel = document.getElementById("fType").value;
   let rows = DATA.filter(r => !q
     || r.Title.toLowerCase().includes(q)
     || (r.Genres || "").toLowerCase().includes(q)
     || (r.Directors || "").toLowerCase().includes(q));
+  if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
+  if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
 
   rows.sort((a, b) => {{
     let x = a[sortKey], y = b[sortKey];
@@ -126,17 +169,19 @@ function render() {{
   const tb = document.querySelector("#t tbody");
   tb.innerHTML = rows.map(r => `
     <tr>
-      <td>${{r.Title}}</td>
+      <td>${{posterCell(r)}}</td>
+      <td><a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a></td>
       <td class="num">${{r.Year ?? ""}}</td>
       <td>${{r["Title Type"]}}</td>
-      <td class="num">${{r["IMDb Rating"] ?? ""}}</td>
+      <td class="num" title="${{r["Num Votes"] ? r["Num Votes"].toLocaleString("es-AR") + " votos" : ""}}">${{r["IMDb Rating"] ?? ""}}</td>
       <td class="genres">${{r.Directors ?? ""}}</td>
+      <td class="genres">${{durationLabel(r)}}</td>
       <td class="num"><span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span></td>
       <td class="num">${{(r.p_like * 100).toFixed(0)}}%</td>
       <td class="genres">${{r.Genres ?? ""}}</td>
     </tr>`).join("");
 
-  document.querySelectorAll("#t th").forEach(th => {{
+  document.querySelectorAll("#t th[data-k]").forEach(th => {{
     th.classList.remove("sorted", "asc");
     if (th.dataset.k === sortKey) th.classList.add(sortAsc ? "asc" : "sorted");
   }});
@@ -164,13 +209,40 @@ function drawChart(rows) {{
   document.getElementById("chart").innerHTML = svg;
 }}
 
-document.querySelectorAll("#t th").forEach(th => th.addEventListener("click", () => {{
+function initFilters() {{
+  const types = [...new Set(DATA.map(r => r["Title Type"]).filter(Boolean))].sort();
+  const sel = document.getElementById("fType");
+  types.forEach(t => {{
+    const opt = document.createElement("option");
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  }});
+
+  const genres = [...new Set(DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
+  const box = document.getElementById("fGenres");
+  genres.forEach(g => {{
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = g;
+    chip.addEventListener("click", () => {{
+      chip.classList.toggle("active");
+      if (activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
+      render();
+    }});
+    box.appendChild(chip);
+  }});
+}}
+
+document.querySelectorAll("#t th[data-k]").forEach(th => th.addEventListener("click", () => {{
   const k = th.dataset.k;
   if (k === sortKey) sortAsc = !sortAsc;
   else {{ sortKey = k; sortAsc = false; }}
   render();
 }}));
 document.getElementById("q").addEventListener("input", render);
+document.getElementById("fType").addEventListener("change", render);
+
+initFilters();
 render();
 </script>
 </body>

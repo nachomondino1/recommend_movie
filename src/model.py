@@ -27,6 +27,7 @@ from sklearn.pipeline import Pipeline
 
 from src.config import (METRICS_CSV, MODELS, OUTPUTS, RATINGS_CSV, SCORED_CSV,
                         WATCHLIST_CSV)
+from src.data import tmdb_table
 from src.features import build, feature_groups
 from src.pipeline import (LIKE_THRESHOLD, OverviewEmbedder, build_classifier,  # noqa: F401
                           build_regressor, make_preprocessor)
@@ -112,10 +113,13 @@ def score_watchlist() -> pd.DataFrame:
     wl["pred_rating"] = (X_wl["IMDb Rating"].to_numpy() + reg.predict(X_wl)).clip(1, 10)
     wl["p_like"] = clf.predict_proba(X_wl)[:, 1]
     wl["Directors"] = wl["Directors"].fillna("")
+    wl = wl.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes"]],
+                  left_on="Const", right_on="imdb_id", how="left")
     if n_drop:
         print(f"({n_drop} títulos de la watchlist ya estaban puntuados; se omiten)")
 
-    cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
+    cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
+            "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
             "pred_rating", "p_like"]
     out = (wl[cols].sort_values("pred_rating", ascending=False)
            .round({"pred_rating": 1, "p_like": 2}).reset_index(drop=True))

@@ -145,6 +145,7 @@ def parse_detail(detail: dict) -> dict:
         "tmdb_vote_average": detail.get("vote_average"),
         "tmdb_vote_count": detail.get("vote_count"),
         "tmdb_popularity": detail.get("popularity"),
+        "poster_path": detail.get("poster_path"),
         "budget": detail.get("budget"),
         "revenue": detail.get("revenue"),
         "n_seasons": detail.get("number_of_seasons"),
