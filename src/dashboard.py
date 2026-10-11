@@ -49,6 +49,7 @@ TEMPLATE = """<!doctype html>
     margin: 0 0 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); }}
   input[type=search] {{ width: 100%; padding: 10px 12px; border: 1px solid var(--border);
     border-radius: 8px; font-size: 16px; background: var(--bg); }}
+  .result-count {{ color: var(--muted); font-size: 12px; margin-top: 8px; }}
   .filter-bar {{ display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
     margin-top: 12px; }}
   .filter-group {{ display: flex; flex-direction: column; gap: 4px; }}
@@ -183,6 +184,7 @@ TEMPLATE = """<!doctype html>
   <div id="panel-tabla" class="panel">
     <div class="controls">
       <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
+      <div id="resultCount" class="result-count"></div>
       <div class="filter-bar">
         <div class="filter-group">
           <label for="fType">Tipo</label>
@@ -377,6 +379,9 @@ function render() {{
 
   document.getElementById("clearFilters").hidden =
     !(q || typeSel || sourceSel || activePlatforms.size || activeGenres.size);
+  document.getElementById("resultCount").innerHTML = rows.length === DATA.length
+    ? `${{rows.length}} t&iacute;tulos`
+    : `${{rows.length}} de ${{DATA.length}} t&iacute;tulos`;
 
   rows.sort((a, b) => {{
     let x = a[sortKey], y = b[sortKey];
