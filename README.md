@@ -22,8 +22,9 @@ make publish     # sube el dashboard a GitHub Pages
 | `make setup` | Crear venv e instalar dependencias (una sola vez). Después completar `TMDB_TOKEN` en `.env`. |
 | `make update` | `src.data` (TMDB) → `src.model` (entrena + guarda + puntúa) → `src.dashboard` (HTML). |
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
+| `make review TITLE="X" TEXT="..."` | Guardar/actualizar tu reseña personal (texto libre) de un título. |
 | `make publish` | `git add docs/ && commit && push` → Pages se redespliega. |
-| `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores. |
+| `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas. |
 | `make explore` | Análisis exploratorio (gráficos en `outputs/`). |
 
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
@@ -34,6 +35,7 @@ en ambos casos es `make update`.
 ```
 data/
   ratings.csv, watchlist.csv     exportaciones de IMDb (versionadas)
+  reviews.csv                     tu reseña personal por título (versionada; make review)
   metrics_history.csv            scores CV por tamaño de dataset (versionado; crece con make update)
   cache/                          TMDB json + tabla (regenerable, git-ignored)
 src/
@@ -41,8 +43,10 @@ src/
   data.py        cargar CSVs + cliente TMDB + enriquecimiento
   features.py    matriz de features (IMDb + TMDB); build() y build_row() (1 título)
   pipeline.py    definición del pipeline (preprocesado + estimadores)
-  model.py       entrenar/guardar, cargar, puntuar watchlist, diagnósticos
+  model.py       entrenar/guardar, cargar, puntuar watchlist, diagnósticos, insight de reseñas
   predict.py     nota predicha para un título por nombre (make predict)
+  curate.py      marcar como vista o "no me interesa" (make watched / make skip)
+  review.py      guardar tu reseña personal de un título (make review)
   dashboard.py   generar el HTML (outputs/ + docs/index.html)
 notebooks/
   exploration.py análisis exploratorio (one-off)

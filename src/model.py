@@ -11,6 +11,8 @@ Pipeline final (ver docs/4_modeling.md):
 
 import argparse
 import json
+import re
+from collections import Counter
 from datetime import datetime, timezone
 
 import joblib
@@ -26,8 +28,8 @@ from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
 from sklearn.pipeline import Pipeline
 
 from src.config import (EXCLUDED_CSV, METRICS_CSV, MODELS, OUTPUTS, RATINGS_CSV,
-                        SCORED_CSV, WATCHLIST_CSV)
-from src.data import tmdb_table
+                        REVIEWED_SCORED_CSV, REVIEWS_CSV, SCORED_CSV, WATCHLIST_CSV)
+from src.data import load_reviews, tmdb_table
 from src.features import build, feature_groups
 from src.pipeline import (LIKE_THRESHOLD, OverviewEmbedder, build_classifier,  # noqa: F401
                           build_regressor, make_preprocessor)
@@ -116,22 +118,59 @@ def score_watchlist() -> pd.DataFrame:
     wl["p_like"] = clf.predict_proba(X_wl)[:, 1]
     wl["Directors"] = wl["Directors"].fillna("")
     wl = wl.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons",
-                                "n_episodes", "providers_flatrate"]],
+                                "n_episodes", "providers_flatrate", "overview"]],
                   left_on="Const", right_on="imdb_id", how="left")
+    reviews = load_reviews()[["Const", "Liked", "Disliked", "Date"]].rename(
+        columns={"Liked": "my_liked", "Disliked": "my_disliked", "Date": "review_date"})
+    wl = wl.merge(reviews, on="Const", how="left")
     if n_drop_rated:
         print(f"({n_drop_rated} títulos de la watchlist ya estaban puntuados; se omiten)")
     if n_drop_excluded:
         print(f"({n_drop_excluded} títulos marcados 'no me interesa'; se omiten)")
 
-    cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
+    cols = ["Const", "Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
             "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
-            "providers_flatrate", "pred_rating", "p_like"]
+            "providers_flatrate", "overview", "my_liked", "my_disliked", "review_date",
+            "pred_rating", "p_like"]
     out = (wl[cols].sort_values("pred_rating", ascending=False)
            .round({"pred_rating": 1, "p_like": 2}).reset_index(drop=True))
     out.to_csv(SCORED_CSV, index=False)
     print(f"\nGuardado: {SCORED_CSV}  ({len(out)} títulos)")
     print("\nTOP 10:")
     print(out.head(10).to_string())
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Títulos ya vistos con reseña (para mostrarlos en el dashboard -- acá no hay
+# nada que predecir, pred_rating/p_like son tu nota real, no una predicción)
+# --------------------------------------------------------------------------- #
+REVIEWED_COLS = ["Const", "Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
+                 "URL", "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
+                 "providers_flatrate", "overview", "my_liked", "my_disliked", "review_date",
+                 "pred_rating", "p_like"]
+
+
+def score_reviewed() -> pd.DataFrame:
+    reviews = load_reviews()
+    if reviews.empty:
+        out = pd.DataFrame(columns=REVIEWED_COLS)
+        out.to_csv(REVIEWED_SCORED_CSV, index=False)
+        return out
+
+    ratings = pd.read_csv(RATINGS_CSV)
+    ratings["Directors"] = ratings["Directors"].fillna("")
+    df = ratings.merge(reviews[["Const", "Liked", "Disliked", "Date"]], on="Const", how="inner")
+    df = df.rename(columns={"Liked": "my_liked", "Disliked": "my_disliked", "Date": "review_date"})
+    df = df.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons",
+                                "n_episodes", "providers_flatrate", "overview"]],
+                  left_on="Const", right_on="imdb_id", how="left")
+    df["pred_rating"] = df["Your Rating"].astype(float)
+    df["p_like"] = (df["Your Rating"] >= LIKE_THRESHOLD).astype(float)
+
+    out = df[REVIEWED_COLS].sort_values("pred_rating", ascending=False).reset_index(drop=True)
+    out.to_csv(REVIEWED_SCORED_CSV, index=False)
+    print(f"Guardado: {REVIEWED_SCORED_CSV}  ({len(out)} títulos reseñados)")
     return out
 
 
@@ -246,6 +285,58 @@ def plot_history() -> None:
     print(f"Gráfico: {OUTPUTS / 'metrics_history.png'}")
 
 
+# Spanish stopwords para el análisis de reseñas -- no exhaustivo, alcanza para
+# filtrar conectores comunes de un texto corto e informal.
+_STOPWORDS = {
+    "de", "la", "que", "el", "en", "y", "a", "los", "del", "se", "las", "por",
+    "un", "para", "con", "no", "una", "su", "al", "lo", "como", "más", "pero",
+    "sus", "le", "ya", "este", "porque", "esta", "entre", "cuando", "muy",
+    "sin", "sobre", "también", "hasta", "hay", "donde", "quien", "desde",
+    "todo", "nos", "durante", "todos", "uno", "les", "esa", "eso", "ese",
+    "ante", "ellos", "esto", "antes", "algunos", "unos", "otro", "otras",
+    "otra", "tanto", "estos", "mucho", "quienes", "nada", "muchos", "cual",
+    "poco", "ella", "estar", "estas", "algunas", "algo", "nosotros", "ellas",
+    "esos", "esas", "estoy", "estás", "está", "estamos", "están", "tiene",
+    "tienen", "hace", "hacer", "había", "soy", "eres", "así", "cada", "vez",
+    "bien", "mal", "creo", "pienso", "capitulos", "capítulos", "personaje",
+    "mucha", "muchas", "cosas", "cosa",
+}
+
+
+def _review_words(text: str) -> list[str]:
+    tokens = re.findall(r"[a-zñáéíóúü]+", str(text).lower())
+    return [t for t in tokens if len(t) >= 4 and t not in _STOPWORDS]
+
+
+def review_insights() -> None:
+    """Analiza data/reviews.csv: qué palabras aparecen más en la parte 'me gustó'
+    vs 'no me gustó', juntando todas tus reseñas. Es un insight para vos -- NO
+    entra como feature del modelo, porque no existe reseña para un título que
+    todavía no viste."""
+    reviews = load_reviews()
+    if reviews.empty:
+        print("\n(sin reseñas todavía -- 'make review TITLE=\"X\" LIKED=\"...\" DISLIKED=\"...\"')")
+        return
+
+    liked = reviews["Liked"].dropna()
+    disliked = reviews["Disliked"].dropna()
+    print(f"\n--- RESEÑAS ({len(reviews)} títulos reseñados; {len(liked)} con sección "
+          f"'me gustó', {len(disliked)} con 'no me gustó') ---")
+
+    liked_words = Counter(w for t in liked for w in _review_words(t))
+    disliked_words = Counter(w for t in disliked for w in _review_words(t))
+    if not liked_words and not disliked_words:
+        print("Todavía no hay suficiente texto en las reseñas para analizar.")
+        return
+
+    print("\nTop palabras en lo que te gustó:")
+    for w, c in liked_words.most_common(10):
+        print(f"  {w:20s} {c}")
+    print("\nTop palabras en lo que NO te gustó:")
+    for w, c in disliked_words.most_common(10):
+        print(f"  {w:20s} {c}")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--eval", action="store_true",
@@ -254,7 +345,9 @@ if __name__ == "__main__":
 
     fit_and_save()
     score_watchlist()
+    score_reviewed()
     if args.eval:
         compare_models()
         learning_curve_report()
         plot_history()
+        review_insights()

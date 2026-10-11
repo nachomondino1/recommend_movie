@@ -1,2 +1,3 @@
 date,n_train,cv_mae_rating,cv_roc_auc_like
 2026-10-11,126,1.26,0.625
+2026-10-11,127,1.233,0.558

@@ -14,7 +14,7 @@ import pandas as pd
 
 from src.config import (CATALOG_CSV, CATALOG_SCORED_CSV, EXCLUDED_CSV, MODELS,
                         RATINGS_CSV, WATCHLIST_CSV)
-from src.data import TMDBClient, imdb_like_fields, parse_detail
+from src.data import TMDBClient, imdb_like_fields, load_reviews, parse_detail
 from src.features import build_rows
 from src.model import load_models
 
@@ -63,9 +63,10 @@ def score_catalog() -> pd.DataFrame:
     CATALOG_SCORED_CSV con las mismas columnas que watchlist_scored.csv."""
     cat = build_catalog()
     if cat.empty:
-        out = cat.reindex(columns=["Title", "Year", "Title Type", "IMDb Rating", "Directors",
-                                   "Genres", "URL", "Num Votes", "poster_path", "tmdb_runtime",
-                                   "n_seasons", "n_episodes", "providers_flatrate",
+        out = cat.reindex(columns=["Const", "Title", "Year", "Title Type", "IMDb Rating",
+                                   "Directors", "Genres", "URL", "Num Votes", "poster_path",
+                                   "tmdb_runtime", "n_seasons", "n_episodes", "providers_flatrate",
+                                   "overview", "my_liked", "my_disliked", "review_date",
                                    "pred_rating", "p_like"])
         out.to_csv(CATALOG_SCORED_CSV, index=False)
         return out
@@ -81,10 +82,16 @@ def score_catalog() -> pd.DataFrame:
     cat["IMDb Rating"] = cat["IMDb Rating"].fillna(cat["tmdb_vote_average"])
     cat["Directors"] = cat["director"].fillna("").str.replace("|", ", ", regex=False)
     cat["URL"] = "https://www.imdb.com/title/" + cat["imdb_id"]
+    cat["Const"] = cat["imdb_id"]
 
-    cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
+    reviews = load_reviews()[["Const", "Liked", "Disliked", "Date"]].rename(
+        columns={"Liked": "my_liked", "Disliked": "my_disliked", "Date": "review_date"})
+    cat = cat.merge(reviews, on="Const", how="left")
+
+    cols = ["Const", "Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
             "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
-            "providers_flatrate", "pred_rating", "p_like"]
+            "providers_flatrate", "overview", "my_liked", "my_disliked", "review_date",
+            "pred_rating", "p_like"]
     out = (cat[cols].sort_values("pred_rating", ascending=False)
            .round({"pred_rating": 1, "p_like": 2}).reset_index(drop=True))
     out.to_csv(CATALOG_SCORED_CSV, index=False)

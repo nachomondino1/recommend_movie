@@ -1,7 +1,7 @@
 # Interfaz del proyecto. Correr `make` para ver los comandos.
 PY := ./venv/bin/python
 
-.PHONY: help setup update eval explore predict watched skip publish
+.PHONY: help setup update eval explore predict watched skip review publish
 
 help:
 	@echo "make setup                        - crear venv e instalar dependencias (una vez)"
@@ -9,7 +9,8 @@ help:
 	@echo "make predict TITLE=\"X\"            - nota predicha para un título por nombre"
 	@echo "make watched TITLE=\"X\" RATING=N   - marcar como vista y puntuada (agrega a data/ratings.csv)"
 	@echo "make skip TITLE=\"X\"               - marcar 'no me interesa' (se saca del dashboard sin puntuar)"
-	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria"
+	@echo "make review TITLE=\"X\" LIKED=\"...\" DISLIKED=\"...\" - guardar tu reseña (qué te gustó / qué no)"
+	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria + reseñas"
 	@echo "make explore                      - análisis exploratorio (gráficos en outputs/)"
 	@echo "make publish                      - subir el dashboard a GitHub Pages (git add docs + commit + push)"
 	@echo
@@ -35,6 +36,9 @@ watched:
 
 skip:
 	@$(PY) -m src.curate skip "$(TITLE)"
+
+review:
+	@$(PY) -m src.review "$(TITLE)" --liked "$(LIKED)" --disliked "$(DISLIKED)"
 
 eval:
 	$(PY) -m src.model --eval

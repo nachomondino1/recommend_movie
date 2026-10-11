@@ -16,7 +16,8 @@ import numpy as np
 import pandas as pd
 import requests
 
-from src.config import RATINGS_CSV, TMDB_CSV, TMDB_DIR, TMDB_TOKEN, WATCHLIST_CSV
+from src.config import (RATINGS_CSV, REVIEWS_CSV, TMDB_CSV, TMDB_DIR, TMDB_TOKEN,
+                        WATCHLIST_CSV)
 
 BASE = "https://api.themoviedb.org/3"
 TOP_CAST = 8
@@ -31,6 +32,13 @@ def load_ratings() -> pd.DataFrame:
 
 def load_watchlist() -> pd.DataFrame:
     return pd.read_csv(WATCHLIST_CSV)
+
+
+def load_reviews() -> pd.DataFrame:
+    """data/reviews.csv (Const, Title, Liked, Disliked, Date) -- vacío si no existe."""
+    if not REVIEWS_CSV.exists():
+        return pd.DataFrame(columns=["Const", "Title", "Liked", "Disliked", "Date"])
+    return pd.read_csv(REVIEWS_CSV)
 
 
 # --------------------------------------------------------------------------- #

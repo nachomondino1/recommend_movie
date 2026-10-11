@@ -14,7 +14,9 @@ from datetime import date
 
 import pandas as pd
 
-from src.config import CATALOG_SCORED_CSV, DOCS, METRICS_CSV, OUTPUTS, SCORED_CSV
+from src.config import (CATALOG_SCORED_CSV, DOCS, OUTPUTS,
+                        REVIEWED_SCORED_CSV, SCORED_CSV)
+from src.taste import build_taste_stats
 
 DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
 
@@ -44,19 +46,23 @@ TEMPLATE = """<!doctype html>
     padding: 16px; margin-bottom: 20px; }}
   .bar {{ fill: var(--accent); }}
   .bar-label {{ fill: var(--muted); font-size: 11px; }}
-  .traj-line {{ fill: none; stroke: var(--accent); stroke-width: 2; }}
-  .traj-dot {{ fill: var(--accent); }}
   .traj-head {{ font-size: 13px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.03em; color: var(--muted); margin: 0 0 10px; }}
   .traj-grid {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }}
   .chart-card {{ flex: 1; min-width: 260px; background: var(--card); border: 1px solid var(--border);
     border-radius: 10px; padding: 16px; }}
   .traj-title {{ font-size: 12px; color: var(--muted); margin-bottom: 8px; }}
-  .traj-single {{ display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }}
-  .traj-value {{ font-size: 28px; font-weight: 700; }}
-  .traj-sub {{ font-size: 12px; color: var(--muted); }}
-  .traj-hint {{ font-size: 11px; color: var(--muted); margin-top: 10px; }}
   .traj-empty {{ font-size: 13px; color: var(--muted); }}
+  .hbar {{ display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }}
+  .hbar-label {{ flex: 0 0 120px; font-size: 13px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; }}
+  .hbar-track {{ flex: 1; background: var(--bg); border-radius: 4px; height: 14px; overflow: hidden; }}
+  .hbar-fill {{ height: 100%; border-radius: 4px; }}
+  .hbar-value {{ flex: 0 0 64px; text-align: right; color: var(--muted); font-size: 12px;
+    font-variant-numeric: tabular-nums; }}
+  .toplist-row {{ display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }}
+  .toplist-info {{ flex: 1; min-width: 0; }}
+  .toplist-info a {{ display: block; font-weight: 600; font-size: 13px; }}
   .controls {{ position: sticky; top: 0; z-index: 5; background: var(--card);
     border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 14px;
     margin: 0 0 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); }}
@@ -176,34 +182,96 @@ TEMPLATE = """<!doctype html>
   .badge-discover {{ display: inline-block; padding: 1px 6px; border-radius: 999px;
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
     background: #fff3cd; color: #8a6400; margin-left: 5px; vertical-align: middle; }}
+  .badge-watched {{ display: inline-block; padding: 1px 6px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
+    background: #e3e3df; color: #5a5a55; margin-left: 5px; vertical-align: middle; }}
+  .title-btn {{ background: none; border: none; padding: 0; margin: 0; font: inherit;
+    color: var(--ink); cursor: pointer; text-align: left; }}
+  .title-btn:hover {{ text-decoration: underline; }}
+  .imdb-link {{ color: var(--muted); font-size: 11px; text-decoration: none; margin-left: 5px; }}
+  .imdb-link:hover {{ text-decoration: underline; }}
+  .modal-overlay {{ position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex;
+    align-items: center; justify-content: center; padding: 16px; z-index: 50; }}
+  .modal-overlay[hidden] {{ display: none; }}
+  .modal-box {{ background: var(--card); border-radius: 12px; max-width: 560px; width: 100%;
+    max-height: 85vh; overflow-y: auto; padding: 20px; position: relative; }}
+  .modal-close {{ position: absolute; top: 8px; right: 10px; background: none; border: none;
+    font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 6px; }}
+  .modal-close:hover {{ color: var(--ink); }}
+  .modal-head {{ display: flex; gap: 14px; margin-bottom: 14px; padding-right: 22px; }}
+  .modal-poster {{ width: 92px; height: 138px; object-fit: cover; border-radius: 6px; flex: none;
+    background: var(--border); }}
+  .modal-head h3 {{ margin: 0 0 4px; font-size: 16px; }}
+  .modal-meta {{ color: var(--muted); font-size: 12px; }}
+  .modal-section-label {{ font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; color: var(--muted); margin-bottom: 4px; }}
+  .modal-overview {{ margin-bottom: 4px; }}
+  .modal-overview p {{ margin: 0 0 10px; white-space: pre-wrap; }}
+  .modal-review {{ margin-bottom: 10px; padding-left: 10px; border-left: 3px solid var(--border); }}
+  .modal-review p {{ margin: 0; white-space: pre-wrap; }}
+  .modal-review-pos {{ border-left-color: #2f9e44; }}
+  .modal-review-neg {{ border-left-color: #e03131; }}
+  .modal-review-empty {{ border-left: none; padding-left: 0; }}
+  .modal-review-empty p {{ color: var(--muted); margin-bottom: 6px; }}
+  .modal-review-empty code {{ display: block; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font-size: 12px; overflow-x: auto; }}
+  .modal-review-date {{ color: var(--muted); font-size: 11px; margin-top: 2px; }}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Watchlist &mdash; notas predichas</h1>
   <div class="sub">Generado el {generated} &middot; {n} t&iacute;tulos en tu watchlist
-    &middot; {n_catalog} para descubrir &middot;
-    modelo: RandomForest sobre el desv&iacute;o vs IMDb (MAE &asymp; 1.26)</div>
+    &middot; {n_catalog} para descubrir &middot; {n_reviewed} rese&ntilde;ados</div>
 
   <div class="tabs">
     <button type="button" class="tab-btn active" data-tab="tabla">Tabla</button>
-    <button type="button" class="tab-btn" data-tab="dashboard">Dashboard</button>
+    <button type="button" class="tab-btn" data-tab="dashboard">Mi gusto</button>
   </div>
 
   <div id="panel-dashboard" class="panel" hidden>
     <div class="cards">
-      <div class="card"><div class="n">{n}</div><div class="l">t&iacute;tulos</div></div>
-      <div class="card"><div class="n">{mean_pred}</div><div class="l">nota predicha media</div></div>
-      <div class="card"><div class="n">{n_ge7}</div><div class="l">con nota predicha &ge; 7</div></div>
-      <div class="card"><div class="n">{n_lt5}</div><div class="l">con nota predicha &lt; 5</div></div>
+      <div class="card"><div class="n">{t_n_rated}</div><div class="l">t&iacute;tulos puntuados</div></div>
+      <div class="card"><div class="n">{t_movies_series}</div><div class="l">pel&iacute;culas / series</div></div>
+      <div class="card"><div class="n">{t_mean_rating}</div><div class="l">nota media que pon&eacute;s</div></div>
+      <div class="card"><div class="n">{t_deviation}</div><div class="l">vs. nota de IMDb (promedio)</div></div>
     </div>
 
-    <div id="chart"></div>
+    <div id="chart">
+      <div class="traj-title">distribuci&oacute;n de tus notas (1 a 10)</div>
+      <div id="chartSvg"></div>
+    </div>
 
-    <div class="traj-head">Evoluci&oacute;n del modelo</div>
+    <div class="traj-head">Tu patr&oacute;n de gusto</div>
     <div class="traj-grid">
-      <div class="chart-card"><div id="chartMae"></div></div>
-      <div class="chart-card"><div id="chartAuc"></div></div>
+      <div class="chart-card">
+        <div class="traj-title">por g&eacute;nero &mdash; nota media (m&iacute;n. 3 t&iacute;tulos)</div>
+        <div id="rankGenre"></div>
+      </div>
+      <div class="chart-card">
+        <div class="traj-title">por d&eacute;cada de estreno</div>
+        <div id="chartDecade"></div>
+      </div>
+    </div>
+    <div class="traj-grid">
+      <div class="chart-card">
+        <div class="traj-title">pel&iacute;culas vs. series</div>
+        <div id="rankType"></div>
+      </div>
+      <div class="chart-card">
+        <div class="traj-title">directores que m&aacute;s te gustan (m&iacute;n. 2 t&iacute;tulos)</div>
+        <div id="rankDirector"></div>
+      </div>
+    </div>
+    <div class="traj-grid">
+      <div class="chart-card">
+        <div class="traj-title">tus mejor puntuadas</div>
+        <div id="topList"></div>
+      </div>
+      <div class="chart-card">
+        <div class="traj-title">tus peor puntuadas</div>
+        <div id="bottomList"></div>
+      </div>
     </div>
   </div>
 
@@ -236,6 +304,7 @@ TEMPLATE = """<!doctype html>
             <option value="">Todos</option>
             <option value="mine">Mi lista</option>
             <option value="discover">Para descubrir</option>
+            <option value="reviewed">Ya rese&ntilde;adas</option>
           </select>
         </div>
         <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
@@ -270,9 +339,16 @@ TEMPLATE = """<!doctype html>
   </div>
 </div>
 
+<div id="modalOverlay" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <button type="button" id="modalClose" class="modal-close" aria-label="Cerrar">&times;</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
 <script>
 const DATA = {data_json};
-const METRICS = {metrics_json};
+const TASTE = {taste_json};
 let sortKey = "pred_rating", sortAsc = false;
 let currentRows = [];
 const activeGenres = new Set();
@@ -304,6 +380,12 @@ function updatePlatformButton() {{
   const n = activePlatforms.size;
   document.getElementById("fPlatformBtn").textContent =
     n === 0 ? "Todas" : n === 1 ? [...activePlatforms][0] : `${{n}} plataformas`;
+}}
+
+function sourceBadge(r) {{
+  if (r.reviewed) return ' <span class="badge-watched">vista</span>';
+  if (!r.in_watchlist) return ' <span class="badge-discover">nuevo</span>';
+  return "";
 }}
 
 function colorFor(v) {{
@@ -361,6 +443,57 @@ function pickWeighted(rows) {{
   return rows[rows.length - 1];
 }}
 
+function escapeHtml(s) {{
+  return (s || "").replace(/[&<>"']/g, c => ({{
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }}[c]));
+}}
+
+function reviewSectionsHtml(r) {{
+  const liked = r.my_liked ? `<div class="modal-review modal-review-pos">
+      <div class="modal-section-label">Te gust&oacute;</div>
+      <p>${{escapeHtml(r.my_liked)}}</p></div>` : "";
+  const disliked = r.my_disliked ? `<div class="modal-review modal-review-neg">
+      <div class="modal-section-label">No te gust&oacute;</div>
+      <p>${{escapeHtml(r.my_disliked)}}</p></div>` : "";
+  if (!liked && !disliked) {{
+    return `<div class="modal-review modal-review-empty">
+      <div class="modal-section-label">Tu rese&ntilde;a</div>
+      <p>Todav&iacute;a no dejaste una rese&ntilde;a para este t&iacute;tulo.</p>
+      <code>make review TITLE="${{escapeHtml(r.Title)}}" LIKED="..." DISLIKED="..."</code></div>`;
+  }}
+  const date = r.review_date ? `<div class="modal-review-date">${{r.review_date}}</div>` : "";
+  return liked + disliked + date;
+}}
+
+function openModal(key) {{
+  const r = DATA.find(d => (d.Title + "|" + d.Year) === key);
+  if (!r) return;
+  const poster = r.poster_path
+    ? `<img class="modal-poster" src="https://image.tmdb.org/t/p/w185${{r.poster_path}}" alt="">`
+    : `<div class="modal-poster"></div>`;
+  const overviewText = escapeHtml(r.overview) || "Sin sinopsis.";
+  const reviewBlock = reviewSectionsHtml(r);
+  document.getElementById("modalBody").innerHTML = `
+    <div class="modal-head">
+      ${{poster}}
+      <div>
+        <h3>${{escapeHtml(r.Title)}}</h3>
+        <div class="modal-meta">${{mobileMetaLine(r)}}</div>
+      </div>
+    </div>
+    <div class="modal-overview">
+      <div class="modal-section-label">Sinopsis</div>
+      <p>${{overviewText}}</p>
+    </div>
+    ${{reviewBlock}}`;
+  document.getElementById("modalOverlay").hidden = false;
+}}
+
+function closeModal() {{
+  document.getElementById("modalOverlay").hidden = true;
+}}
+
 function highlightRow(key) {{
   const row = document.querySelector(`#t tbody tr[data-key="${{CSS.escape(key)}}"]`);
   if (row) {{
@@ -384,7 +517,7 @@ function renderReco(rows) {{
       ${{r.poster_path
         ? `<img class="reco-poster" src="https://image.tmdb.org/t/p/w154${{r.poster_path}}" alt="" loading="lazy">`
         : `<div class="reco-poster"></div>`}}
-      <div class="reco-title">${{r.Title}}${{r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>'}}</div>
+      <div class="reco-title">${{r.Title}}${{sourceBadge(r)}}</div>
       <div class="reco-meta">
         <span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span>
         ${{r.Year ?? ""}}
@@ -402,7 +535,8 @@ function render() {{
     || (r.Directors || "").toLowerCase().includes(q));
   if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
   if (sourceSel === "mine") rows = rows.filter(r => r.in_watchlist);
-  else if (sourceSel === "discover") rows = rows.filter(r => !r.in_watchlist);
+  else if (sourceSel === "discover") rows = rows.filter(r => !r.in_watchlist && !r.reviewed);
+  else if (sourceSel === "reviewed") rows = rows.filter(r => r.reviewed);
   if (activePlatforms.size) rows = rows.filter(r => (r.providers_flatrate || "").split("|").some(p => activePlatforms.has(p)));
   if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
 
@@ -430,7 +564,8 @@ function render() {{
     <tr data-key="${{r.Title}}|${{r.Year}}">
       <td>${{posterCell(r)}}</td>
       <td>
-        <a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a>${{r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>'}}
+        <button type="button" class="title-btn" data-key="${{r.Title}}|${{r.Year}}">${{r.Title}}</button>
+        <a class="imdb-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener" title="Abrir en IMDb">IMDb &#8599;</a>${{sourceBadge(r)}}
         <div class="mobile-meta">
           ${{meta ? `<div class="mobile-meta-line">${{meta}}</div>` : ""}}
           <div class="mobile-chips">${{genres}}</div>
@@ -454,69 +589,87 @@ function render() {{
     if (th.dataset.k === sortKey) th.classList.add(sortAsc ? "asc" : "sorted");
   }});
 
-  renderReco(rows);
-  drawChart(rows);
+  renderReco(rows.filter(r => !r.reviewed));
 }}
 
-function drawChart(rows) {{
-  const bins = new Array(10).fill(0);
-  rows.forEach(r => {{
-    const b = Math.max(0, Math.min(9, Math.round(r.pred_rating) - 1));
-    bins[b]++;
-  }});
-  const W = 620, H = 140, pad = 24, bw = (W - pad * 2) / 10;
-  const max = Math.max(1, ...bins);
+function hbarList(containerId, items) {{
+  const el = document.getElementById(containerId);
+  if (!items.length) {{
+    el.innerHTML = '<div class="traj-empty">Todav&iacute;a no hay suficientes t&iacute;tulos.</div>';
+    return;
+  }}
+  el.innerHTML = items.map(it => `
+    <div class="hbar">
+      <div class="hbar-label" title="${{it.label}}">${{it.label}}</div>
+      <div class="hbar-track"><div class="hbar-fill"
+        style="width:${{it.avg * 10}}%;background:${{colorFor(it.avg)}}"></div></div>
+      <div class="hbar-value">${{it.avg.toFixed(1)}} &middot; ${{it.n}}</div>
+    </div>`).join("");
+}}
+
+function drawRatingHistogram(containerId, counts) {{
+  const mount = document.getElementById(containerId);
+  const W = mount.clientWidth || 620, H = 140, pad = 24, bw = (W - pad * 2) / 10;
+  const max = Math.max(1, ...counts);
   let svg = `<svg viewBox="0 0 ${{W}} ${{H}}" width="100%" height="${{H}}">`;
-  bins.forEach((c, i) => {{
+  counts.forEach((c, i) => {{
     const h = (H - pad * 2) * c / max;
     const x = pad + i * bw, y = H - pad - h;
     svg += `<rect class="bar" x="${{x + 3}}" y="${{y}}" width="${{bw - 6}}" height="${{h}}" rx="2"/>`;
     svg += `<text class="bar-label" x="${{x + bw / 2}}" y="${{H - pad + 12}}" text-anchor="middle">${{i + 1}}</text>`;
     if (c) svg += `<text class="bar-label" x="${{x + bw / 2}}" y="${{y - 4}}" text-anchor="middle">${{c}}</text>`;
   }});
-  svg += `<text class="bar-label" x="${{W / 2}}" y="14" text-anchor="middle">distribuci&oacute;n de la nota predicha (redondeada)</text></svg>`;
-  document.getElementById("chart").innerHTML = svg;
+  svg += `</svg>`;
+  mount.innerHTML = svg;
 }}
 
-function drawTrajectoryChart(containerId, points, opts) {{
-  const el = document.getElementById(containerId);
-  if (!points.length) {{
-    el.innerHTML = `<div class="traj-title">${{opts.title}}</div>
-      <div class="traj-empty">A&uacute;n no hay historial de entrenamientos.</div>`;
+function drawDecadeChart(containerId, items) {{
+  const mount = document.getElementById(containerId);
+  if (!items.length) {{
+    mount.innerHTML = '<div class="traj-empty">Todav&iacute;a no hay suficientes t&iacute;tulos.</div>';
     return;
   }}
-  if (points.length === 1) {{
-    const p = points[0];
-    el.innerHTML = `
-      <div class="traj-title">${{opts.title}}</div>
-      <div class="traj-single">
-        <span class="traj-value">${{p.value.toFixed(opts.decimals)}}</span>
-        <span class="traj-sub">con ${{p.n_train}} ratings &middot; ${{p.date}}</span>
-      </div>
-      <div class="traj-hint">El gr&aacute;fico de evoluci&oacute;n aparece a partir del
-        segundo entrenamiento con un tama&ntilde;o de dataset distinto.</div>`;
-    return;
-  }}
-  const W = 320, H = 150, pad = 30;
-  const xs = points.map(p => p.n_train), ys = points.map(p => p.value);
-  const xMin = Math.min(...xs), xMax = Math.max(...xs);
-  let yMin = Math.min(...ys), yMax = Math.max(...ys);
-  if (yMin === yMax) {{ yMin -= 0.05; yMax += 0.05; }}
-  const yPad = (yMax - yMin) * 0.2;
-  const xScale = n => xMax === xMin ? W / 2 : pad + (W - pad * 2) * (n - xMin) / (xMax - xMin);
-  const yScale = v => H - pad - (H - pad * 2) * (v - (yMin - yPad)) / ((yMax + yPad) - (yMin - yPad));
-  const coords = points.map(p => [xScale(p.n_train), yScale(p.value)]);
-  const path = coords.map((c, i) => `${{i === 0 ? "M" : "L"}}${{c[0].toFixed(1)}},${{c[1].toFixed(1)}}`).join(" ");
+  const W = mount.clientWidth || 300, H = 140, pad = 24, bw = (W - pad * 2) / items.length;
   let svg = `<svg viewBox="0 0 ${{W}} ${{H}}" width="100%" height="${{H}}">`;
-  svg += `<path d="${{path}}" class="traj-line"/>`;
-  coords.forEach(([x, y], i) => {{
-    svg += `<circle cx="${{x}}" cy="${{y}}" r="3.5" class="traj-dot"/>`;
-    svg += `<text class="bar-label" x="${{x}}" y="${{y - 8}}" text-anchor="middle">${{points[i].value.toFixed(opts.decimals)}}</text>`;
+  items.forEach((it, i) => {{
+    const h = (H - pad * 2) * it.avg / 10;
+    const x = pad + i * bw, y = H - pad - h;
+    svg += `<rect class="bar" x="${{x + 3}}" y="${{y}}" width="${{bw - 6}}" height="${{h}}" rx="2"
+      style="fill:${{colorFor(it.avg)}}"/>`;
+    svg += `<text class="bar-label" x="${{x + bw / 2}}" y="${{H - pad + 12}}" text-anchor="middle">${{it.decade}}</text>`;
+    svg += `<text class="bar-label" x="${{x + bw / 2}}" y="${{y - 4}}" text-anchor="middle">${{it.avg.toFixed(1)}}</text>`;
   }});
-  svg += `<text class="bar-label" x="${{pad}}" y="${{H - 8}}" text-anchor="start">${{xMin}}</text>`;
-  svg += `<text class="bar-label" x="${{W - pad}}" y="${{H - 8}}" text-anchor="end">${{xMax}} ratings</text>`;
   svg += `</svg>`;
-  el.innerHTML = `<div class="traj-title">${{opts.title}}</div>${{svg}}`;
+  mount.innerHTML = svg;
+}}
+
+function titleList(containerId, items) {{
+  const el = document.getElementById(containerId);
+  if (!items.length) {{
+    el.innerHTML = '<div class="traj-empty">Sin datos todav&iacute;a.</div>';
+    return;
+  }}
+  el.innerHTML = items.map(it => `
+    <div class="toplist-row">
+      ${{it.poster_path
+        ? `<img class="poster" src="https://image.tmdb.org/t/p/w92${{it.poster_path}}" alt="" loading="lazy">`
+        : `<div class="poster"></div>`}}
+      <div class="toplist-info">
+        <a class="title-link" href="${{it.URL || "#"}}" target="_blank" rel="noopener">${{it.Title}}</a>
+        <div class="genres">${{it.Year ?? ""}} &middot; ${{it.Genres ?? ""}}</div>
+      </div>
+      <span class="pill" style="background:${{colorFor(it["Your Rating"])}}">${{it["Your Rating"]}}</span>
+    </div>`).join("");
+}}
+
+function renderTaste() {{
+  drawRatingHistogram("chartSvg", TASTE.rating_counts);
+  hbarList("rankGenre", TASTE.by_genre);
+  hbarList("rankType", TASTE.by_type);
+  hbarList("rankDirector", TASTE.by_director);
+  drawDecadeChart("chartDecade", TASTE.by_decade);
+  titleList("topList", TASTE.top);
+  titleList("bottomList", TASTE.bottom);
 }}
 
 function initFilters() {{
@@ -594,7 +747,16 @@ document.getElementById("fType").addEventListener("change", render);
 document.getElementById("fSource").addEventListener("change", render);
 document.querySelector("#t tbody").addEventListener("click", (e) => {{
   const chip = e.target.closest(".chip[data-genre]");
-  if (chip) toggleGenre(chip.dataset.genre);
+  if (chip) {{ toggleGenre(chip.dataset.genre); return; }}
+  const btn = e.target.closest(".title-btn");
+  if (btn) openModal(btn.dataset.key);
+}});
+document.getElementById("modalClose").addEventListener("click", closeModal);
+document.getElementById("modalOverlay").addEventListener("click", (e) => {{
+  if (e.target.id === "modalOverlay") closeModal();
+}});
+document.addEventListener("keydown", (e) => {{
+  if (e.key === "Escape") closeModal();
 }});
 document.getElementById("clearFilters").addEventListener("click", () => {{
   document.getElementById("q").value = "";
@@ -625,8 +787,9 @@ document.addEventListener("click", (e) => {{
   }}
 }});
 document.getElementById("pickForMe").addEventListener("click", () => {{
-  if (!currentRows.length) return;
-  const pick = pickWeighted(currentRows);
+  const pickable = currentRows.filter(r => !r.reviewed);
+  if (!pickable.length) return;
+  const pick = pickWeighted(pickable);
   highlightRow(pick.Title + "|" + pick.Year);
 }});
 document.getElementById("recoRow").addEventListener("click", (e) => {{
@@ -638,16 +801,16 @@ document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
   document.getElementById("panel-dashboard").hidden = btn.dataset.tab !== "dashboard";
   document.getElementById("panel-tabla").hidden = btn.dataset.tab !== "tabla";
+  if (btn.dataset.tab === "dashboard") renderTaste();
 }}));
+
+window.addEventListener("resize", () => {{
+  if (!document.getElementById("panel-dashboard").hidden) renderTaste();
+}});
 
 initFilters();
 render();
-drawTrajectoryChart("chartMae",
-  METRICS.map(r => ({{n_train: r.n_train, value: r.cv_mae_rating, date: r.date}})),
-  {{title: "MAE &mdash; error promedio (menor es mejor)", decimals: 2}});
-drawTrajectoryChart("chartAuc",
-  METRICS.map(r => ({{n_train: r.n_train, value: r.cv_roc_auc_like, date: r.date}})),
-  {{title: "ROC AUC &mdash; &iquest;te va a gustar? (mayor es mejor)", decimals: 3}});
+renderTaste();
 </script>
 </body>
 </html>
@@ -661,24 +824,33 @@ def build_html() -> None:
 
     df = pd.read_csv(SCORED_CSV)
     df["in_watchlist"] = True
+    df["reviewed"] = False
 
     cat = pd.read_csv(CATALOG_SCORED_CSV) if CATALOG_SCORED_CSV.exists() else pd.DataFrame()
     if not cat.empty:
         cat["in_watchlist"] = False
-    combined = pd.concat([df, cat], ignore_index=True) if not cat.empty else df
+        cat["reviewed"] = False
 
-    hist = pd.read_csv(METRICS_CSV) if METRICS_CSV.exists() else pd.DataFrame()
+    rev = pd.read_csv(REVIEWED_SCORED_CSV) if REVIEWED_SCORED_CSV.exists() else pd.DataFrame()
+    if not rev.empty:
+        rev["in_watchlist"] = False
+        rev["reviewed"] = True
+
+    combined = pd.concat([d for d in (df, cat, rev) if not d.empty], ignore_index=True)
+
+    taste = build_taste_stats()
 
     html = TEMPLATE.format(
         generated=date.today().isoformat(),
         n=len(df),
         n_catalog=len(cat),
-        mean_pred=round(df["pred_rating"].mean(), 1),
-        n_ge7=int((df["pred_rating"] >= 7).sum()),
-        n_lt5=int((df["pred_rating"] < 5).sum()),
+        n_reviewed=len(rev),
+        t_n_rated=taste["n_rated"],
+        t_movies_series=f'{taste["n_movies"]} / {taste["n_series"]}',
+        t_mean_rating=taste["mean_rating"],
+        t_deviation=f'{taste["deviation_vs_imdb"]:+.2f}',
         data_json=json.dumps(json.loads(combined.to_json(orient="records")), ensure_ascii=False),
-        metrics_json=json.dumps(json.loads(hist.to_json(orient="records")), ensure_ascii=False)
-        if not hist.empty else "[]",
+        taste_json=json.dumps(taste, ensure_ascii=False),
     )
     for dest in DESTS:
         dest.parent.mkdir(parents=True, exist_ok=True)
