@@ -77,6 +77,9 @@ TEMPLATE = """<!doctype html>
   .pill {{ display: inline-block; padding: 2px 8px; border-radius: 999px; font-weight: 600;
     color: #fff; font-variant-numeric: tabular-nums; }}
   .genres {{ color: var(--muted); font-size: 12px; }}
+  .provider-pill {{ display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px;
+    background: #eef2f7; color: var(--ink); border: 1px solid var(--border);
+    margin: 1px 3px 1px 0; white-space: nowrap; }}
   .poster {{ width: 40px; height: 60px; object-fit: cover; border-radius: 4px; display: block;
     background: var(--border); }}
   a.title-link {{ color: var(--ink); text-decoration: none; }}
@@ -117,6 +120,7 @@ TEMPLATE = """<!doctype html>
     <th data-k="pred_rating" class="num">Nota predicha</th>
     <th data-k="p_like" class="num">P(&ge;7)</th>
     <th data-k="Genres">G&eacute;neros</th>
+    <th class="nosort">Streaming</th>
   </tr></thead><tbody></tbody></table></div>
 
   <div class="foot">Tomar como <b>orden sugerido</b>, no como veredicto: el error
@@ -150,6 +154,12 @@ function durationLabel(r) {{
   return "";
 }}
 
+function providerPills(r) {{
+  const list = (r.providers_flatrate || "").split("|").filter(Boolean);
+  if (!list.length) return '<span class="genres">no disponible</span>';
+  return list.map(p => `<span class="provider-pill">${{p}}</span>`).join("");
+}}
+
 function render() {{
   const q = document.getElementById("q").value.trim().toLowerCase();
   const typeSel = document.getElementById("fType").value;
@@ -179,6 +189,7 @@ function render() {{
       <td class="num"><span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span></td>
       <td class="num">${{(r.p_like * 100).toFixed(0)}}%</td>
       <td class="genres">${{r.Genres ?? ""}}</td>
+      <td>${{providerPills(r)}}</td>
     </tr>`).join("");
 
   document.querySelectorAll("#t th[data-k]").forEach(th => {{

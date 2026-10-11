@@ -67,7 +67,11 @@ class TMDBClient:
     def fetch(self, imdb_id: str, force: bool = False) -> dict:
         cache = TMDB_DIR / f"{imdb_id}.json"
         if cache.exists() and not force:
-            return json.loads(cache.read_text())
+            data = json.loads(cache.read_text())
+            if data.get("tmdb_found") and "providers_flatrate_ar" not in data:
+                data["providers_flatrate_ar"] = self._providers(data["media_type"], data["id"])
+                cache.write_text(json.dumps(data, ensure_ascii=False))
+            return data
 
         found = self._get(f"/find/{imdb_id}", external_source="imdb_id")
         movie, tv = found.get("movie_results") or [], found.get("tv_results") or []
@@ -81,11 +85,18 @@ class TMDBClient:
             return data
         return self._detail(media_type, tmdb_id, imdb_id)
 
+    def _providers(self, media_type: str, tmdb_id: int) -> list[str]:
+        """Plataformas de streaming por suscripción (AR), vía /watch/providers."""
+        res = self._get(f"/{media_type}/{tmdb_id}/watch/providers")
+        ar = (res.get("results") or {}).get("AR") or {}
+        return [p["provider_name"] for p in ar.get("flatrate", [])]
+
     def _detail(self, media_type: str, tmdb_id: int, imdb_id: str | None) -> dict:
         detail = self._get(f"/{media_type}/{tmdb_id}",
                            append_to_response="credits,keywords,external_ids")
         imdb_id = imdb_id or (detail.get("external_ids") or {}).get("imdb_id")
         detail.update(imdb_id=imdb_id, media_type=media_type, tmdb_found=True)
+        detail["providers_flatrate_ar"] = self._providers(media_type, tmdb_id)
         if imdb_id:
             (TMDB_DIR / f"{imdb_id}.json").write_text(json.dumps(detail, ensure_ascii=False))
         return detail
@@ -146,6 +157,7 @@ def parse_detail(detail: dict) -> dict:
         "tmdb_vote_count": detail.get("vote_count"),
         "tmdb_popularity": detail.get("popularity"),
         "poster_path": detail.get("poster_path"),
+        "providers_flatrate": _join(detail.get("providers_flatrate_ar") or []),
         "budget": detail.get("budget"),
         "revenue": detail.get("revenue"),
         "n_seasons": detail.get("number_of_seasons"),

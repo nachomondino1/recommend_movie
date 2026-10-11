@@ -113,14 +113,15 @@ def score_watchlist() -> pd.DataFrame:
     wl["pred_rating"] = (X_wl["IMDb Rating"].to_numpy() + reg.predict(X_wl)).clip(1, 10)
     wl["p_like"] = clf.predict_proba(X_wl)[:, 1]
     wl["Directors"] = wl["Directors"].fillna("")
-    wl = wl.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes"]],
+    wl = wl.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons",
+                                "n_episodes", "providers_flatrate"]],
                   left_on="Const", right_on="imdb_id", how="left")
     if n_drop:
         print(f"({n_drop} títulos de la watchlist ya estaban puntuados; se omiten)")
 
     cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
             "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
-            "pred_rating", "p_like"]
+            "providers_flatrate", "pred_rating", "p_like"]
     out = (wl[cols].sort_values("pred_rating", ascending=False)
            .round({"pred_rating": 1, "p_like": 2}).reset_index(drop=True))
     out.to_csv(SCORED_CSV, index=False)
