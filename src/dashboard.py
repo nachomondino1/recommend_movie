@@ -114,7 +114,8 @@ TEMPLATE = """<!doctype html>
     border-radius: 10px; }}
   table {{ width: 100%; border-collapse: collapse; background: var(--card);
     min-width: 720px; }}
-  th, td {{ padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }}
+  th, td {{ padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border);
+    vertical-align: top; }}
   th {{ background: #f0f0ec; cursor: pointer; user-select: none; white-space: nowrap;
     position: sticky; top: 0; z-index: 4; }}
   th.nosort {{ cursor: default; }}
@@ -132,7 +133,19 @@ TEMPLATE = """<!doctype html>
     background: var(--border); }}
   a.title-link {{ color: var(--ink); text-decoration: none; }}
   a.title-link:hover {{ text-decoration: underline; }}
+  .mobile-meta {{ display: none; }}
   .foot {{ color: var(--muted); font-size: 12px; margin-top: 16px; }}
+  @media (max-width: 640px) {{
+    table {{ min-width: 0; }}
+    .tablewrap {{ overflow-x: hidden; }}
+    th {{ white-space: normal; }}
+    .mobile-chips .provider-pill {{ white-space: normal; }}
+    .col-year, .col-type, .col-imdb, .col-director, .col-duration,
+    .col-genres, .col-streaming {{ display: none; }}
+    .mobile-meta {{ display: block; margin-top: 4px; }}
+    .mobile-meta-line {{ color: var(--muted); font-size: 12px; }}
+    .mobile-chips {{ margin-top: 4px; }}
+  }}
   .tabs {{ display: flex; gap: 8px; margin-bottom: 20px; }}
   .tab-btn {{ padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
     background: var(--card); color: var(--muted); font-size: 14px; font-weight: 600;
@@ -210,15 +223,15 @@ TEMPLATE = """<!doctype html>
     <div class="tablewrap"><table id="t"><thead><tr>
       <th class="nosort">Poster</th>
       <th data-k="Title">T&iacute;tulo</th>
-      <th data-k="Year" class="num">A&ntilde;o</th>
-      <th data-k="Title Type">Tipo</th>
-      <th data-k="IMDb Rating" class="num">IMDb</th>
-      <th data-k="Directors">Director</th>
-      <th class="nosort">Duraci&oacute;n</th>
       <th data-k="pred_rating" class="num">Nota predicha</th>
       <th data-k="p_like" class="num">P(&ge;7)</th>
-      <th data-k="Genres">G&eacute;neros</th>
-      <th class="nosort">Streaming</th>
+      <th class="nosort col-streaming">Streaming</th>
+      <th data-k="Genres" class="col-genres">G&eacute;neros</th>
+      <th data-k="Year" class="num col-year">A&ntilde;o</th>
+      <th data-k="Title Type" class="col-type">Tipo</th>
+      <th data-k="IMDb Rating" class="num col-imdb">IMDb</th>
+      <th data-k="Directors" class="col-director">Director</th>
+      <th class="nosort col-duration">Duraci&oacute;n</th>
     </tr></thead><tbody></tbody></table></div>
 
     <div class="foot">Tomar como <b>orden sugerido</b>, no como veredicto: el error
@@ -281,6 +294,17 @@ function durationLabel(r) {{
   }}
   if (r.tmdb_runtime) return `${{Math.round(r.tmdb_runtime)}} min`;
   return "";
+}}
+
+function mobileMetaLine(r) {{
+  const parts = [];
+  if (r.Year) parts.push(r.Year);
+  if (r["Title Type"]) parts.push(r["Title Type"]);
+  if (r["IMDb Rating"] != null) parts.push("IMDb " + r["IMDb Rating"]);
+  if (r.Directors) parts.push(r.Directors);
+  const dur = durationLabel(r);
+  if (dur) parts.push(dur);
+  return parts.join(" &middot; ");
 }}
 
 function providerPills(r) {{
@@ -362,20 +386,32 @@ function render() {{
 
   currentRows = rows;
   const tb = document.querySelector("#t tbody");
-  tb.innerHTML = rows.map(r => `
+  tb.innerHTML = rows.map(r => {{
+    const genres = genreChips(r);
+    const providers = providerPills(r);
+    const meta = mobileMetaLine(r);
+    return `
     <tr data-key="${{r.Title}}|${{r.Year}}">
       <td>${{posterCell(r)}}</td>
-      <td><a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a>${{r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>'}}</td>
-      <td class="num">${{r.Year ?? ""}}</td>
-      <td>${{r["Title Type"]}}</td>
-      <td class="num" title="${{r["Num Votes"] ? r["Num Votes"].toLocaleString("es-AR") + " votos" : ""}}">${{r["IMDb Rating"] ?? ""}}</td>
-      <td class="genres">${{r.Directors ?? ""}}</td>
-      <td class="genres">${{durationLabel(r)}}</td>
+      <td>
+        <a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a>${{r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>'}}
+        <div class="mobile-meta">
+          ${{meta ? `<div class="mobile-meta-line">${{meta}}</div>` : ""}}
+          <div class="mobile-chips">${{genres}}</div>
+          <div class="mobile-chips">${{providers}}</div>
+        </div>
+      </td>
       <td class="num"><span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span></td>
       <td class="num">${{(r.p_like * 100).toFixed(0)}}%</td>
-      <td>${{genreChips(r)}}</td>
-      <td>${{providerPills(r)}}</td>
-    </tr>`).join("");
+      <td class="col-streaming">${{providers}}</td>
+      <td class="col-genres">${{genres}}</td>
+      <td class="num col-year">${{r.Year ?? ""}}</td>
+      <td class="col-type">${{r["Title Type"]}}</td>
+      <td class="num col-imdb" title="${{r["Num Votes"] ? r["Num Votes"].toLocaleString("es-AR") + " votos" : ""}}">${{r["IMDb Rating"] ?? ""}}</td>
+      <td class="genres col-director">${{r.Directors ?? ""}}</td>
+      <td class="genres col-duration">${{durationLabel(r)}}</td>
+    </tr>`;
+  }}).join("");
 
   document.querySelectorAll("#t th[data-k]").forEach(th => {{
     th.classList.remove("sorted", "asc");
