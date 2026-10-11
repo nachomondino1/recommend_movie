@@ -111,6 +111,7 @@ TEMPLATE = """<!doctype html>
   .reco-card .reco-meta {{ font-size: 11px; color: var(--muted); margin-top: 4px;
     display: flex; align-items: center; gap: 6px; }}
   .reco-empty {{ color: var(--muted); font-size: 13px; }}
+  .empty-state {{ text-align: center; color: var(--muted); font-size: 13px; padding: 28px 12px; }}
   .tablewrap {{ overflow: auto; max-height: 70vh; border: 1px solid var(--border);
     border-radius: 10px; }}
   table {{ width: 100%; border-collapse: collapse; background: var(--card);
@@ -391,7 +392,9 @@ function render() {{
 
   currentRows = rows;
   const tb = document.querySelector("#t tbody");
-  tb.innerHTML = rows.map(r => {{
+  tb.innerHTML = !rows.length
+    ? `<tr><td colspan="11" class="empty-state">Ning&uacute;n t&iacute;tulo cumple los filtros activos.</td></tr>`
+    : rows.map(r => {{
     const genres = genreChips(r);
     const providers = providerPills(r);
     const meta = mobileMetaLine(r);
