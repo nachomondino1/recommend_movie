@@ -24,23 +24,43 @@
     padding: 16px; margin-bottom: 20px; }
   .bar { fill: var(--accent); }
   .bar-label { fill: var(--muted); font-size: 11px; }
-  .controls { position: sticky; top: 0; z-index: 5; background: var(--bg);
-    padding: 8px 0 12px; margin-top: -8px; }
+  .controls { position: sticky; top: 0; z-index: 5; background: var(--card);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 14px;
+    margin: 0 0 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); }
   input[type=search] { width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 16px; background: var(--card); }
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
-  .filters select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 14px; background: var(--card); color: var(--ink); }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    border-radius: 8px; font-size: 16px; background: var(--bg); }
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    margin-top: 12px; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.03em; }
+  .filter-group select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; background: var(--bg); color: var(--ink); min-width: 150px; }
+  .btn-clear { padding: 7px 12px; border-radius: 8px; border: 1px solid transparent;
+    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
+    text-decoration: underline; margin-left: auto; }
+  .btn-clear:hover { color: var(--ink); }
+  .genre-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px;
+    padding-top: 14px; border-top: 1px solid var(--border); }
+  .filter-label { font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; padding-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
   .chip { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px;
     border: 1px solid var(--border); background: var(--card); color: var(--muted);
     cursor: pointer; user-select: none; }
   .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .chip.mini { padding: 2px 7px; font-size: 11px; margin: 1px 3px 1px 0; }
   .btn-pick { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--accent);
-    background: var(--accent); color: #fff; font-size: 14px; cursor: pointer; }
+    background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
   .btn-pick:hover { opacity: 0.9; }
   tr.picked td { background: #eaf2fb; }
+  @media (max-width: 640px) {
+    .filter-bar { align-items: stretch; }
+    .filter-group select { width: 100%; min-width: 0; }
+    .btn-clear { margin-left: 0; text-align: left; }
+    .btn-pick { width: 100%; }
+    .genre-row { flex-direction: column; }
+  }
   @media (max-width: 640px) {
     body { padding: 12px; }
     h1 { font-size: 18px; }
@@ -85,11 +105,11 @@
     modelo: RandomForest sobre el desv&iacute;o vs IMDb (MAE &asymp; 1.26)</div>
 
   <div class="tabs">
-    <button type="button" class="tab-btn active" data-tab="dashboard">Dashboard</button>
-    <button type="button" class="tab-btn" data-tab="tabla">Tabla</button>
+    <button type="button" class="tab-btn active" data-tab="tabla">Tabla</button>
+    <button type="button" class="tab-btn" data-tab="dashboard">Dashboard</button>
   </div>
 
-  <div id="panel-dashboard" class="panel">
+  <div id="panel-dashboard" class="panel" hidden>
     <div class="cards">
       <div class="card"><div class="n">162</div><div class="l">t&iacute;tulos</div></div>
       <div class="card"><div class="n">6.2</div><div class="l">nota predicha media</div></div>
@@ -100,15 +120,25 @@
     <div id="chart"></div>
   </div>
 
-  <div id="panel-tabla" class="panel" hidden>
+  <div id="panel-tabla" class="panel">
     <div class="controls">
       <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
-      <div class="filters">
-        <select id="fType"><option value="">Todos los tipos</option></select>
-        <select id="fPlatform"><option value="">Todas las plataformas</option></select>
-        <button type="button" id="pickForMe" class="btn-pick">Elegí por mí</button>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label for="fType">Tipo</label>
+          <select id="fType"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="fPlatform">Plataforma</label>
+          <select id="fPlatform"><option value="">Todas</option></select>
+        </div>
+        <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
+        <button type="button" id="pickForMe" class="btn-pick">Eleg&iacute; por m&iacute;</button>
       </div>
-      <div id="fGenres" class="chips"></div>
+      <div class="genre-row">
+        <span class="filter-label">G&eacute;nero</span>
+        <div id="fGenres" class="chips"></div>
+      </div>
     </div>
     <div class="tablewrap"><table id="t"><thead><tr>
       <th class="nosort">Poster</th>
@@ -199,6 +229,9 @@ function render() {
   if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
   if (platformSel) rows = rows.filter(r => (r.providers_flatrate || "").split("|").includes(platformSel));
   if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
+
+  document.getElementById("clearFilters").hidden =
+    !(q || typeSel || platformSel || activeGenres.size);
 
   rows.sort((a, b) => {
     let x = a[sortKey], y = b[sortKey];
@@ -292,6 +325,14 @@ document.getElementById("fPlatform").addEventListener("change", render);
 document.querySelector("#t tbody").addEventListener("click", (e) => {
   const chip = e.target.closest(".chip[data-genre]");
   if (chip) toggleGenre(chip.dataset.genre);
+});
+document.getElementById("clearFilters").addEventListener("click", () => {
+  document.getElementById("q").value = "";
+  document.getElementById("fType").value = "";
+  document.getElementById("fPlatform").value = "";
+  activeGenres.clear();
+  document.querySelectorAll("#fGenres .chip").forEach(c => c.classList.remove("active"));
+  render();
 });
 document.getElementById("pickForMe").addEventListener("click", () => {
   if (!currentRows.length) return;
