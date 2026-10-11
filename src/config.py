@@ -21,7 +21,7 @@ WATCHLIST_CSV = DATA / "watchlist.csv"
 EXCLUDED_CSV = DATA / "excluded.csv"    # "no me interesa": Const + fecha, versionado
 TMDB_CSV = CACHE / "tmdb.csv"
 SCORED_CSV = OUTPUTS / "watchlist_scored.csv"
-METRICS_CSV = ROOT / "metrics_history.csv"   # versionado: trayectoria real de scores
+METRICS_CSV = DATA / "metrics_history.csv"   # versionado: trayectoria real de scores
 
 for _d in (CACHE, TMDB_DIR, MODELS, OUTPUTS):
     _d.mkdir(parents=True, exist_ok=True)

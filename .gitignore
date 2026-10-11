@@ -24,3 +24,6 @@ models/
 
 # Gráficos y CSVs locales
 outputs/
+
+# Worktrees sueltos de Claude Code (sesiones con aislamiento por worktree)
+.claude/worktrees/

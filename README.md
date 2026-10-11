@@ -34,6 +34,7 @@ en ambos casos es `make update`.
 ```
 data/
   ratings.csv, watchlist.csv     exportaciones de IMDb (versionadas)
+  metrics_history.csv            scores CV por tamaño de dataset (versionado; crece con make update)
   cache/                          TMDB json + tabla (regenerable, git-ignored)
 src/
   config.py      paths y carga de .env
@@ -48,7 +49,6 @@ notebooks/
 docs/            narrativa CRISP-DM (1..6) + index.html publicado por Pages
 models/          modelos entrenados (git-ignored)
 outputs/         gráficos y CSVs locales (git-ignored)
-metrics_history.csv   scores CV por tamaño de dataset (versionado; crece con make update)
 ```
 
 La metodología sigue CRISP-DM; cada fase está documentada en `docs/` y el código
