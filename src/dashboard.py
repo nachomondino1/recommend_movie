@@ -90,6 +90,12 @@ TEMPLATE = """<!doctype html>
   a.title-link {{ color: var(--ink); text-decoration: none; }}
   a.title-link:hover {{ text-decoration: underline; }}
   .foot {{ color: var(--muted); font-size: 12px; margin-top: 16px; }}
+  .tabs {{ display: flex; gap: 8px; margin-bottom: 20px; }}
+  .tab-btn {{ padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card); color: var(--muted); font-size: 14px; font-weight: 600;
+    cursor: pointer; }}
+  .tab-btn.active {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
+  .panel[hidden] {{ display: none; }}
 </style>
 </head>
 <body>
@@ -98,41 +104,50 @@ TEMPLATE = """<!doctype html>
   <div class="sub">Generado el {generated} &middot; {n} t&iacute;tulos &middot;
     modelo: RandomForest sobre el desv&iacute;o vs IMDb (MAE &asymp; 1.26)</div>
 
-  <div class="cards">
-    <div class="card"><div class="n">{n}</div><div class="l">t&iacute;tulos</div></div>
-    <div class="card"><div class="n">{mean_pred}</div><div class="l">nota predicha media</div></div>
-    <div class="card"><div class="n">{n_ge7}</div><div class="l">con nota predicha &ge; 7</div></div>
-    <div class="card"><div class="n">{n_lt5}</div><div class="l">con nota predicha &lt; 5</div></div>
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button type="button" class="tab-btn" data-tab="tabla">Tabla</button>
   </div>
 
-  <div id="chart"></div>
-
-  <div class="controls">
-    <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
-    <div class="filters">
-      <select id="fType"><option value="">Todos los tipos</option></select>
-      <select id="fPlatform"><option value="">Todas las plataformas</option></select>
-      <button type="button" id="pickForMe" class="btn-pick">Elegí por mí</button>
+  <div id="panel-dashboard" class="panel">
+    <div class="cards">
+      <div class="card"><div class="n">{n}</div><div class="l">t&iacute;tulos</div></div>
+      <div class="card"><div class="n">{mean_pred}</div><div class="l">nota predicha media</div></div>
+      <div class="card"><div class="n">{n_ge7}</div><div class="l">con nota predicha &ge; 7</div></div>
+      <div class="card"><div class="n">{n_lt5}</div><div class="l">con nota predicha &lt; 5</div></div>
     </div>
-    <div id="fGenres" class="chips"></div>
-  </div>
-  <div class="tablewrap"><table id="t"><thead><tr>
-    <th class="nosort">Poster</th>
-    <th data-k="Title">T&iacute;tulo</th>
-    <th data-k="Year" class="num">A&ntilde;o</th>
-    <th data-k="Title Type">Tipo</th>
-    <th data-k="IMDb Rating" class="num">IMDb</th>
-    <th data-k="Directors">Director</th>
-    <th class="nosort">Duraci&oacute;n</th>
-    <th data-k="pred_rating" class="num">Nota predicha</th>
-    <th data-k="p_like" class="num">P(&ge;7)</th>
-    <th data-k="Genres">G&eacute;neros</th>
-    <th class="nosort">Streaming</th>
-  </tr></thead><tbody></tbody></table></div>
 
-  <div class="foot">Tomar como <b>orden sugerido</b>, no como veredicto: el error
-    t&iacute;pico es &plusmn;1.3 puntos. <code>pred_rating</code> y <code>p_like</code>
-    salen de dos modelos distintos y pueden no coincidir.</div>
+    <div id="chart"></div>
+  </div>
+
+  <div id="panel-tabla" class="panel" hidden>
+    <div class="controls">
+      <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
+      <div class="filters">
+        <select id="fType"><option value="">Todos los tipos</option></select>
+        <select id="fPlatform"><option value="">Todas las plataformas</option></select>
+        <button type="button" id="pickForMe" class="btn-pick">Elegí por mí</button>
+      </div>
+      <div id="fGenres" class="chips"></div>
+    </div>
+    <div class="tablewrap"><table id="t"><thead><tr>
+      <th class="nosort">Poster</th>
+      <th data-k="Title">T&iacute;tulo</th>
+      <th data-k="Year" class="num">A&ntilde;o</th>
+      <th data-k="Title Type">Tipo</th>
+      <th data-k="IMDb Rating" class="num">IMDb</th>
+      <th data-k="Directors">Director</th>
+      <th class="nosort">Duraci&oacute;n</th>
+      <th data-k="pred_rating" class="num">Nota predicha</th>
+      <th data-k="p_like" class="num">P(&ge;7)</th>
+      <th data-k="Genres">G&eacute;neros</th>
+      <th class="nosort">Streaming</th>
+    </tr></thead><tbody></tbody></table></div>
+
+    <div class="foot">Tomar como <b>orden sugerido</b>, no como veredicto: el error
+      t&iacute;pico es &plusmn;1.3 puntos. <code>pred_rating</code> y <code>p_like</code>
+      salen de dos modelos distintos y pueden no coincidir.</div>
+  </div>
 </div>
 
 <script>
@@ -308,6 +323,12 @@ document.getElementById("pickForMe").addEventListener("click", () => {{
     setTimeout(() => row.classList.remove("picked"), 2500);
   }}
 }});
+
+document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {{
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+  document.getElementById("panel-dashboard").hidden = btn.dataset.tab !== "dashboard";
+  document.getElementById("panel-tabla").hidden = btn.dataset.tab !== "tabla";
+}}));
 
 initFilters();
 render();
