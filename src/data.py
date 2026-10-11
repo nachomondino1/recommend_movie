@@ -12,6 +12,7 @@ import json
 import time
 from functools import lru_cache
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -114,6 +115,33 @@ class TMDBClient:
         top = hits[0]
         return self._detail(top["media_type"], top["id"], imdb_id=None)
 
+    def discover(self, media_type: str, n: int, min_votes: int = 100) -> list[dict]:
+        """IDs de /discover/{media_type} ordenados por popularidad, acotado a n
+        (usado por src/catalog.py para armar el catálogo ampliado, Fase 6)."""
+        out, page = [], 1
+        while len(out) < n and page <= 20:
+            res = self._get(f"/discover/{media_type}", page=page, sort_by="popularity.desc",
+                            **{"vote_count.gte": min_votes})
+            results = res.get("results") or []
+            if not results:
+                break
+            out.extend({"media_type": media_type, "id": r["id"]} for r in results)
+            page += 1
+        return out[:n]
+
+    def external_id(self, media_type: str, tmdb_id: int) -> str | None:
+        """IMDb id de un título ya identificado en TMDB, vía /external_ids (liviano,
+        no cachea: solo se usa para decidir si fetch_by_tmdb_id necesita pedir más)."""
+        return (self._get(f"/{media_type}/{tmdb_id}/external_ids") or {}).get("imdb_id") or None
+
+    def fetch_by_tmdb_id(self, media_type: str, tmdb_id: int) -> dict:
+        """Como fetch(), pero arrancando desde un id de TMDB ya conocido (p. ej. de
+        discover()), que no trae imdb_id de forma directa."""
+        imdb_id = self.external_id(media_type, tmdb_id)
+        if imdb_id and (TMDB_DIR / f"{imdb_id}.json").exists():
+            return self.fetch(imdb_id)
+        return self._detail(media_type, tmdb_id, imdb_id)
+
 
 # --------------------------------------------------------------------------- #
 # Aplanado del JSON de TMDB a fila tabular
@@ -163,6 +191,23 @@ def parse_detail(detail: dict) -> dict:
         "n_seasons": detail.get("number_of_seasons"),
         "n_episodes": detail.get("number_of_episodes"),
         "release_date": detail.get("release_date") or detail.get("first_air_date"),
+    }
+
+
+def imdb_like_fields(detail: dict, parsed: dict) -> dict:
+    """Aplana un detalle de TMDB a las columnas 'estilo IMDb' (Title, Year, Genres...)
+    para títulos que no vienen de una exportación real de IMDb: búsqueda por nombre
+    (src/predict.py) o catálogo ampliado (src/catalog.py, Fase 6)."""
+    date_ = detail.get("release_date") or detail.get("first_air_date") or ""
+    year = int(date_[:4]) if date_[:4].isdigit() else np.nan
+    return {
+        "Title": detail.get("title") or detail.get("name"),
+        "Title Type": "Movie" if detail.get("media_type") == "movie" else "TV Series",
+        "Year": year,
+        "IMDb Rating": np.nan,  # -> build()/_engineer() usa tmdb_vote_average como sustituto
+        "Runtime (mins)": parsed.get("tmdb_runtime"),
+        "Genres": (parsed.get("tmdb_genres") or "").replace("|", ", "),
+        "Num Votes": detail.get("vote_count"),
     }
 
 

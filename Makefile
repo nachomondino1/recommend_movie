@@ -24,6 +24,7 @@ setup:
 update:
 	$(PY) -m src.data
 	$(PY) -m src.model
+	$(PY) -m src.catalog
 	$(PY) -m src.dashboard
 
 predict:

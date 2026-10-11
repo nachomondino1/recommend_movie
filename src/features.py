@@ -45,12 +45,18 @@ def build(csv: Path = RATINGS_CSV) -> tuple[pd.DataFrame, pd.Series | None]:
     return _engineer(df)
 
 
-def build_row(record: dict) -> pd.DataFrame:
-    """X (1 fila) para un título suelto. `record` combina las columnas de IMDb
-    (Title, Year, Title Type, Genres, Num Votes...) con las de TMDB (overview,
-    keywords, director, tmdb_*...). Usado por src/predict.py."""
-    X, _ = _engineer(pd.DataFrame([record]))
+def build_rows(records: list[dict]) -> pd.DataFrame:
+    """X (N filas) para una lista de títulos sueltos. Cada `record` combina las
+    columnas de IMDb (Title, Year, Title Type, Genres, Num Votes...) con las de TMDB
+    (overview, keywords, director, tmdb_*...). Usado por src/predict.py (1 título) y
+    src/catalog.py (el catálogo ampliado completo, Fase 6)."""
+    X, _ = _engineer(pd.DataFrame(records))
     return X
+
+
+def build_row(record: dict) -> pd.DataFrame:
+    """X (1 fila) para un título suelto. Ver build_rows()."""
+    return build_rows([record])
 
 
 _NUM_SOURCE = ["IMDb Rating", "Num Votes", "Runtime (mins)", "Year",

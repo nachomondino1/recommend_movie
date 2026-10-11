@@ -14,7 +14,7 @@ from datetime import date
 
 import pandas as pd
 
-from src.config import DOCS, OUTPUTS, SCORED_CSV
+from src.config import CATALOG_SCORED_CSV, DOCS, OUTPUTS, SCORED_CSV
 
 DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
 
@@ -139,12 +139,16 @@ TEMPLATE = """<!doctype html>
     cursor: pointer; }}
   .tab-btn.active {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
   .panel[hidden] {{ display: none; }}
+  .badge-discover {{ display: inline-block; padding: 1px 6px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
+    background: #fff3cd; color: #8a6400; margin-left: 5px; vertical-align: middle; }}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Watchlist &mdash; notas predichas</h1>
-  <div class="sub">Generado el {generated} &middot; {n} t&iacute;tulos &middot;
+  <div class="sub">Generado el {generated} &middot; {n} t&iacute;tulos en tu watchlist
+    &middot; {n_catalog} para descubrir &middot;
     modelo: RandomForest sobre el desv&iacute;o vs IMDb (MAE &asymp; 1.26)</div>
 
   <div class="tabs">
@@ -184,6 +188,14 @@ TEMPLATE = """<!doctype html>
             <button type="button" id="fGenreBtn" class="ms-toggle">Todos</button>
             <div id="fGenreMenu" class="ms-menu" hidden></div>
           </div>
+        </div>
+        <div class="filter-group">
+          <label for="fSource">Origen</label>
+          <select id="fSource">
+            <option value="">Todos</option>
+            <option value="mine">Mi lista</option>
+            <option value="discover">Para descubrir</option>
+          </select>
         </div>
         <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
         <button type="button" id="pickForMe" class="btn-pick">Eleg&iacute; por m&iacute;</button>
@@ -317,7 +329,7 @@ function renderReco(rows) {{
       ${{r.poster_path
         ? `<img class="reco-poster" src="https://image.tmdb.org/t/p/w154${{r.poster_path}}" alt="" loading="lazy">`
         : `<div class="reco-poster"></div>`}}
-      <div class="reco-title">${{r.Title}}</div>
+      <div class="reco-title">${{r.Title}}${{r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>'}}</div>
       <div class="reco-meta">
         <span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span>
         ${{r.Year ?? ""}}
@@ -328,16 +340,19 @@ function renderReco(rows) {{
 function render() {{
   const q = document.getElementById("q").value.trim().toLowerCase();
   const typeSel = document.getElementById("fType").value;
+  const sourceSel = document.getElementById("fSource").value;
   let rows = DATA.filter(r => !q
     || r.Title.toLowerCase().includes(q)
     || (r.Genres || "").toLowerCase().includes(q)
     || (r.Directors || "").toLowerCase().includes(q));
   if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
+  if (sourceSel === "mine") rows = rows.filter(r => r.in_watchlist);
+  else if (sourceSel === "discover") rows = rows.filter(r => !r.in_watchlist);
   if (activePlatforms.size) rows = rows.filter(r => (r.providers_flatrate || "").split("|").some(p => activePlatforms.has(p)));
   if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
 
   document.getElementById("clearFilters").hidden =
-    !(q || typeSel || activePlatforms.size || activeGenres.size);
+    !(q || typeSel || sourceSel || activePlatforms.size || activeGenres.size);
 
   rows.sort((a, b) => {{
     let x = a[sortKey], y = b[sortKey];
@@ -350,7 +365,7 @@ function render() {{
   tb.innerHTML = rows.map(r => `
     <tr data-key="${{r.Title}}|${{r.Year}}">
       <td>${{posterCell(r)}}</td>
-      <td><a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a></td>
+      <td><a class="title-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener">${{r.Title}}</a>${{r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>'}}</td>
       <td class="num">${{r.Year ?? ""}}</td>
       <td>${{r["Title Type"]}}</td>
       <td class="num" title="${{r["Num Votes"] ? r["Num Votes"].toLocaleString("es-AR") + " votos" : ""}}">${{r["IMDb Rating"] ?? ""}}</td>
@@ -463,6 +478,7 @@ document.querySelectorAll("#t th[data-k]").forEach(th => th.addEventListener("cl
 }}));
 document.getElementById("q").addEventListener("input", render);
 document.getElementById("fType").addEventListener("change", render);
+document.getElementById("fSource").addEventListener("change", render);
 document.querySelector("#t tbody").addEventListener("click", (e) => {{
   const chip = e.target.closest(".chip[data-genre]");
   if (chip) toggleGenre(chip.dataset.genre);
@@ -470,6 +486,7 @@ document.querySelector("#t tbody").addEventListener("click", (e) => {{
 document.getElementById("clearFilters").addEventListener("click", () => {{
   document.getElementById("q").value = "";
   document.getElementById("fType").value = "";
+  document.getElementById("fSource").value = "";
   activePlatforms.clear();
   document.querySelectorAll("#fPlatformMenu input[data-platform]").forEach(cb => cb.checked = false);
   updatePlatformButton();
@@ -524,13 +541,21 @@ def build_html() -> None:
         score_watchlist()
 
     df = pd.read_csv(SCORED_CSV)
+    df["in_watchlist"] = True
+
+    cat = pd.read_csv(CATALOG_SCORED_CSV) if CATALOG_SCORED_CSV.exists() else pd.DataFrame()
+    if not cat.empty:
+        cat["in_watchlist"] = False
+    combined = pd.concat([df, cat], ignore_index=True) if not cat.empty else df
+
     html = TEMPLATE.format(
         generated=date.today().isoformat(),
         n=len(df),
+        n_catalog=len(cat),
         mean_pred=round(df["pred_rating"].mean(), 1),
         n_ge7=int((df["pred_rating"] >= 7).sum()),
         n_lt5=int((df["pred_rating"] < 5).sum()),
-        data_json=json.dumps(json.loads(df.to_json(orient="records")), ensure_ascii=False),
+        data_json=json.dumps(json.loads(combined.to_json(orient="records")), ensure_ascii=False),
     )
     for dest in DESTS:
         dest.parent.mkdir(parents=True, exist_ok=True)

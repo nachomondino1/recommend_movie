@@ -15,29 +15,15 @@ import numpy as np
 import pandas as pd
 
 from src.config import MODELS
-from src.data import TMDBClient, parse_detail
+from src.data import TMDBClient, imdb_like_fields, parse_detail
 from src.features import build, build_row
 from src.model import load_models
-
-
-def _imdb_like_fields(detail: dict, parsed: dict) -> dict:
-    date = detail.get("release_date") or detail.get("first_air_date") or ""
-    year = int(date[:4]) if date[:4].isdigit() else np.nan
-    return {
-        "Title": detail.get("title") or detail.get("name"),
-        "Title Type": "Movie" if detail.get("media_type") == "movie" else "TV Series",
-        "Year": year,
-        "IMDb Rating": np.nan,  # -> build usa tmdb_vote_average como sustituto
-        "Runtime (mins)": parsed.get("tmdb_runtime"),
-        "Genres": (parsed.get("tmdb_genres") or "").replace("|", ", "),
-        "Num Votes": detail.get("vote_count"),
-    }
 
 
 def predict_title(name: str) -> dict:
     detail = TMDBClient().fetch_by_name(name)
     parsed = parse_detail(detail)
-    record = {**_imdb_like_fields(detail, parsed), **parsed}
+    record = {**imdb_like_fields(detail, parsed), **parsed}
 
     X = build_row(record)
     meta = json.loads((MODELS / "meta.json").read_text()) if (MODELS / "meta.json").exists() else {}
