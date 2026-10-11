@@ -25,8 +25,8 @@ from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
                                      learning_curve)
 from sklearn.pipeline import Pipeline
 
-from src.config import (METRICS_CSV, MODELS, OUTPUTS, RATINGS_CSV, SCORED_CSV,
-                        WATCHLIST_CSV)
+from src.config import (EXCLUDED_CSV, METRICS_CSV, MODELS, OUTPUTS, RATINGS_CSV,
+                        SCORED_CSV, WATCHLIST_CSV)
 from src.data import tmdb_table
 from src.features import build, feature_groups
 from src.pipeline import (LIKE_THRESHOLD, OverviewEmbedder, build_classifier,  # noqa: F401
@@ -103,8 +103,10 @@ def score_watchlist() -> pd.DataFrame:
 
     wl = pd.read_csv(WATCHLIST_CSV)
     rated = set(pd.read_csv(RATINGS_CSV)["Const"].dropna())
-    keep = ~wl["Const"].isin(rated)          # sacar los que ya viste y puntuaste
-    n_drop = int((~keep).sum())
+    excluded = set(pd.read_csv(EXCLUDED_CSV)["Const"].dropna()) if EXCLUDED_CSV.exists() else set()
+    n_drop_rated = int(wl["Const"].isin(rated).sum())
+    n_drop_excluded = int(wl["Const"].isin(excluded).sum())
+    keep = ~wl["Const"].isin(rated | excluded)   # sacar los ya puntuados y los "no me interesa"
     wl = wl[keep].reset_index(drop=True)
 
     X_wl, _ = build(WATCHLIST_CSV)
@@ -116,8 +118,10 @@ def score_watchlist() -> pd.DataFrame:
     wl = wl.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons",
                                 "n_episodes", "providers_flatrate"]],
                   left_on="Const", right_on="imdb_id", how="left")
-    if n_drop:
-        print(f"({n_drop} títulos de la watchlist ya estaban puntuados; se omiten)")
+    if n_drop_rated:
+        print(f"({n_drop_rated} títulos de la watchlist ya estaban puntuados; se omiten)")
+    if n_drop_excluded:
+        print(f"({n_drop_excluded} títulos marcados 'no me interesa'; se omiten)")
 
     cols = ["Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres", "URL",
             "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",

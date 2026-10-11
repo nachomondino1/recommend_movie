@@ -1,15 +1,17 @@
 # Interfaz del proyecto. Correr `make` para ver los comandos.
 PY := ./venv/bin/python
 
-.PHONY: help setup update eval explore predict publish
+.PHONY: help setup update eval explore predict watched skip publish
 
 help:
-	@echo "make setup              - crear venv e instalar dependencias (una vez)"
-	@echo "make update             - re-enriquecer TMDB, re-entrenar, re-puntuar y regenerar el dashboard"
-	@echo "make predict TITLE=\"X\"  - nota predicha para un título por nombre"
-	@echo "make eval               - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria"
-	@echo "make explore            - análisis exploratorio (gráficos en outputs/)"
-	@echo "make publish            - subir el dashboard a GitHub Pages (git add docs + commit + push)"
+	@echo "make setup                        - crear venv e instalar dependencias (una vez)"
+	@echo "make update                       - re-enriquecer TMDB, re-entrenar, re-puntuar y regenerar el dashboard"
+	@echo "make predict TITLE=\"X\"            - nota predicha para un título por nombre"
+	@echo "make watched TITLE=\"X\" RATING=N   - marcar como vista y puntuada (agrega a data/ratings.csv)"
+	@echo "make skip TITLE=\"X\"               - marcar 'no me interesa' (se saca del dashboard sin puntuar)"
+	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria"
+	@echo "make explore                      - análisis exploratorio (gráficos en outputs/)"
+	@echo "make publish                      - subir el dashboard a GitHub Pages (git add docs + commit + push)"
 	@echo
 	@echo "Flujo habitual: actualizás data/ratings.csv o data/watchlist.csv -> make update -> make publish"
 
@@ -26,6 +28,12 @@ update:
 
 predict:
 	@$(PY) -m src.predict "$(TITLE)"
+
+watched:
+	@$(PY) -m src.curate watched "$(TITLE)" "$(RATING)"
+
+skip:
+	@$(PY) -m src.curate skip "$(TITLE)"
 
 eval:
 	$(PY) -m src.model --eval

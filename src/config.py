@@ -18,6 +18,7 @@ DOCS = ROOT / "docs"
 
 RATINGS_CSV = DATA / "ratings.csv"
 WATCHLIST_CSV = DATA / "watchlist.csv"
+EXCLUDED_CSV = DATA / "excluded.csv"    # "no me interesa": Const + fecha, versionado
 TMDB_CSV = CACHE / "tmdb.csv"
 SCORED_CSV = OUTPUTS / "watchlist_scored.csv"
 METRICS_CSV = ROOT / "metrics_history.csv"   # versionado: trayectoria real de scores
