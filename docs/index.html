@@ -85,7 +85,6 @@
     .filter-group select, .ms-toggle { width: 100%; min-width: 0; }
     .ms-menu { left: 0; right: 0; min-width: 0; }
     .btn-clear { margin-left: 0; text-align: left; }
-    .btn-pick { width: 100%; }
   }
   @media (max-width: 640px) {
     body { padding: 12px; }
@@ -94,8 +93,10 @@
     .card { min-width: 46%; flex: 1; }
   }
   .reco { margin: 0 0 16px; }
+  .reco-head { display: flex; align-items: center; justify-content: space-between;
+    gap: 8px 12px; flex-wrap: wrap; margin: 0 0 10px; }
   .reco h2 { font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.03em; color: var(--muted); margin: 0 0 10px; }
+    letter-spacing: 0.03em; color: var(--muted); margin: 0; }
   .reco-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
   .reco-card { flex: 0 0 112px; cursor: pointer; }
   .reco-poster { width: 112px; height: 168px; object-fit: cover; border-radius: 8px;
@@ -214,12 +215,14 @@
           </select>
         </div>
         <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
-        <button type="button" id="pickForMe" class="btn-pick">Eleg&iacute; por m&iacute;</button>
       </div>
     </div>
 
     <div class="reco">
-      <h2>Te recomendamos</h2>
+      <div class="reco-head">
+        <h2>Te recomendamos</h2>
+        <button type="button" id="pickForMe" class="btn-pick">Eleg&iacute; por m&iacute;</button>
+      </div>
       <div id="recoRow" class="reco-row"></div>
     </div>
 
