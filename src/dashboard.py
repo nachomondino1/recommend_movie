@@ -26,37 +26,46 @@ TEMPLATE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Watchlist &mdash; notas predichas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {{
-    --bg: #f7f7f5; --card: #fff; --ink: #1c1c1c; --muted: #6b6b6b;
-    --border: #e3e3df; --accent: #2b6cb0;
+    --bg: #fafafa; --bg-subtle: #f2f2f4; --card: #fff; --ink: #18181b;
+    --muted: #71717a; --muted-soft: #a1a1aa; --border: #e4e4e7; --border-soft: #ececef;
+    --accent: #4f46e5; --accent-soft: #eef0fe;
+    --radius-sm: 8px; --radius: 12px; --radius-lg: 16px;
+    --shadow-xs: 0 1px 2px rgba(15, 15, 20, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 15, 20, 0.06), 0 1px 2px rgba(15, 15, 20, 0.04);
+    --shadow-md: 0 8px 24px rgba(15, 15, 20, 0.10);
   }}
   * {{ box-sizing: border-box; }}
-  body {{ margin: 0; padding: 24px; background: var(--bg); color: var(--ink);
-    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
-  h1 {{ font-size: 20px; margin: 0 0 4px; }}
-  .sub {{ color: var(--muted); margin-bottom: 20px; }}
+  body {{ margin: 0; padding: 32px 24px; background: var(--bg); color: var(--ink);
+    font: 14px/1.55 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; }}
+  h1 {{ font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }}
+  .sub {{ color: var(--muted); font-size: 13px; margin-bottom: 28px; }}
   .wrap {{ max-width: 1100px; margin: 0 auto; }}
   .cards {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }}
-  .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; min-width: 130px; }}
-  .card .n {{ font-size: 22px; font-weight: 600; }}
-  .card .l {{ color: var(--muted); font-size: 12px; }}
-  #chart {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 16px; margin-bottom: 20px; }}
+  .card {{ background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    padding: 18px 20px; min-width: 140px; box-shadow: var(--shadow-xs); }}
+  .card .n {{ font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }}
+  .card .l {{ color: var(--muted); font-size: 12px; margin-top: 2px; }}
+  #chart {{ background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 20px; box-shadow: var(--shadow-xs); }}
   .bar {{ fill: var(--accent); }}
   .bar-label {{ fill: var(--muted); font-size: 11px; }}
-  .traj-head {{ font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.03em; color: var(--muted); margin: 0 0 10px; }}
+  .traj-head {{ font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted-soft); margin: 0 0 12px; }}
   .traj-grid {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }}
-  .chart-card {{ flex: 1; min-width: 260px; background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 16px; }}
-  .traj-title {{ font-size: 12px; color: var(--muted); margin-bottom: 8px; }}
+  .chart-card {{ flex: 1; min-width: 260px; background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-xs); }}
+  .traj-title {{ font-size: 12px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }}
   .traj-empty {{ font-size: 13px; color: var(--muted); }}
-  .hbar {{ display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }}
+  .hbar {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }}
   .hbar-label {{ flex: 0 0 120px; font-size: 13px; overflow: hidden; text-overflow: ellipsis;
     white-space: nowrap; }}
-  .hbar-track {{ flex: 1; background: var(--bg); border-radius: 4px; height: 14px; overflow: hidden; }}
+  .hbar-track {{ flex: 1; background: var(--bg-subtle); border-radius: 4px; height: 14px; overflow: hidden; }}
   .hbar-fill {{ height: 100%; border-radius: 4px; }}
   .hbar-value {{ flex: 0 0 64px; text-align: right; color: var(--muted); font-size: 12px;
     font-variant-numeric: tabular-nums; }}
@@ -64,47 +73,55 @@ TEMPLATE = """<!doctype html>
   .toplist-info {{ flex: 1; min-width: 0; }}
   .toplist-info a {{ display: block; font-weight: 600; font-size: 13px; }}
   .controls {{ position: sticky; top: 0; z-index: 5; background: var(--card);
-    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 14px;
-    margin: 0 0 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); }}
-  input[type=search] {{ width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 16px; background: var(--bg); }}
-  .result-count {{ color: var(--muted); font-size: 12px; margin-top: 8px; }}
+    border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 16px 18px 18px;
+    margin: 0 0 20px; box-shadow: var(--shadow-sm); }}
+  input[type=search] {{ width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 15px; background: var(--bg); color: var(--ink);
+    font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease; }}
+  input[type=search]:focus {{ outline: none; border-color: var(--accent); background: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft); }}
+  .result-count {{ color: var(--muted); font-size: 12px; margin-top: 10px; }}
   .filter-bar {{ display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
-    margin-top: 12px; }}
-  .filter-group {{ display: flex; flex-direction: column; gap: 4px; }}
+    margin-top: 14px; }}
+  .filter-group {{ display: flex; flex-direction: column; gap: 5px; }}
   .filter-group > label {{ font-size: 11px; font-weight: 600; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.03em; }}
-  .filter-group select {{ padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 14px; background: var(--bg); color: var(--ink); min-width: 150px; }}
-  .btn-clear {{ padding: 7px 12px; border-radius: 8px; border: 1px solid transparent;
+    text-transform: uppercase; letter-spacing: 0.05em; }}
+  .filter-group select {{ padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; background: var(--bg); color: var(--ink); min-width: 150px; font-family: inherit;
+    cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }}
+  .filter-group select:focus {{ outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft); }}
+  .btn-clear {{ padding: 7px 12px; border-radius: var(--radius-sm); border: 1px solid transparent;
     background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
-    text-decoration: underline; margin-left: auto; }}
+    font-family: inherit; text-decoration: underline; margin-left: auto; }}
   .btn-clear:hover {{ color: var(--ink); }}
   .multiselect {{ position: relative; }}
-  .ms-toggle {{ padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 14px; background: var(--bg); color: var(--ink); min-width: 150px;
+  .ms-toggle {{ padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; background: var(--bg); color: var(--ink); min-width: 150px; font-family: inherit;
     text-align: left; cursor: pointer; display: flex; align-items: center;
-    justify-content: space-between; gap: 8px; }}
+    justify-content: space-between; gap: 8px; transition: border-color .15s ease, box-shadow .15s ease; }}
+  .ms-toggle:focus {{ outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }}
   .ms-toggle::after {{ content: "\\25be"; color: var(--muted); font-size: 11px; }}
   .ms-menu {{ position: absolute; top: calc(100% + 4px); left: 0; z-index: 10; min-width: 220px;
-    max-height: 280px; overflow-y: auto; background: var(--card); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); padding: 6px; }}
+    max-height: 280px; overflow-y: auto; background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-md); padding: 6px; }}
   .ms-menu[hidden] {{ display: none; }}
-  .ms-option {{ display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  .ms-option {{ display: flex; align-items: center; gap: 8px; padding: 7px 8px;
     border-radius: 6px; font-size: 13px; cursor: pointer; user-select: none; }}
-  .ms-option:hover {{ background: #f0f0ec; }}
-  .ms-option input {{ margin: 0; }}
+  .ms-option:hover {{ background: var(--bg-subtle); }}
+  .ms-option input {{ margin: 0; accent-color: var(--accent); }}
   .ms-all {{ font-weight: 600; }}
-  .ms-divider {{ height: 1px; background: var(--border); margin: 4px 2px; }}
+  .ms-divider {{ height: 1px; background: var(--border-soft); margin: 4px 2px; }}
   .chip {{ display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px;
     border: 1px solid var(--border); background: var(--card); color: var(--muted);
-    cursor: pointer; user-select: none; }}
+    cursor: pointer; user-select: none; transition: background .15s ease, color .15s ease; }}
   .chip.active {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
   .chip.mini {{ padding: 2px 7px; font-size: 11px; margin: 1px 3px 1px 0; }}
-  .btn-pick {{ padding: 7px 14px; border-radius: 8px; border: 1px solid var(--accent);
-    background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }}
+  .btn-pick {{ padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: opacity .15s ease; }}
   .btn-pick:hover {{ opacity: 0.9; }}
-  tr.picked td {{ background: #eaf2fb; }}
+  tr.picked td {{ background: var(--accent-soft); }}
   @media (max-height: 480px) {{
     .controls {{ position: static; }}
   }}
@@ -116,51 +133,58 @@ TEMPLATE = """<!doctype html>
     .btn-clear {{ margin-left: 0; text-align: left; }}
   }}
   @media (max-width: 640px) {{
-    body {{ padding: 12px; }}
-    h1 {{ font-size: 18px; }}
-    #chart {{ padding: 10px; }}
+    body {{ padding: 16px 12px; }}
+    h1 {{ font-size: 19px; }}
+    #chart {{ padding: 12px; }}
     .card {{ min-width: 46%; flex: 1; }}
   }}
   .reco {{ margin: 0 0 16px; }}
   .reco-head {{ display: flex; align-items: center; justify-content: space-between;
-    gap: 8px 12px; flex-wrap: wrap; margin: 0 0 10px; }}
-  .reco h2 {{ font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.03em; color: var(--muted); margin: 0; }}
-  .reco-row {{ display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }}
-  .reco-card {{ flex: 0 0 112px; cursor: pointer; }}
-  .reco-poster {{ width: 112px; height: 168px; object-fit: cover; border-radius: 8px;
-    display: block; background: var(--border); }}
-  .reco-card .reco-title {{ font-size: 12px; font-weight: 600; margin-top: 6px;
+    gap: 8px 12px; flex-wrap: wrap; margin: 0 0 12px; }}
+  .reco h2 {{ font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted-soft); margin: 0; }}
+  .reco-row {{ display: flex; gap: 14px; overflow-x: auto; padding-bottom: 4px; }}
+  .reco-card {{ flex: 0 0 120px; cursor: pointer; transition: transform .15s ease; }}
+  .reco-card:hover {{ transform: translateY(-2px); }}
+  .reco-poster {{ width: 120px; height: 180px; object-fit: cover; border-radius: 10px;
+    display: block; background: var(--border-soft); box-shadow: var(--shadow-xs); }}
+  .reco-card .reco-title {{ font-size: 12px; font-weight: 600; margin-top: 8px;
     line-height: 1.3; }}
   .reco-card .reco-meta {{ font-size: 11px; color: var(--muted); margin-top: 4px;
     display: flex; align-items: center; gap: 6px; }}
   .reco-empty {{ color: var(--muted); font-size: 13px; }}
-  .empty-state {{ text-align: center; color: var(--muted); font-size: 13px; padding: 28px 12px; }}
-  .tablewrap {{ overflow: auto; max-height: 70vh; border: 1px solid var(--border);
-    border-radius: 10px; }}
+  .empty-state {{ text-align: center; color: var(--muted); font-size: 13px; padding: 32px 12px; }}
+  .tablewrap {{ overflow: auto; max-height: 70vh; border: 1px solid var(--border-soft);
+    border-radius: var(--radius); }}
+  .tablewrap::-webkit-scrollbar, .ms-menu::-webkit-scrollbar {{ width: 8px; height: 8px; }}
+  .tablewrap::-webkit-scrollbar-thumb, .ms-menu::-webkit-scrollbar-thumb {{
+    background: var(--border); border-radius: 8px; }}
+  .tablewrap::-webkit-scrollbar-track, .ms-menu::-webkit-scrollbar-track {{ background: transparent; }}
   table {{ width: 100%; border-collapse: collapse; background: var(--card);
     min-width: 720px; }}
-  th, td {{ padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border);
-    vertical-align: top; }}
-  th {{ background: #f0f0ec; cursor: pointer; user-select: none; white-space: nowrap;
-    position: sticky; top: 0; z-index: 4; }}
+  th, td {{ padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border-soft);
+    vertical-align: top; font-size: 13px; }}
+  th {{ background: var(--bg-subtle); cursor: pointer; user-select: none; white-space: nowrap;
+    position: sticky; top: 0; z-index: 4; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted); }}
   th.nosort {{ cursor: default; }}
+  th.sorted, th.asc {{ color: var(--ink); }}
   th.sorted::after {{ content: " \\25be"; }}
   th.asc::after {{ content: " \\25b4"; }}
   td.num, th.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
-  tr:hover td {{ background: #fafaf8; }}
-  .pill {{ display: inline-block; padding: 2px 8px; border-radius: 999px; font-weight: 600;
-    color: #fff; font-variant-numeric: tabular-nums; }}
+  tr:hover td {{ background: var(--bg-subtle); }}
+  .pill {{ display: inline-block; padding: 3px 9px; border-radius: 999px; font-weight: 700;
+    font-size: 12.5px; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }}
   .genres {{ color: var(--muted); font-size: 12px; }}
-  .provider-pill {{ display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px;
-    background: #eef2f7; color: var(--ink); border: 1px solid var(--border);
-    margin: 1px 3px 1px 0; white-space: nowrap; }}
-  .poster {{ width: 40px; height: 60px; object-fit: cover; border-radius: 4px; display: block;
-    background: var(--border); }}
+  .provider-pill {{ display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 11px;
+    background: var(--bg-subtle); color: var(--ink); border: 1px solid var(--border-soft);
+    margin: 1px 4px 1px 0; white-space: nowrap; font-weight: 500; }}
+  .poster {{ width: 40px; height: 60px; object-fit: cover; border-radius: 6px; display: block;
+    background: var(--border-soft); }}
   a.title-link {{ color: var(--ink); text-decoration: none; }}
   a.title-link:hover {{ text-decoration: underline; }}
   .mobile-meta {{ display: none; }}
-  .foot {{ color: var(--muted); font-size: 12px; margin-top: 16px; }}
+  .foot {{ color: var(--muted); font-size: 12px; margin-top: 18px; }}
   @media (max-width: 640px) {{
     table {{ min-width: 0; }}
     .tablewrap {{ overflow-x: hidden; }}
@@ -173,45 +197,54 @@ TEMPLATE = """<!doctype html>
     .mobile-meta-line {{ color: var(--muted); font-size: 12px; }}
     .mobile-chips {{ margin-top: 4px; }}
   }}
-  .tabs {{ display: flex; gap: 8px; margin-bottom: 20px; }}
-  .tab-btn {{ padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--card); color: var(--muted); font-size: 14px; font-weight: 600;
-    cursor: pointer; }}
-  .tab-btn.active {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
+  .tabs {{ display: inline-flex; gap: 2px; padding: 4px; background: var(--bg-subtle);
+    border: 1px solid var(--border-soft); border-radius: calc(var(--radius-sm) + 4px);
+    margin-bottom: 28px; }}
+  .tab-btn {{ padding: 8px 16px; border-radius: var(--radius-sm); border: none;
+    background: transparent; color: var(--muted); font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: background .15s ease, color .15s ease; }}
+  .tab-btn:hover {{ color: var(--ink); }}
+  .tab-btn.active {{ background: var(--card); color: var(--ink); box-shadow: var(--shadow-xs); }}
+  @media (max-width: 640px) {{
+    .tabs {{ width: 100%; }}
+    .tab-btn {{ flex: 1; text-align: center; }}
+  }}
   .panel[hidden] {{ display: none; }}
-  .badge-discover {{ display: inline-block; padding: 1px 6px; border-radius: 999px;
+  .badge-discover {{ display: inline-block; padding: 2px 7px; border-radius: 999px;
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
-    background: #fff3cd; color: #8a6400; margin-left: 5px; vertical-align: middle; }}
+    background: #fef3c7; color: #92400e; margin-left: 6px; vertical-align: middle; }}
   .title-btn {{ background: none; border: none; padding: 0; margin: 0; font: inherit;
     color: var(--ink); cursor: pointer; text-align: left; }}
   .title-btn:hover {{ text-decoration: underline; }}
-  .imdb-link {{ color: var(--muted); font-size: 11px; text-decoration: none; margin-left: 5px; }}
+  .imdb-link {{ color: var(--muted); font-size: 11px; text-decoration: none; margin-left: 6px; }}
   .imdb-link:hover {{ text-decoration: underline; }}
-  .modal-overlay {{ position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex;
+  .modal-overlay {{ position: fixed; inset: 0; background: rgba(15, 15, 20, 0.55);
+    backdrop-filter: blur(2px); display: flex;
     align-items: center; justify-content: center; padding: 16px; z-index: 50; }}
   .modal-overlay[hidden] {{ display: none; }}
-  .modal-box {{ background: var(--card); border-radius: 12px; max-width: 560px; width: 100%;
-    max-height: 85vh; overflow-y: auto; padding: 20px; position: relative; }}
-  .modal-close {{ position: absolute; top: 8px; right: 10px; background: none; border: none;
-    font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 6px; }}
-  .modal-close:hover {{ color: var(--ink); }}
-  .modal-head {{ display: flex; gap: 14px; margin-bottom: 14px; padding-right: 22px; }}
-  .modal-poster {{ width: 92px; height: 138px; object-fit: cover; border-radius: 6px; flex: none;
-    background: var(--border); }}
-  .modal-head h3 {{ margin: 0 0 4px; font-size: 16px; }}
+  .modal-box {{ background: var(--card); border-radius: var(--radius-lg); max-width: 560px; width: 100%;
+    max-height: 85vh; overflow-y: auto; padding: 24px; position: relative; box-shadow: var(--shadow-md); }}
+  .modal-close {{ position: absolute; top: 10px; right: 12px; background: none; border: none;
+    font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 6px;
+    border-radius: 999px; transition: background .15s ease, color .15s ease; }}
+  .modal-close:hover {{ color: var(--ink); background: var(--bg-subtle); }}
+  .modal-head {{ display: flex; gap: 14px; margin-bottom: 16px; padding-right: 22px; }}
+  .modal-poster {{ width: 92px; height: 138px; object-fit: cover; border-radius: 8px; flex: none;
+    background: var(--border-soft); }}
+  .modal-head h3 {{ margin: 0 0 4px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }}
   .modal-meta {{ color: var(--muted); font-size: 12px; }}
   .modal-section-label {{ font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.03em; color: var(--muted); margin-bottom: 4px; }}
+    letter-spacing: 0.05em; color: var(--muted-soft); margin-bottom: 5px; }}
   .modal-overview {{ margin-bottom: 4px; }}
   .modal-overview p {{ margin: 0 0 10px; white-space: pre-wrap; }}
-  .modal-review {{ margin-bottom: 10px; padding-left: 10px; border-left: 3px solid var(--border); }}
+  .modal-review {{ margin-bottom: 10px; padding-left: 12px; border-left: 3px solid var(--border); }}
   .modal-review p {{ margin: 0; white-space: pre-wrap; }}
-  .modal-review-pos {{ border-left-color: #2f9e44; }}
-  .modal-review-neg {{ border-left-color: #e03131; }}
+  .modal-review-pos {{ border-left-color: #059669; }}
+  .modal-review-neg {{ border-left-color: #e11d48; }}
   .modal-review-empty {{ border-left: none; padding-left: 0; }}
   .modal-review-empty p {{ color: var(--muted); margin-bottom: 6px; }}
-  .modal-review-empty code {{ display: block; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 6px; padding: 6px 8px; font-size: 12px; overflow-x: auto; }}
+  .modal-review-empty code {{ display: block; background: var(--bg-subtle); border: 1px solid var(--border-soft);
+    border-radius: 6px; padding: 7px 9px; font-size: 12px; overflow-x: auto; }}
   .modal-review-date {{ color: var(--muted); font-size: 11px; margin-top: 2px; }}
 </style>
 </head>
@@ -224,7 +257,7 @@ TEMPLATE = """<!doctype html>
   <div class="tabs">
     <button type="button" class="tab-btn active" data-tab="hoy">&iquest;Qu&eacute; ver hoy?</button>
     <button type="button" class="tab-btn" data-tab="analisis">An&aacute;lisis</button>
-    <button type="button" class="tab-btn" data-tab="catalogo">Cat&aacute;logo</button>
+    <button type="button" class="tab-btn" data-tab="catalogo">Ya vistas</button>
   </div>
 
   <div id="panel-analisis" class="panel" hidden>
@@ -418,7 +451,7 @@ function discoverBadge(r) {{
 function colorFor(v) {{
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
   const hue = t * 120;               // 0=rojo, 120=verde
-  return `hsl(${{hue}}, 62%, 42%)`;
+  return `hsl(${{hue}}, 56%, 42%)`;
 }}
 
 function posterCell(r) {{
