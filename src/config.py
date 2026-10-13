@@ -24,7 +24,7 @@ TMDB_CSV = CACHE / "tmdb.csv"
 CATALOG_CSV = CACHE / "catalog.csv"          # Fase 6: catálogo ampliado, fuera de ratings/watchlist
 SCORED_CSV = OUTPUTS / "watchlist_scored.csv"
 CATALOG_SCORED_CSV = OUTPUTS / "catalog_scored.csv"
-REVIEWED_SCORED_CSV = OUTPUTS / "reviewed_scored.csv"  # títulos ya vistos con reseña
+WATCHED_SCORED_CSV = OUTPUTS / "watched_scored.csv"  # todos los títulos ya vistos (ratings.csv)
 METRICS_CSV = DATA / "metrics_history.csv"   # versionado: trayectoria real de scores
 
 for _d in (CACHE, TMDB_DIR, MODELS, OUTPUTS):

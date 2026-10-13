@@ -15,7 +15,7 @@ from datetime import date
 import pandas as pd
 
 from src.config import (CATALOG_SCORED_CSV, DOCS, OUTPUTS,
-                        REVIEWED_SCORED_CSV, SCORED_CSV)
+                        SCORED_CSV, WATCHED_SCORED_CSV)
 from src.taste import build_taste_stats
 
 DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
@@ -182,9 +182,6 @@ TEMPLATE = """<!doctype html>
   .badge-discover {{ display: inline-block; padding: 1px 6px; border-radius: 999px;
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
     background: #fff3cd; color: #8a6400; margin-left: 5px; vertical-align: middle; }}
-  .badge-watched {{ display: inline-block; padding: 1px 6px; border-radius: 999px;
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
-    background: #e3e3df; color: #5a5a55; margin-left: 5px; vertical-align: middle; }}
   .title-btn {{ background: none; border: none; padding: 0; margin: 0; font: inherit;
     color: var(--ink); cursor: pointer; text-align: left; }}
   .title-btn:hover {{ text-decoration: underline; }}
@@ -222,14 +219,15 @@ TEMPLATE = """<!doctype html>
 <div class="wrap">
   <h1>Watchlist &mdash; notas predichas</h1>
   <div class="sub">Generado el {generated} &middot; {n} t&iacute;tulos en tu watchlist
-    &middot; {n_catalog} para descubrir &middot; {n_reviewed} rese&ntilde;ados</div>
+    &middot; {n_catalog} para descubrir &middot; {n_watched} ya vistas</div>
 
   <div class="tabs">
-    <button type="button" class="tab-btn active" data-tab="tabla">Tabla</button>
-    <button type="button" class="tab-btn" data-tab="dashboard">Mi gusto</button>
+    <button type="button" class="tab-btn active" data-tab="hoy">&iquest;Qu&eacute; ver hoy?</button>
+    <button type="button" class="tab-btn" data-tab="analisis">An&aacute;lisis</button>
+    <button type="button" class="tab-btn" data-tab="catalogo">Cat&aacute;logo</button>
   </div>
 
-  <div id="panel-dashboard" class="panel" hidden>
+  <div id="panel-analisis" class="panel" hidden>
     <div class="cards">
       <div class="card"><div class="n">{t_n_rated}</div><div class="l">t&iacute;tulos puntuados</div></div>
       <div class="card"><div class="n">{t_movies_series}</div><div class="l">pel&iacute;culas / series</div></div>
@@ -275,7 +273,7 @@ TEMPLATE = """<!doctype html>
     </div>
   </div>
 
-  <div id="panel-tabla" class="panel">
+  <div id="panel-hoy" class="panel">
     <div class="controls">
       <input type="search" id="q" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
       <div id="resultCount" class="result-count"></div>
@@ -304,7 +302,6 @@ TEMPLATE = """<!doctype html>
             <option value="">Todos</option>
             <option value="mine">Mi lista</option>
             <option value="discover">Para descubrir</option>
-            <option value="reviewed">Ya rese&ntilde;adas</option>
           </select>
         </div>
         <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
@@ -337,6 +334,35 @@ TEMPLATE = """<!doctype html>
       t&iacute;pico es &plusmn;1.3 puntos. <code>pred_rating</code> y <code>p_like</code>
       salen de dos modelos distintos y pueden no coincidir.</div>
   </div>
+
+  <div id="panel-catalogo" class="panel" hidden>
+    <div class="controls">
+      <input type="search" id="qCat" placeholder="Buscar por t&iacute;tulo, director o g&eacute;nero&hellip;">
+      <div id="resultCountCat" class="result-count"></div>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label for="fTypeCat">Tipo</label>
+          <select id="fTypeCat"><option value="">Todos</option></select>
+        </div>
+        <button type="button" id="clearFiltersCat" class="btn-clear" hidden>Limpiar filtros</button>
+      </div>
+    </div>
+
+    <div class="tablewrap"><table id="tCat"><thead><tr>
+      <th class="nosort">Poster</th>
+      <th data-k="Title">T&iacute;tulo</th>
+      <th data-k="pred_rating" class="num">Tu nota</th>
+      <th data-k="Year" class="num col-year">A&ntilde;o</th>
+      <th data-k="Title Type" class="col-type">Tipo</th>
+      <th data-k="Genres" class="col-genres">G&eacute;neros</th>
+      <th data-k="IMDb Rating" class="num col-imdb">IMDb</th>
+      <th data-k="Directors" class="col-director">Director</th>
+      <th class="nosort col-duration">Duraci&oacute;n</th>
+    </tr></thead><tbody></tbody></table></div>
+
+    <div class="foot">Tu cat&aacute;logo de t&iacute;tulos ya vistos y puntuados en IMDb.
+      Clic en el t&iacute;tulo para ver la sinopsis y tu rese&ntilde;a (si la escribiste).</div>
+  </div>
 </div>
 
 <div id="modalOverlay" class="modal-overlay" hidden>
@@ -348,8 +374,11 @@ TEMPLATE = """<!doctype html>
 
 <script>
 const DATA = {data_json};
+const HOY_DATA = DATA.filter(r => !r.watched);
+const CATALOG_DATA = DATA.filter(r => r.watched);
 const TASTE = {taste_json};
 let sortKey = "pred_rating", sortAsc = false;
+let catSortKey = "pred_rating", catSortAsc = false;
 let currentRows = [];
 const activeGenres = new Set();
 const activePlatforms = new Set();
@@ -382,10 +411,8 @@ function updatePlatformButton() {{
     n === 0 ? "Todas" : n === 1 ? [...activePlatforms][0] : `${{n}} plataformas`;
 }}
 
-function sourceBadge(r) {{
-  if (r.reviewed) return ' <span class="badge-watched">vista</span>';
-  if (!r.in_watchlist) return ' <span class="badge-discover">nuevo</span>';
-  return "";
+function discoverBadge(r) {{
+  return r.in_watchlist ? "" : ' <span class="badge-discover">nuevo</span>';
 }}
 
 function colorFor(v) {{
@@ -517,7 +544,7 @@ function renderReco(rows) {{
       ${{r.poster_path
         ? `<img class="reco-poster" src="https://image.tmdb.org/t/p/w154${{r.poster_path}}" alt="" loading="lazy">`
         : `<div class="reco-poster"></div>`}}
-      <div class="reco-title">${{r.Title}}${{sourceBadge(r)}}</div>
+      <div class="reco-title">${{r.Title}}${{discoverBadge(r)}}</div>
       <div class="reco-meta">
         <span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span>
         ${{r.Year ?? ""}}
@@ -529,22 +556,21 @@ function render() {{
   const q = document.getElementById("q").value.trim().toLowerCase();
   const typeSel = document.getElementById("fType").value;
   const sourceSel = document.getElementById("fSource").value;
-  let rows = DATA.filter(r => !q
+  let rows = HOY_DATA.filter(r => !q
     || r.Title.toLowerCase().includes(q)
     || (r.Genres || "").toLowerCase().includes(q)
     || (r.Directors || "").toLowerCase().includes(q));
   if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
   if (sourceSel === "mine") rows = rows.filter(r => r.in_watchlist);
-  else if (sourceSel === "discover") rows = rows.filter(r => !r.in_watchlist && !r.reviewed);
-  else if (sourceSel === "reviewed") rows = rows.filter(r => r.reviewed);
+  else if (sourceSel === "discover") rows = rows.filter(r => !r.in_watchlist);
   if (activePlatforms.size) rows = rows.filter(r => (r.providers_flatrate || "").split("|").some(p => activePlatforms.has(p)));
   if (activeGenres.size) rows = rows.filter(r => (r.Genres || "").split(", ").some(g => activeGenres.has(g)));
 
   document.getElementById("clearFilters").hidden =
     !(q || typeSel || sourceSel || activePlatforms.size || activeGenres.size);
-  document.getElementById("resultCount").innerHTML = rows.length === DATA.length
+  document.getElementById("resultCount").innerHTML = rows.length === HOY_DATA.length
     ? `${{rows.length}} t&iacute;tulos`
-    : `${{rows.length}} de ${{DATA.length}} t&iacute;tulos`;
+    : `${{rows.length}} de ${{HOY_DATA.length}} t&iacute;tulos`;
 
   rows.sort((a, b) => {{
     let x = a[sortKey], y = b[sortKey];
@@ -565,7 +591,7 @@ function render() {{
       <td>${{posterCell(r)}}</td>
       <td>
         <button type="button" class="title-btn" data-key="${{r.Title}}|${{r.Year}}">${{r.Title}}</button>
-        <a class="imdb-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener" title="Abrir en IMDb">IMDb &#8599;</a>${{sourceBadge(r)}}
+        <a class="imdb-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener" title="Abrir en IMDb">IMDb &#8599;</a>${{discoverBadge(r)}}
         <div class="mobile-meta">
           ${{meta ? `<div class="mobile-meta-line">${{meta}}</div>` : ""}}
           <div class="mobile-chips">${{genres}}</div>
@@ -589,7 +615,7 @@ function render() {{
     if (th.dataset.k === sortKey) th.classList.add(sortAsc ? "asc" : "sorted");
   }});
 
-  renderReco(rows.filter(r => !r.reviewed));
+  renderReco(rows);
 }}
 
 function hbarList(containerId, items) {{
@@ -673,7 +699,7 @@ function renderTaste() {{
 }}
 
 function initFilters() {{
-  const types = [...new Set(DATA.map(r => r["Title Type"]).filter(Boolean))].sort();
+  const types = [...new Set(HOY_DATA.map(r => r["Title Type"]).filter(Boolean))].sort();
   const sel = document.getElementById("fType");
   types.forEach(t => {{
     const opt = document.createElement("option");
@@ -681,7 +707,7 @@ function initFilters() {{
     sel.appendChild(opt);
   }});
 
-  const platforms = [...new Set(DATA.flatMap(r => (r.providers_flatrate || "").split("|").filter(Boolean)))].sort();
+  const platforms = [...new Set(HOY_DATA.flatMap(r => (r.providers_flatrate || "").split("|").filter(Boolean)))].sort();
   const pmenu = document.getElementById("fPlatformMenu");
   const pAllOpt = document.createElement("div");
   pAllOpt.className = "ms-option ms-all";
@@ -708,7 +734,7 @@ function initFilters() {{
     pmenu.appendChild(opt);
   }});
 
-  const genres = [...new Set(DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
+  const genres = [...new Set(HOY_DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
   const menu = document.getElementById("fGenreMenu");
   const allOpt = document.createElement("div");
   allOpt.className = "ms-option ms-all";
@@ -733,6 +759,68 @@ function initFilters() {{
     opt.appendChild(cb);
     opt.appendChild(document.createTextNode(g));
     menu.appendChild(opt);
+  }});
+}}
+
+function renderCatalog() {{
+  const q = document.getElementById("qCat").value.trim().toLowerCase();
+  const typeSel = document.getElementById("fTypeCat").value;
+  let rows = CATALOG_DATA.filter(r => !q
+    || r.Title.toLowerCase().includes(q)
+    || (r.Genres || "").toLowerCase().includes(q)
+    || (r.Directors || "").toLowerCase().includes(q));
+  if (typeSel) rows = rows.filter(r => r["Title Type"] === typeSel);
+
+  document.getElementById("clearFiltersCat").hidden = !(q || typeSel);
+  document.getElementById("resultCountCat").innerHTML = rows.length === CATALOG_DATA.length
+    ? `${{rows.length}} t&iacute;tulos`
+    : `${{rows.length}} de ${{CATALOG_DATA.length}} t&iacute;tulos`;
+
+  rows.sort((a, b) => {{
+    let x = a[catSortKey], y = b[catSortKey];
+    if (typeof x === "string") {{ x = x.toLowerCase(); y = (y || "").toLowerCase(); }}
+    return (x < y ? -1 : x > y ? 1 : 0) * (catSortAsc ? 1 : -1);
+  }});
+
+  const tb = document.querySelector("#tCat tbody");
+  tb.innerHTML = !rows.length
+    ? `<tr><td colspan="9" class="empty-state">Ning&uacute;n t&iacute;tulo cumple los filtros activos.</td></tr>`
+    : rows.map(r => {{
+    const meta = mobileMetaLine(r);
+    return `
+    <tr data-key="${{r.Title}}|${{r.Year}}">
+      <td>${{posterCell(r)}}</td>
+      <td>
+        <button type="button" class="title-btn" data-key="${{r.Title}}|${{r.Year}}">${{r.Title}}</button>
+        <a class="imdb-link" href="${{r.URL || "#"}}" target="_blank" rel="noopener" title="Abrir en IMDb">IMDb &#8599;</a>
+        <div class="mobile-meta">
+          ${{meta ? `<div class="mobile-meta-line">${{meta}}</div>` : ""}}
+          ${{r.Genres ? `<div class="mobile-meta-line">${{r.Genres}}</div>` : ""}}
+        </div>
+      </td>
+      <td class="num"><span class="pill" style="background:${{colorFor(r.pred_rating)}}">${{r.pred_rating.toFixed(1)}}</span></td>
+      <td class="num col-year">${{r.Year ?? ""}}</td>
+      <td class="col-type">${{r["Title Type"]}}</td>
+      <td class="genres col-genres">${{r.Genres ?? ""}}</td>
+      <td class="num col-imdb">${{r["IMDb Rating"] ?? ""}}</td>
+      <td class="genres col-director">${{r.Directors ?? ""}}</td>
+      <td class="genres col-duration">${{durationLabel(r)}}</td>
+    </tr>`;
+  }}).join("");
+
+  document.querySelectorAll("#tCat th[data-k]").forEach(th => {{
+    th.classList.remove("sorted", "asc");
+    if (th.dataset.k === catSortKey) th.classList.add(catSortAsc ? "asc" : "sorted");
+  }});
+}}
+
+function initCatalogFilters() {{
+  const types = [...new Set(CATALOG_DATA.map(r => r["Title Type"]).filter(Boolean))].sort();
+  const sel = document.getElementById("fTypeCat");
+  types.forEach(t => {{
+    const opt = document.createElement("option");
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
   }});
 }}
 
@@ -787,9 +875,8 @@ document.addEventListener("click", (e) => {{
   }}
 }});
 document.getElementById("pickForMe").addEventListener("click", () => {{
-  const pickable = currentRows.filter(r => !r.reviewed);
-  if (!pickable.length) return;
-  const pick = pickWeighted(pickable);
+  if (!currentRows.length) return;
+  const pick = pickWeighted(currentRows);
   highlightRow(pick.Title + "|" + pick.Year);
 }});
 document.getElementById("recoRow").addEventListener("click", (e) => {{
@@ -797,20 +884,41 @@ document.getElementById("recoRow").addEventListener("click", (e) => {{
   if (card) highlightRow(card.dataset.key);
 }});
 
+document.querySelectorAll("#tCat th[data-k]").forEach(th => th.addEventListener("click", () => {{
+  const k = th.dataset.k;
+  if (k === catSortKey) catSortAsc = !catSortAsc;
+  else {{ catSortKey = k; catSortAsc = false; }}
+  renderCatalog();
+}}));
+document.getElementById("qCat").addEventListener("input", renderCatalog);
+document.getElementById("fTypeCat").addEventListener("change", renderCatalog);
+document.querySelector("#tCat tbody").addEventListener("click", (e) => {{
+  const btn = e.target.closest(".title-btn");
+  if (btn) openModal(btn.dataset.key);
+}});
+document.getElementById("clearFiltersCat").addEventListener("click", () => {{
+  document.getElementById("qCat").value = "";
+  document.getElementById("fTypeCat").value = "";
+  renderCatalog();
+}});
+
 document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {{
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
-  document.getElementById("panel-dashboard").hidden = btn.dataset.tab !== "dashboard";
-  document.getElementById("panel-tabla").hidden = btn.dataset.tab !== "tabla";
-  if (btn.dataset.tab === "dashboard") renderTaste();
+  document.getElementById("panel-hoy").hidden = btn.dataset.tab !== "hoy";
+  document.getElementById("panel-analisis").hidden = btn.dataset.tab !== "analisis";
+  document.getElementById("panel-catalogo").hidden = btn.dataset.tab !== "catalogo";
+  if (btn.dataset.tab === "analisis") renderTaste();
 }}));
 
 window.addEventListener("resize", () => {{
-  if (!document.getElementById("panel-dashboard").hidden) renderTaste();
+  if (!document.getElementById("panel-analisis").hidden) renderTaste();
 }});
 
 initFilters();
 render();
 renderTaste();
+initCatalogFilters();
+renderCatalog();
 </script>
 </body>
 </html>
@@ -824,19 +932,19 @@ def build_html() -> None:
 
     df = pd.read_csv(SCORED_CSV)
     df["in_watchlist"] = True
-    df["reviewed"] = False
+    df["watched"] = False
 
     cat = pd.read_csv(CATALOG_SCORED_CSV) if CATALOG_SCORED_CSV.exists() else pd.DataFrame()
     if not cat.empty:
         cat["in_watchlist"] = False
-        cat["reviewed"] = False
+        cat["watched"] = False
 
-    rev = pd.read_csv(REVIEWED_SCORED_CSV) if REVIEWED_SCORED_CSV.exists() else pd.DataFrame()
-    if not rev.empty:
-        rev["in_watchlist"] = False
-        rev["reviewed"] = True
+    watched = pd.read_csv(WATCHED_SCORED_CSV) if WATCHED_SCORED_CSV.exists() else pd.DataFrame()
+    if not watched.empty:
+        watched["in_watchlist"] = False
+        watched["watched"] = True
 
-    combined = pd.concat([d for d in (df, cat, rev) if not d.empty], ignore_index=True)
+    combined = pd.concat([d for d in (df, cat, watched) if not d.empty], ignore_index=True)
 
     taste = build_taste_stats()
 
@@ -844,7 +952,7 @@ def build_html() -> None:
         generated=date.today().isoformat(),
         n=len(df),
         n_catalog=len(cat),
-        n_reviewed=len(rev),
+        n_watched=len(watched),
         t_n_rated=taste["n_rated"],
         t_movies_series=f'{taste["n_movies"]} / {taste["n_series"]}',
         t_mean_rating=taste["mean_rating"],

@@ -28,7 +28,7 @@ from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
 from sklearn.pipeline import Pipeline
 
 from src.config import (EXCLUDED_CSV, METRICS_CSV, MODELS, OUTPUTS, RATINGS_CSV,
-                        REVIEWED_SCORED_CSV, REVIEWS_CSV, SCORED_CSV, WATCHLIST_CSV)
+                        REVIEWS_CSV, SCORED_CSV, WATCHED_SCORED_CSV, WATCHLIST_CSV)
 from src.data import load_reviews, tmdb_table
 from src.features import build, feature_groups
 from src.pipeline import (LIKE_THRESHOLD, OverviewEmbedder, build_classifier,  # noqa: F401
@@ -142,35 +142,31 @@ def score_watchlist() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- #
-# Títulos ya vistos con reseña (para mostrarlos en el dashboard -- acá no hay
-# nada que predecir, pred_rating/p_like son tu nota real, no una predicción)
+# Títulos ya vistos (todo ratings.csv), con tu reseña si la escribiste -- acá
+# no hay nada que predecir, pred_rating/p_like son tu nota real, no una
+# predicción.
 # --------------------------------------------------------------------------- #
-REVIEWED_COLS = ["Const", "Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
-                 "URL", "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
-                 "providers_flatrate", "overview", "my_liked", "my_disliked", "review_date",
-                 "pred_rating", "p_like"]
+WATCHED_COLS = ["Const", "Title", "Year", "Title Type", "IMDb Rating", "Directors", "Genres",
+                "URL", "Num Votes", "poster_path", "tmdb_runtime", "n_seasons", "n_episodes",
+                "providers_flatrate", "overview", "my_liked", "my_disliked", "review_date",
+                "pred_rating", "p_like"]
 
 
-def score_reviewed() -> pd.DataFrame:
-    reviews = load_reviews()
-    if reviews.empty:
-        out = pd.DataFrame(columns=REVIEWED_COLS)
-        out.to_csv(REVIEWED_SCORED_CSV, index=False)
-        return out
-
+def score_watched() -> pd.DataFrame:
     ratings = pd.read_csv(RATINGS_CSV)
     ratings["Directors"] = ratings["Directors"].fillna("")
-    df = ratings.merge(reviews[["Const", "Liked", "Disliked", "Date"]], on="Const", how="inner")
-    df = df.rename(columns={"Liked": "my_liked", "Disliked": "my_disliked", "Date": "review_date"})
+    reviews = load_reviews()[["Const", "Liked", "Disliked", "Date"]].rename(
+        columns={"Liked": "my_liked", "Disliked": "my_disliked", "Date": "review_date"})
+    df = ratings.merge(reviews, on="Const", how="left")
     df = df.merge(tmdb_table()[["imdb_id", "poster_path", "tmdb_runtime", "n_seasons",
                                 "n_episodes", "providers_flatrate", "overview"]],
                   left_on="Const", right_on="imdb_id", how="left")
     df["pred_rating"] = df["Your Rating"].astype(float)
     df["p_like"] = (df["Your Rating"] >= LIKE_THRESHOLD).astype(float)
 
-    out = df[REVIEWED_COLS].sort_values("pred_rating", ascending=False).reset_index(drop=True)
-    out.to_csv(REVIEWED_SCORED_CSV, index=False)
-    print(f"Guardado: {REVIEWED_SCORED_CSV}  ({len(out)} títulos reseñados)")
+    out = df[WATCHED_COLS].sort_values("pred_rating", ascending=False).reset_index(drop=True)
+    out.to_csv(WATCHED_SCORED_CSV, index=False)
+    print(f"Guardado: {WATCHED_SCORED_CSV}  ({len(out)} títulos vistos)")
     return out
 
 
@@ -345,7 +341,7 @@ if __name__ == "__main__":
 
     fit_and_save()
     score_watchlist()
-    score_reviewed()
+    score_watched()
     if args.eval:
         compare_models()
         learning_curve_report()
