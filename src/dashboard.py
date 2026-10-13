@@ -25,7 +25,7 @@ TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Watchlist &mdash; notas predichas</title>
+<title>Recomendador de pel&iacute;culas y series</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,14 +38,20 @@ TEMPLATE = """<!doctype html>
     --shadow-xs: 0 1px 2px rgba(15, 15, 20, 0.04);
     --shadow-sm: 0 1px 3px rgba(15, 15, 20, 0.06), 0 1px 2px rgba(15, 15, 20, 0.04);
     --shadow-md: 0 8px 24px rgba(15, 15, 20, 0.10);
+    --navbar-h: 61px;
   }}
   * {{ box-sizing: border-box; }}
-  body {{ margin: 0; padding: 32px 24px; background: var(--bg); color: var(--ink);
+  body {{ margin: 0; background: var(--bg); color: var(--ink);
     font: 14px/1.55 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased; }}
-  h1 {{ font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }}
-  .sub {{ color: var(--muted); font-size: 13px; margin-bottom: 28px; }}
-  .wrap {{ max-width: 1100px; margin: 0 auto; }}
+  .navbar {{ position: sticky; top: 0; z-index: 20; background: var(--card);
+    border-bottom: 1px solid var(--border-soft); }}
+  .navbar-inner {{ max-width: 1100px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px 24px;
+    flex-wrap: wrap; }}
+  .navbar-title {{ font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }}
+  .sub {{ color: var(--muted); font-size: 13px; margin: 20px 0 20px; }}
+  .wrap {{ max-width: 1100px; margin: 0 auto; padding: 24px 24px 32px; }}
   .cards {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }}
   .card {{ background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius);
     padding: 18px 20px; min-width: 140px; box-shadow: var(--shadow-xs); }}
@@ -72,7 +78,7 @@ TEMPLATE = """<!doctype html>
   .toplist-row {{ display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }}
   .toplist-info {{ flex: 1; min-width: 0; }}
   .toplist-info a {{ display: block; font-weight: 600; font-size: 13px; }}
-  .controls {{ position: sticky; top: 0; z-index: 5; background: var(--card);
+  .controls {{ position: sticky; top: var(--navbar-h); z-index: 5; background: var(--card);
     border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 16px 18px 18px;
     margin: 0 0 20px; box-shadow: var(--shadow-sm); }}
   input[type=search] {{ width: 100%; padding: 11px 14px; border: 1px solid var(--border);
@@ -149,8 +155,9 @@ TEMPLATE = """<!doctype html>
     .btn-clear {{ margin-left: 0; text-align: left; }}
   }}
   @media (max-width: 640px) {{
-    body {{ padding: 16px 12px; }}
-    h1 {{ font-size: 19px; }}
+    .wrap {{ padding: 16px 12px 24px; }}
+    .navbar-inner {{ padding: 12px 16px; }}
+    .navbar-title {{ font-size: 15px; }}
     #chart {{ padding: 12px; }}
     .card {{ min-width: 46%; flex: 1; }}
   }}
@@ -214,14 +221,14 @@ TEMPLATE = """<!doctype html>
     .mobile-chips {{ margin-top: 4px; }}
   }}
   .tabs {{ display: inline-flex; gap: 2px; padding: 4px; background: var(--bg-subtle);
-    border: 1px solid var(--border-soft); border-radius: calc(var(--radius-sm) + 4px);
-    margin-bottom: 28px; }}
+    border: 1px solid var(--border-soft); border-radius: calc(var(--radius-sm) + 4px); }}
   .tab-btn {{ padding: 8px 16px; border-radius: var(--radius-sm); border: none;
     background: transparent; color: var(--muted); font-size: 13px; font-weight: 600;
     font-family: inherit; cursor: pointer; transition: background .15s ease, color .15s ease; }}
   .tab-btn:hover {{ color: var(--ink); }}
   .tab-btn.active {{ background: var(--card); color: var(--ink); box-shadow: var(--shadow-xs); }}
   @media (max-width: 640px) {{
+    .navbar-inner {{ flex-direction: column; align-items: stretch; }}
     .tabs {{ width: 100%; }}
     .tab-btn {{ flex: 1; text-align: center; }}
   }}
@@ -265,16 +272,19 @@ TEMPLATE = """<!doctype html>
 </style>
 </head>
 <body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div class="navbar-title">Recomendador de pel&iacute;culas y series</div>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="hoy">&iquest;Qu&eacute; ver hoy?</button>
+      <button type="button" class="tab-btn" data-tab="analisis">An&aacute;lisis</button>
+      <button type="button" class="tab-btn" data-tab="catalogo">Ya vistas</button>
+    </div>
+  </div>
+</nav>
 <div class="wrap">
-  <h1>Watchlist &mdash; notas predichas</h1>
   <div class="sub">Generado el {generated} &middot; {n} t&iacute;tulos en tu watchlist
     &middot; {n_catalog} para descubrir &middot; {n_watched} ya vistas</div>
-
-  <div class="tabs">
-    <button type="button" class="tab-btn active" data-tab="hoy">&iquest;Qu&eacute; ver hoy?</button>
-    <button type="button" class="tab-btn" data-tab="analisis">An&aacute;lisis</button>
-    <button type="button" class="tab-btn" data-tab="catalogo">Ya vistas</button>
-  </div>
 
   <div id="panel-analisis" class="panel" hidden>
     <div class="cards">
@@ -1012,6 +1022,14 @@ document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click
 window.addEventListener("resize", () => {{
   if (!document.getElementById("panel-analisis").hidden) renderTaste();
 }});
+
+function syncNavbarHeight() {{
+  const navbar = document.querySelector(".navbar");
+  document.documentElement.style.setProperty("--navbar-h", navbar.offsetHeight + "px");
+}}
+syncNavbarHeight();
+window.addEventListener("resize", syncNavbarHeight);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncNavbarHeight);
 
 initFilters();
 render();
