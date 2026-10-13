@@ -99,6 +99,22 @@
     background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
     font-family: inherit; transition: opacity .15s ease; }
   .btn-pick:hover { opacity: 0.9; }
+  .chk-inline { display: flex; align-items: center; gap: 6px; font-size: 12px;
+    color: var(--muted); margin-top: 2px; cursor: pointer; white-space: nowrap; }
+  .chk-inline input { margin: 0; accent-color: var(--accent); }
+  .ms-row { display: flex; align-items: center; justify-content: space-between; gap: 2px; }
+  .ms-row .ms-option { flex: 1; min-width: 0; }
+  .ms-star { background: none; border: none; cursor: pointer; font-size: 14px;
+    color: var(--muted-soft); padding: 4px 6px; line-height: 1; font-family: inherit; }
+  .ms-star.active { color: #f59e0b; }
+  .pick-random { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; margin-top: 24px; padding: 20px 24px; background: var(--accent-soft);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-lg); }
+  .pick-random-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .pick-random-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  @media (max-width: 640px) {
+    .pick-random { flex-direction: column; align-items: stretch; text-align: center; }
+  }
   tr.picked td { background: var(--accent-soft); }
   @media (max-height: 480px) {
     .controls { position: static; }
@@ -299,6 +315,7 @@
             <button type="button" id="fPlatformBtn" class="ms-toggle">Todas</button>
             <div id="fPlatformMenu" class="ms-menu" hidden></div>
           </div>
+          <label class="chk-inline"><input type="checkbox" id="fMyPlatforms"> Mis plataformas</label>
         </div>
         <div class="filter-group">
           <label id="fGenreLabel" for="fGenreBtn">G&eacute;nero</label>
@@ -315,15 +332,13 @@
             <option value="discover">Para descubrir</option>
           </select>
         </div>
+        <button type="button" id="applyFilters" class="btn-pick">Buscar</button>
         <button type="button" id="clearFilters" class="btn-clear" hidden>Limpiar filtros</button>
       </div>
     </div>
 
     <div class="reco">
-      <div class="reco-head">
-        <h2>Te recomendamos</h2>
-        <button type="button" id="pickForMe" class="btn-pick">Eleg&iacute; por m&iacute;</button>
-      </div>
+      <h2>Te recomendamos</h2>
       <div id="recoRow" class="reco-row"></div>
     </div>
 
@@ -344,6 +359,14 @@
     <div class="foot">Tomar como <b>orden sugerido</b>, no como veredicto: el error
       t&iacute;pico es &plusmn;1.3 puntos. <code>pred_rating</code> y <code>p_like</code>
       salen de dos modelos distintos y pueden no coincidir.</div>
+
+    <div class="pick-random">
+      <div>
+        <div class="pick-random-title">&iquest;No sab&eacute;s qu&eacute; elegir?</div>
+        <div class="pick-random-sub">Te tiramos un dado entre los t&iacute;tulos que ves ahora.</div>
+      </div>
+      <button type="button" id="pickForMe" class="btn-pick">&#127922; Eleg&iacute; por m&iacute;</button>
+    </div>
   </div>
 
   <div id="panel-catalogo" class="panel" hidden>
@@ -394,12 +417,27 @@ let currentRows = [];
 const activeGenres = new Set();
 const activePlatforms = new Set();
 
+function loadMyPlatforms() {
+  try { return new Set(JSON.parse(localStorage.getItem("rm_my_platforms") || "[]")); }
+  catch (e) { return new Set(); }
+}
+function saveMyPlatforms() {
+  try { localStorage.setItem("rm_my_platforms", JSON.stringify([...myPlatforms])); } catch (e) {}
+}
+const myPlatforms = loadMyPlatforms();
+
+function toggleMyPlatform(p, starEl) {
+  if (myPlatforms.has(p)) myPlatforms.delete(p); else myPlatforms.add(p);
+  saveMyPlatforms();
+  starEl.textContent = myPlatforms.has(p) ? "★" : "☆";
+  starEl.classList.toggle("active", myPlatforms.has(p));
+}
+
 function toggleGenre(g) {
   if (activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
   const cb = document.querySelector(`#fGenreMenu input[data-genre="${CSS.escape(g)}"]`);
   if (cb) cb.checked = activeGenres.has(g);
   updateGenreButton();
-  render();
 }
 
 function updateGenreButton() {
@@ -413,7 +451,6 @@ function togglePlatform(p) {
   const cb = document.querySelector(`#fPlatformMenu input[data-platform="${CSS.escape(p)}"]`);
   if (cb) cb.checked = activePlatforms.has(p);
   updatePlatformButton();
-  render();
 }
 
 function updatePlatformButton() {
@@ -727,13 +764,14 @@ function initFilters() {
     activePlatforms.clear();
     pmenu.querySelectorAll("input[data-platform]").forEach(cb => cb.checked = false);
     updatePlatformButton();
-    render();
   });
   pmenu.appendChild(pAllOpt);
   const pDivider = document.createElement("div");
   pDivider.className = "ms-divider";
   pmenu.appendChild(pDivider);
   platforms.forEach(p => {
+    const row = document.createElement("div");
+    row.className = "ms-row";
     const opt = document.createElement("label");
     opt.className = "ms-option";
     const cb = document.createElement("input");
@@ -742,7 +780,15 @@ function initFilters() {
     cb.addEventListener("change", () => togglePlatform(p));
     opt.appendChild(cb);
     opt.appendChild(document.createTextNode(p));
-    pmenu.appendChild(opt);
+    const star = document.createElement("button");
+    star.type = "button";
+    star.className = "ms-star" + (myPlatforms.has(p) ? " active" : "");
+    star.textContent = myPlatforms.has(p) ? "★" : "☆";
+    star.title = "Marcar como mía";
+    star.addEventListener("click", (e) => { e.stopPropagation(); toggleMyPlatform(p, star); });
+    row.appendChild(opt);
+    row.appendChild(star);
+    pmenu.appendChild(row);
   });
 
   const genres = [...new Set(HOY_DATA.flatMap(r => (r.Genres || "").split(", ").filter(Boolean)))].sort();
@@ -754,7 +800,6 @@ function initFilters() {
     activeGenres.clear();
     menu.querySelectorAll("input[data-genre]").forEach(cb => cb.checked = false);
     updateGenreButton();
-    render();
   });
   menu.appendChild(allOpt);
   const divider = document.createElement("div");
@@ -841,12 +886,32 @@ document.querySelectorAll("#t th[data-k]").forEach(th => th.addEventListener("cl
   else { sortKey = k; sortAsc = false; }
   render();
 }));
-document.getElementById("q").addEventListener("input", render);
-document.getElementById("fType").addEventListener("change", render);
-document.getElementById("fSource").addEventListener("change", render);
+document.getElementById("applyFilters").addEventListener("click", render);
+document.getElementById("q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") render();
+});
+document.getElementById("fMyPlatforms").addEventListener("change", (e) => {
+  if (e.target.checked) {
+    if (!myPlatforms.size) {
+      alert("Todavía no marcaste ninguna plataforma como tuya. Abrí el filtro de Plataforma y tocá la estrellita ☆ de las que tenés.");
+      e.target.checked = false;
+      return;
+    }
+    activePlatforms.clear();
+    myPlatforms.forEach(p => activePlatforms.add(p));
+    document.querySelectorAll("#fPlatformMenu input[data-platform]").forEach(cb => {
+      cb.checked = activePlatforms.has(cb.dataset.platform);
+    });
+    updatePlatformButton();
+  } else {
+    activePlatforms.clear();
+    document.querySelectorAll("#fPlatformMenu input[data-platform]").forEach(cb => cb.checked = false);
+    updatePlatformButton();
+  }
+});
 document.querySelector("#t tbody").addEventListener("click", (e) => {
   const chip = e.target.closest(".chip[data-genre]");
-  if (chip) { toggleGenre(chip.dataset.genre); return; }
+  if (chip) { toggleGenre(chip.dataset.genre); render(); return; }
   const btn = e.target.closest(".title-btn");
   if (btn) openModal(btn.dataset.key);
 });
@@ -861,6 +926,7 @@ document.getElementById("clearFilters").addEventListener("click", () => {
   document.getElementById("q").value = "";
   document.getElementById("fType").value = "";
   document.getElementById("fSource").value = "";
+  document.getElementById("fMyPlatforms").checked = false;
   activePlatforms.clear();
   document.querySelectorAll("#fPlatformMenu input[data-platform]").forEach(cb => cb.checked = false);
   updatePlatformButton();
