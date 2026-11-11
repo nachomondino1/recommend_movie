@@ -5,7 +5,8 @@ const PAGE_SIZE = 20;
 const LOW_VOTES = { TMDB: 300, IMDb: 1000 };  // por debajo de esto la nota no es confiable (escalas distintas)
 const fmt = (n) => Number(n).toLocaleString("es-AR");
 
-const state = { rows: [], current: [], shown: PAGE_SIZE, type: "", genre: "", onlyWatchlist: false, q: "", sort: "recomendado", minVotes: 0 };
+const state = { rows: [], current: [], shown: PAGE_SIZE, type: "", genre: "", onlyWatchlist: false, q: "", sort: "recomendado", minVotes: 0,
+  data: null, selected: new Set() };
 
 // "recomendado" = nota ponderada por votos + impulso de directores favoritos (rank, ver profile.js)
 const SORTS = {
@@ -41,7 +42,7 @@ function chipsFor(r) {
   if (r.inWatchlist) chips.push('<span class="chip chip--accent">En tu watchlist</span>');
   chips.push(...r.where.map((p) => `<span class="chip">${esc(p)}</span>`));
   if (!r.inCatalog) chips.push('<span class="chip chip--muted">No está en ninguna plataforma de la región</span>');
-  else if (!r.onMine) chips.push('<span class="chip chip--muted">No está en tus plataformas</span>');
+  else if (!r.onMine) chips.push('<span class="chip chip--muted">No está en las plataformas elegidas</span>');
   return chips.join("");
 }
 
@@ -67,11 +68,35 @@ function scoreBlock(r) {
     </div>`;
 }
 
-function initList(rows, stats) {
-  state.rows = rows;
+// Las opciones de género salen de todo el catálogo y no cambian al elegir plataformas.
+function initGenres(rows) {
   const genres = [...new Set(rows.flatMap((r) => splitList(r.Genres)))].sort();
   $("fGenre").innerHTML = '<option value="">Todos los géneros</option>' +
     genres.map((g) => `<option value="${esc(g)}">${esc(genreEs(g))}</option>`).join("");
+}
+
+// ---- plataformas: chips que se prenden y apagan; sin ninguna elegida se ve todo el catálogo -------------------
+function renderPlats() {
+  const none = state.selected.size === 0;
+  $("plats").innerHTML =
+    `<button type="button" class="pchip" data-id="" aria-pressed="${none}">Todas</button>` +
+    catalog.data.providers.map((p) => `
+      <button type="button" class="pchip" data-id="${p.id}" aria-pressed="${state.selected.has(p.id)}">
+        ${p.logo ? `<img src="${IMG}w92${p.logo}" alt="" loading="lazy">` : ""}<span>${esc(p.name)}</span>
+      </button>`).join("");
+}
+
+function persistPlats() {
+  savePlatforms(catalog.data.providers.filter((p) => state.selected.has(p.id)).map((p) => ({ id: p.id, name: p.name })));
+}
+
+// Recalcula qué está disponible según las plataformas elegidas y vuelve a dibujar la lista.
+function rebuild() {
+  const { rows, unavailable } = buildProfile(state.data, state.selected);
+  state.rows = rows;
+  $("subtitle").textContent = unavailable ? `${unavailable} títulos de tu watchlist no están en las plataformas elegidas.` : "";
+  $("platsHint").hidden = state.selected.size > 0;
+  state.shown = PAGE_SIZE;
   renderList();
 }
 
@@ -173,6 +198,18 @@ function wire() {
     timer = setTimeout(() => { state.q = e.target.value; resetAndRender(); }, 150);
   });
   $("btnMore").addEventListener("click", () => { state.shown += PAGE_SIZE; renderList(); });
+  $("plats").addEventListener("click", (e) => {
+    const b = e.target.closest(".pchip");
+    if (!b) return;
+    if (b.dataset.id === "") state.selected.clear();
+    else {
+      const id = Number(b.dataset.id);
+      state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
+    }
+    persistPlats();
+    renderPlats();
+    rebuild();
+  });
   $("list").addEventListener("click", (e) => {
     const btn = e.target.closest(".item-title");
     if (btn) openModal(btn.dataset.key, false);
@@ -188,8 +225,7 @@ async function main() {
   wire();
   $("filtersBox").open = window.innerWidth > 640;  // en el celular arranca plegado para ver la lista enseguida
   const data = loadData();
-  const selected = new Set(loadPlatforms().map((p) => p.id));
-  if (!data.ratings.length || !selected.size) { $("noData").hidden = false; return; }
+  if (!data.ratings.length) { $("noData").hidden = false; return; }
   try {
     await loadCatalog();
   } catch (e) {
@@ -197,11 +233,13 @@ async function main() {
     $("noData").textContent = e.message;
     return;
   }
-  const { rows, unavailable, stats } = buildProfile(data, selected);
-  $("hoyEmpty").hidden = stats.mineNew > 0;
+  state.data = data;
+  const valid = new Set(catalog.data.providers.map((p) => p.id));
+  state.selected = new Set(loadPlatforms().map((p) => p.id).filter((id) => valid.has(id)));
   $("hoyBody").hidden = false;
-  $("subtitle").textContent = unavailable ? `${unavailable} títulos de tu watchlist no están en tus plataformas.` : "";
-  initList(rows, stats);
+  renderPlats();
+  initGenres(buildProfile(data, new Set()).rows);
+  rebuild();
 }
 
 main();

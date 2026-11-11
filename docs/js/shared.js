@@ -28,8 +28,8 @@ function poster(r, size, cls) {
     : `<div class="${cls}"></div>`;
 }
 
-// ¿Ya cargó sus archivos y eligió plataformas? (entonces se habilitan Qué ver y Mi gusto)
-const hasProfile = () => loadData().ratings.length > 0 && loadPlatforms().length > 0;
+// ¿Ya cargó sus archivos? (entonces se habilitan Qué ver y Mi gusto; las plataformas se eligen en Qué ver)
+const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
 const NAV = [

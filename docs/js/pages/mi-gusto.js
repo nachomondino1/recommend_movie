@@ -60,7 +60,7 @@ async function main() {
     $("noData").textContent = e.message;
     return;
   }
-  renderTaste(buildProfile(data, new Set(loadPlatforms().map((p) => p.id))).taste);
+  renderTaste(buildProfile(data, new Set()).taste);
 }
 
 main();

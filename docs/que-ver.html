@@ -16,15 +16,12 @@
 
 <main class="wrap page">
   <h1 class="page-title">Qu&eacute; ver hoy</h1>
-  <p class="lead">Tu watchlist y t&iacute;tulos nuevos que no viste, solo en tus plataformas.</p>
+  <p class="lead">Tu watchlist y t&iacute;tulos nuevos que no viste, en las plataformas que elijas.</p>
 
   <div id="noData" class="empty-state" hidden>
-    Todav&iacute;a no cargaste tus datos. <a href="index.html#pasos">Armá tu perfil en 3 pasos</a>.
+    Todav&iacute;a no cargaste tus datos. <a href="index.html#pasos">Armá tu perfil en 2 pasos</a>.
   </div>
 
-  <div id="hoyEmpty" class="empty-state" hidden>
-    No encontramos t&iacute;tulos en tus plataformas. Prob&aacute; sumar m&aacute;s en <a href="index.html#pasos">Mis datos</a>.
-  </div>
   <div id="hoyBody" hidden>
     <div class="pick-card">
       <div>
@@ -38,6 +35,11 @@
       <h2 class="explore-title" id="exploreTitle">Busc&aacute; y filtr&aacute; la lista de abajo</h2>
       <input type="search" id="q" placeholder="Buscar por nombre (ej: Interstellar)" aria-label="Buscar por nombre" autocomplete="off">
       <p class="note" id="searchNote" hidden>Buscando en todo el cat&aacute;logo: tambi&eacute;n aparecen t&iacute;tulos de otras plataformas y los que ya viste. Los filtros se ignoran mientras busc&aacute;s.</p>
+      <div class="plats-block">
+        <div class="plats-label" id="platsLabel">Plataformas</div>
+        <div class="plats" id="plats" role="group" aria-labelledby="platsLabel"></div>
+        <p class="note" id="platsHint" hidden>Eleg&iacute; tus plataformas para ver solo lo que ten&eacute;s.</p>
+      </div>
       <details class="update" id="filtersBox">
         <summary class="update-summary">Filtros</summary>
         <div class="filters filters--compact">

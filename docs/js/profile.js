@@ -15,7 +15,7 @@ const weightedRating = (rating, votes, m) => {
 
 const typeOf = (c) => (c.type === "movie" ? "Movie" : "TV Series");
 
-// selected: Set de ids de plataforma.
+// selected: Set de ids de plataforma. Si está vacío no se filtra por plataforma (todo el catálogo cuenta como disponible).
 // Devuelve { rows, taste, unavailable, stats }. rows incluye TODO el catálogo más lo que el usuario tiene fuera de él;
 // cada fila trae onMine (está en sus plataformas), seen (ya la puntuó), inWatchlist y yourRating.
 function buildProfile(data, selected) {
@@ -49,7 +49,7 @@ function buildProfile(data, selected) {
     const rd = c.imdb ? ratedByImdb.get(c.imdb) : null;
     const csv = rd || w;                                        // lo que el usuario sabe de este título
     const seen = !!rd;
-    const mine = c.providers.filter((id) => selected.has(id));
+    const mine = selected.size ? c.providers.filter((id) => selected.has(id)) : c.providers;
     rows.push(finish({
       Const: c.imdb || `tmdb:${c.type}:${c.id}`, Title: csv ? csv.Title : c.title, altTitle: csv ? c.title : "",
       Type: typeOf(c), Year: c.year,
@@ -59,7 +59,7 @@ function buildProfile(data, selected) {
       imdbRating: csv ? csv.ImdbRating : null, imdbVotes: csv ? csv.NumVotes : null,
       Runtime: c.runtime, poster_path: c.poster, overview: c.overview, seasons: c.seasons,
       providers: providerNames(c.providers), where: providerNames(mine),
-      others: providerNames(c.providers.filter((id) => !selected.has(id))),
+      others: selected.size ? providerNames(c.providers.filter((id) => !selected.has(id))) : [],
       onMine: mine.length > 0, inWatchlist: !!w && !rd, seen, yourRating: rd ? rd.YourRating : null,
       inCatalog: true,
       URL: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
