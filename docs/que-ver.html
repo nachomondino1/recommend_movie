@@ -26,43 +26,39 @@
     No encontramos t&iacute;tulos en tus plataformas. Prob&aacute; sumar m&aacute;s en <a href="index.html#pasos">Mis datos</a>.
   </div>
   <div id="hoyBody" hidden>
-    <div class="field field--search">
-      <label for="q">Buscar por nombre</label>
-      <input type="search" id="q" placeholder="Ej: Interstellar" autocomplete="off">
-    </div>
-    <p class="note" id="searchNote" hidden>Buscando en todo el cat&aacute;logo: tambi&eacute;n aparecen t&iacute;tulos de otras plataformas y los que ya viste. Los filtros se ignoran mientras busc&aacute;s.</p>
-
-    <button type="button" class="btn btn--big" id="pickForMe">&#127922; Eleg&iacute; por m&iacute;</button>
-
-    <details class="update" id="filtersBox">
-    <summary class="update-summary">Filtros y orden</summary>
-    <div class="filters">
-      <div class="seg" id="fType" role="group" aria-label="Tipo">
-        <button type="button" class="seg-btn active" data-type="">Todo</button>
-        <button type="button" class="seg-btn" data-type="Movie">Pel&iacute;culas</button>
-        <button type="button" class="seg-btn" data-type="TV">Series</button>
+    <div class="pick-card">
+      <div>
+        <div class="pick-title">&iquest;No sab&eacute;s qu&eacute; ver?</div>
+        <div class="pick-sub">Te elegimos uno entre los mejores de la lista.</div>
       </div>
-      <div class="field">
-        <label for="fGenre">G&eacute;nero</label>
-        <select id="fGenre"></select>
-      </div>
-      <label class="check"><input type="checkbox" id="fWatchlist"> Solo mi watchlist</label>
+      <button type="button" class="btn" id="pickForMe">&#127922; Eleg&iacute; por m&iacute;</button>
     </div>
 
-    <div class="filters">
-      <div class="field">
-        <label for="fMinVotes">Votos m&iacute;nimos</label>
-        <select id="fMinVotes">
-          <option value="0">Cualquiera</option>
-          <option value="100">100 o m&aacute;s</option>
-          <option value="500">500 o m&aacute;s</option>
-          <option value="1000">1.000 o m&aacute;s</option>
-          <option value="5000">5.000 o m&aacute;s</option>
-          <option value="10000">10.000 o m&aacute;s</option>
-        </select>
-      </div>
-    </div>
-    </details>
+    <section class="explore" aria-labelledby="exploreTitle">
+      <h2 class="explore-title" id="exploreTitle">Busc&aacute; y filtr&aacute; la lista de abajo</h2>
+      <input type="search" id="q" placeholder="Buscar por nombre (ej: Interstellar)" aria-label="Buscar por nombre" autocomplete="off">
+      <p class="note" id="searchNote" hidden>Buscando en todo el cat&aacute;logo: tambi&eacute;n aparecen t&iacute;tulos de otras plataformas y los que ya viste. Los filtros se ignoran mientras busc&aacute;s.</p>
+      <details class="update" id="filtersBox">
+        <summary class="update-summary">Filtros</summary>
+        <div class="filters filters--compact">
+          <div class="seg" id="fType" role="group" aria-label="Tipo">
+            <button type="button" class="seg-btn active" data-type="">Todo</button>
+            <button type="button" class="seg-btn" data-type="Movie">Pel&iacute;culas</button>
+            <button type="button" class="seg-btn" data-type="TV">Series</button>
+          </div>
+          <select id="fGenre" aria-label="G&eacute;nero"></select>
+          <select id="fMinVotes" aria-label="Votos m&iacute;nimos">
+            <option value="0">Votos: cualquiera</option>
+            <option value="100">Votos: 100 o m&aacute;s</option>
+            <option value="500">Votos: 500 o m&aacute;s</option>
+            <option value="1000">Votos: 1.000 o m&aacute;s</option>
+            <option value="5000">Votos: 5.000 o m&aacute;s</option>
+            <option value="10000">Votos: 10.000 o m&aacute;s</option>
+          </select>
+          <label class="check"><input type="checkbox" id="fWatchlist"> Solo mi watchlist</label>
+        </div>
+      </details>
+    </section>
 
     <div class="results-bar">
       <span class="note" id="resultCount"></span>

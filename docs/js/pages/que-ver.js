@@ -75,8 +75,8 @@ function initList(rows, stats) {
   renderList();
 }
 
-function currentRows() {
-  const tokens = normTitle(state.q).split(" ").filter(Boolean);
+function currentRows(ignoreSearch = false) {
+  const tokens = ignoreSearch ? [] : normTitle(state.q).split(" ").filter(Boolean);
   let rows;
   if (tokens.length) {
     // Buscando: se mira TODO (cualquier plataforma, también lo ya visto) y se ignoran los demás filtros
@@ -115,7 +115,8 @@ function renderList() {
 }
 
 function pickForMe() {
-  const rows = state.current.filter((r) => r.rank != null && !r.seen).slice(0, 40);
+  // "Elegí por mí" es independiente del buscador: elige entre los mejores de la lista con los filtros activos
+  const rows = currentRows(true).filter((r) => r.rank != null && !r.seen).slice(0, 40);
   if (!rows.length) return;
   const w = rows.map((r) => Math.max(0.01, r.rank) ** 2);
   let x = Math.random() * w.reduce((a, b) => a + b, 0);

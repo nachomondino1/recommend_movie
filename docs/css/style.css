@@ -261,3 +261,17 @@ input[type=search]:focus { outline: none; border-color: var(--accent); box-shado
 .modal-head h3 .title-link { color: var(--ink); }
 .modal-poster-link { flex: none; display: block; }
 .how { margin-top: 24px; }
+
+/* ---- "Elegí por mí" separado y bloque compacto de búsqueda y filtros --------------------------- */
+.pick-card { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap;
+  background: var(--accent-soft); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 20px; }
+.pick-title { font-weight: 700; font-size: 1.05rem; }
+.pick-sub { color: var(--muted); font-size: .9rem; }
+.explore { background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 14px 16px 12px; }
+.explore-title { font-size: .95rem; font-weight: 700; margin: 0 0 10px; }
+.filters--compact { margin: 10px 0 0; gap: 8px 10px; }
+.filters--compact select { min-height: 40px; max-width: 100%; }
+.filters--compact .check { min-height: 40px; }
+.explore .update { margin-top: 4px; }
+@media (min-width: 641px) { .explore .update-summary { display: none; } }
+@media (max-width: 520px) { .pick-card .btn { width: 100%; } }
