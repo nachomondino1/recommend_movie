@@ -6,12 +6,12 @@ function setMsg(text, isError) {
   $("uploadMsg").className = "msg" + (isError ? " msg--error" : "");
 }
 
-// Con datos ya cargados: el hero lleva directo a las recomendaciones y un aviso dice que no hace falta volver a cargarlos.
+// Con datos ya cargados: un aviso en los pasos dice que no hace falta volver a cargarlos.
 function updateLoadedState() {
   const data = loadData();
   const loaded = data.ratings.length > 0;
-  $("heroCta").textContent = loaded ? "Ver mis recomendaciones" : "Empezar";
-  $("heroCta").setAttribute("href", loaded ? "que-ver.html" : "#pasos");
+  // El CTA siempre lleva a los pasos: primero se cargan los datos; con datos ya cargados, ahí mismo está el botón a las recomendaciones
+  $("heroCta").textContent = loaded ? "Ver mi carga" : "Empezar";
   $("loadedBanner").hidden = !loaded;
   if (loaded) {
     const when = data.savedAt ? ` el ${new Date(data.savedAt).toLocaleDateString("es-AR")}` : "";
