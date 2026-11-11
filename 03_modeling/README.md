@@ -5,7 +5,7 @@ personal, con 127 notas, el mejor modelo apenas mejoró la regla "IMDb menos 1.3
 exigiría un backend. Tampoco hay un puntaje "para vos": inventar un número personalizado con tan poca información
 sería ruido.
 
-Lo que hace el sitio (`docs/mvp/js/app.js`), todo en el navegador y explicable:
+Lo que hace el sitio (`docs/js/app.js`), todo en el navegador y explicable:
 
 1. Toma los títulos de tu watchlist y los del catálogo que **están en tus plataformas**.
 2. **Descarta lo que ya viste** (por id de IMDb).
@@ -15,7 +15,7 @@ Lo que hace el sitio (`docs/mvp/js/app.js`), todo en el navegador y explicable:
    (los nuevos; mediana ~600 votos, y se exige un mínimo de 500). La nota que se muestra es la cruda; el orden usa la ponderada.
 4. Marca con "De tus géneros favoritos" los títulos de tus 3 géneros mejor puntuados (descriptivo, de la pestaña "Mi gusto"; no cambia el orden).
 
-El análisis de gusto (`docs/mvp/js/taste.js`) es solo estadística descriptiva de tus notas: promedios por género y
+El análisis de gusto (`docs/js/taste.js`) es solo estadística descriptiva de tus notas: promedios por género y
 director, y cuánto te separás de la nota de IMDb.
 
 El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/model.py`) sigue en este

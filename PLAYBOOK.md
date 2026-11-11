@@ -173,11 +173,17 @@ asumir que está comprometido y pedirle que lo regenere.
 
 ## Variante multiusuario: catálogo precomputado, sitio sin API (2026-11-11)
 
-Cuando el proyecto pasa de "una persona" a "cualquiera que abra la página" (caso: `docs/mvp/`):
+Cuando el proyecto pasa de "una persona" a "cualquiera que abra la página" (caso: el sitio de `docs/`):
 
-- **El pipeline Python deja de correr por usuario.** Corre una vez en la máquina del autor y publica un **catálogo estático** (`docs/mvp/data/catalog.json`); el navegador del visitante solo lo lee y lo cruza con sus propios datos (ej. su export de IMDb, parseado localmente y guardado en `localStorage`).
+- **El pipeline Python deja de correr por usuario.** Corre una vez en la máquina del autor y publica un **catálogo estático** (`docs/data/catalog.json`); el navegador del visitante solo lo lee y lo cruza con sus propios datos (ej. su export de IMDb, parseado localmente y guardado en `localStorage`).
 - **Nada de tokens en el cliente ni llamadas a la API desde el sitio:** sin token público, sin rate limits, carga instantánea, y **todas** las llamadas salen de los scripts de recolección, así que se pueden registrar.
 - **Log de uso de la API:** cada corrida real del script de recolección agrega una fila a `01_data_understanding/refresh_log.md` (fecha, opciones, requests totales y por endpoint, nuevos, cambiados, errores, duración). Mismo patrón que `boardgame`.
 - **Estructura por fases CRISP-DM** (`01_data_understanding/` … `05_deployment/`), crudos en `data/01_data_understanding/` (gitignoreados), catálogo del sitio versionado, `sync_data.sh` que lo regenera y commitea en `staging`; `prod` solo recibe pull requests desde `staging`.
 - **Sin modelo ni score personalizado:** con ~100 notas por usuario no hay señal suficiente (el proyecto personal lo confirmó: el modelo apenas supera "IMDb − 1.3"). La lista se ordena por la nota ponderada por votos (como el Top 250 de IMDb), filtrada por plataformas y sin lo ya visto; lo único personal es marcar los géneros favoritos (ver `03_modeling/README.md`).
 - **Trade-off aceptado:** un título del historial que no esté en el catálogo se trata como "no disponible en tus plataformas".
+
+## Diseño del sitio público (2026-11-11)
+
+- **Landing según `DESIGN_PLAYBOOK_unificado.md` §12:** header sticky angosto separado del hero; hero `min-height: calc(100vh - header)` con foto (`docs/media/hero.jpg`, créditos en `docs/media/CREDITS.md`) bajo un degradé oscuro que se funde con `--bg`; título `clamp(2rem, 5vw, 3.2rem)` peso 800 con dos palabras clave en colores fijos (ámbar y violeta suave, no tokens de tema); un solo CTA que scrollea a la segunda sección (los 3 pasos). Al guardar los datos se pasa a la página "Qué ver"; para quien vuelve, el CTA pasa a "Ver mis recomendaciones".
+- **Tres páginas HTML, sin router:** `index.html` (hero + 3 pasos), `que-ver.html` y `mi-gusto.html`. El estado viaja en `localStorage` (archivos del usuario y plataformas). Encabezado y pie se escriben una sola vez en `docs/js/shared.js` (`renderSite`), y el menú muestra "Qué ver" y "Mi gusto" solo cuando ya hay datos. Un JS por página en `docs/js/pages/`; la lógica común en `profile.js`, `taste.js` y `catalog.js`.
+- **Divergencias deliberadas del playbook de diseño, por legibilidad (el autor es disléxico):** base 18px y `line-height` 1.7, una sola columna de 760px, sin etiquetas en mayúscula sostenida, sin cursivas, botones de al menos 44-48px de alto, `letter-spacing` levemente positivo en el cuerpo y mucho aire entre bloques. El playbook unificado pide base 14px y eyebrows en mayúsculas; acá se invierte a propósito. Si se quiere unificar, esta es la divergencia a registrar en el apéndice "decisiones al unificar".

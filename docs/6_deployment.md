@@ -15,7 +15,7 @@ lo rodea:
 `05_deployment/dashboard.py` convierte el CSV puntuado en un HTML autocontenido (sin
 servidor) con tabla buscable/ordenable (título, director, género), nota predicha
 coloreada y gráfico de distribución. Lo escribe en `outputs/watchlist_dashboard.html`
-y en `docs/index.html` (lo que publica Pages). Los títulos de la watchlist que ya
+y en `archive/dashboard_personal.html` (guardado, ya no se publica; el sitio de `docs/` es el MVP público). Los títulos de la watchlist que ya
 figuran puntuados en `ratings.csv` se omiten.
 
 `03_modeling/predict.py` (`make predict TITLE="X"`) resuelve un título por nombre con
@@ -36,7 +36,6 @@ entrenamiento, n, mtime de `ratings.csv` y scores de CV.
 ## Cómo usarlo
 ```bash
 make update      # tmdb_data.py -> model.py -> catalog.py -> dashboard.py
-make publish     # git add docs/ && commit && push -> Pages redepliega
 ```
 Para mirar local: abrir `outputs/watchlist_dashboard.html` con doble clic.
 

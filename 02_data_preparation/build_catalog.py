@@ -2,7 +2,7 @@
 Fase 2 (CRISP-DM) - Preparación: arma el catálogo que consume el sitio.
 
 Lee data/01_data_understanding/tmdb_titles.jsonl (crudo, vocabulario de TMDB) y escribe
-docs/mvp/data/catalog.json: solo títulos con plataforma, géneros pasados al vocabulario de
+docs/data/catalog.json: solo títulos con plataforma, géneros pasados al vocabulario de
 IMDb (para poder cruzarlos con las notas del usuario) y campos recortados al mínimo.
 
     python3 02_data_preparation/build_catalog.py
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "01_data_understanding" / "collect_initial_data" / "tmdb"))
 from tmdb_common import GENRES_JSON, PROVIDERS_JSON, TITLES_JSONL  # noqa: E402
 
-CATALOG_JSON = ROOT / "docs" / "mvp" / "data" / "catalog.json"
+CATALOG_JSON = ROOT / "docs" / "data" / "catalog.json"
 OVERVIEW_MAX = 220
 MIN_TITLES = 150  # plataformas con menos títulos que esto no entran al catálogo
 

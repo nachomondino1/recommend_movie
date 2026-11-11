@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi gusto · Qué ver hoy</title>
+<meta name="description" content="Un resumen de tus notas de IMDb: géneros, directores y títulos que mejor y peor puntuaste.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="siteHeader"></header>
+
+<main class="wrap page">
+  <h1 class="page-title">Mi gusto</h1>
+  <p class="lead">Un resumen de tus notas de IMDb.</p>
+
+  <div id="noData" class="empty-state" hidden>
+    Todav&iacute;a no cargaste tus datos. <a href="index.html#pasos">Armá tu perfil en 3 pasos</a>.
+  </div>
+  <div id="analysisEmpty" class="empty-state" hidden>Todav&iacute;a no hay notas para analizar.</div>
+  <div id="analysisBody" hidden>
+    <div class="cards">
+      <div class="card"><div class="n" id="tNRated"></div><div class="l">t&iacute;tulos puntuados</div></div>
+      <div class="card"><div class="n" id="tMean"></div><div class="l">tu nota promedio</div></div>
+      <div class="card"><div class="n" id="tDev"></div><div class="l">vs. IMDb</div></div>
+    </div>
+    <p class="note" id="devText"></p>
+    <h2 class="block-title">G&eacute;neros que mejor puntu&aacute;s</h2>
+    <div id="rankGenre" class="block"></div>
+    <h2 class="block-title">Directores favoritos</h2>
+    <div id="rankDirector" class="block"></div>
+    <h2 class="block-title">Tus mejor puntuadas</h2>
+    <div id="topList" class="block"></div>
+    <h2 class="block-title">Tus peor puntuadas</h2>
+    <div id="bottomList" class="block"></div>
+  </div>
+</main>
+
+<footer id="siteFooter"></footer>
+
+<script src="js/storage.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/taste.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/pages/mi-gusto.js"></script>
+</body>
+</html>
