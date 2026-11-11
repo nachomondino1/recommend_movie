@@ -29,14 +29,14 @@ function renderProviders(list, onToggle) {
 
 // Con datos ya cargados: el hero lleva directo a las recomendaciones, un aviso lo dice y los pasos 2 y 3
 // quedan plegados para que nadie vuelva a cargar lo que ya está.
-function updateLoadedState() {
+function updateLoadedState(keepOpen = false) {
   const data = loadData();
   const loaded = data.ratings.length > 0;
   const ready = loaded && selected.size > 0;
   $("heroCta").textContent = ready ? "Ver mis recomendaciones" : "Empezar";
   $("heroCta").setAttribute("href", ready ? "que-ver.html" : "#pasos");
   $("loadedBanner").hidden = !loaded;
-  $("updateData").open = !loaded;
+  $("updateData").open = keepOpen || !loaded;   // tras cargar, queda abierto para que se vea el aviso de "listo"
   $("updateData").classList.toggle("update--static", !loaded);
   if (loaded) {
     const when = data.savedAt ? ` el ${new Date(data.savedAt).toLocaleDateString("es-AR")}` : "";
@@ -50,6 +50,7 @@ async function ingest(fileList) {
   if (!files.length) return;
   if (!selected.size) { setMsg("Primero elegí al menos una plataforma (paso 1).", true); return; }
   persistPlatforms();
+  $("uploadDone").hidden = true;
   setMsg("Leyendo archivos…");
   const results = await readImdbFiles(files);
   const data = loadData();
@@ -67,7 +68,17 @@ async function ingest(fileList) {
     setMsg("No pude guardar tus datos en este navegador (¿ventana privada?).", true);
     return;
   }
-  location.href = "que-ver.html";
+  setMsg(notes.join(" "), notes.length > 0);
+  showDone(data);
+}
+
+// Avisa que ya está todo cargado y ofrece ir a las recomendaciones (no redirige solo).
+function showDone(data) {
+  $("uploadDoneText").textContent = `Cargamos ${data.ratings.length} notas y ${data.watchlist.length} títulos de tu watchlist.` +
+    (data.watchlist.length ? "" : " Todavía falta tu watchlist (es opcional): con ella te marcamos lo que ya guardaste.");
+  $("uploadDone").hidden = false;
+  updateLoadedState(true);   // primero se actualiza el layout (aparece el cuadro de arriba) y después se scrollea
+  $("uploadDone").scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
 }
 
 function wireUpload() {
@@ -90,9 +101,6 @@ async function main() {
     $("providers").innerHTML = `<div class="msg msg--error">${esc(e.message)}</div>`;
     return;
   }
-  const total = catalog.data.titles.length, movies = catalog.data.titles.filter((t) => t.type === "movie").length;
-  $("catalogInfo").textContent = `Catálogo: ${total.toLocaleString("es-AR")} títulos (${movies.toLocaleString("es-AR")} películas y ` +
-    `${(total - movies).toLocaleString("es-AR")} series) en ${catalog.data.providers.length} plataformas, actualizado el ${catalog.data.generated}.`;
   renderProviders(catalog.data.providers, (id) => {
     selected.has(id) ? selected.delete(id) : selected.add(id);
     persistPlatforms();

@@ -57,6 +57,7 @@ function renderSite(active) {
     <div class="wrap">
       <p class="note">Datos de pel&iacute;culas y series: <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>.
         Este sitio no est&aacute; afiliado a IMDb ni a TMDB.</p>
+      <p class="note" id="catalogInfo"></p>
       <p class="note"><button type="button" class="link-btn" id="btnClear">Borrar mis datos de este navegador</button></p>
     </div>`;
   $("btnClear").addEventListener("click", () => {

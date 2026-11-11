@@ -26,8 +26,6 @@
     No encontramos t&iacute;tulos en tus plataformas. Prob&aacute; sumar m&aacute;s en <a href="index.html#pasos">Mis datos</a>.
   </div>
   <div id="hoyBody" hidden>
-    <p class="note" id="catalogInfo"></p>
-
     <div class="field field--search">
       <label for="q">Buscar por nombre</label>
       <input type="search" id="q" placeholder="Ej: Interstellar" autocomplete="off">
@@ -53,16 +51,6 @@
 
     <div class="filters">
       <div class="field">
-        <label for="fSort">Ordenar por</label>
-        <select id="fSort">
-          <option value="recomendado">Recomendado (nota con votos)</option>
-          <option value="nota">Mejor nota</option>
-          <option value="votos">M&aacute;s votos</option>
-          <option value="nuevas">M&aacute;s nuevas</option>
-          <option value="az">Nombre A&ndash;Z</option>
-        </select>
-      </div>
-      <div class="field">
         <label for="fMinVotes">Votos m&iacute;nimos</label>
         <select id="fMinVotes">
           <option value="0">Cualquiera</option>
@@ -78,8 +66,22 @@
     <p class="note" id="subtitle"></p>
     <p class="note">&ldquo;Recomendado&rdquo; pondera la nota por la cantidad de votos (como el Top 250 de IMDb), as&iacute; que una nota alta con pocos votos baja; los t&iacute;tulos de tus directores favoritos suben un poco. Nota y votos son de TMDB; en tu watchlist tambi&eacute;n ves los de IMDb.</p>
 
+    <div class="results-bar">
+      <span class="note" id="resultCount"></span>
+      <label class="sort" title="Ordenar">
+        <svg class="sort-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+        <span class="sr-only">Ordenar por</span>
+        <select id="fSort">
+          <option value="recomendado">Recomendado</option>
+          <option value="nota">Mejor nota</option>
+          <option value="votos">M&aacute;s votos</option>
+          <option value="nuevas">M&aacute;s nuevas</option>
+          <option value="az">Nombre A&ndash;Z</option>
+        </select>
+      </label>
+    </div>
+
     <div id="list" class="list"></div>
-    <div class="note" id="resultCount"></div>
     <button type="button" class="btn btn--ghost" id="btnMore" hidden>Ver m&aacute;s</button>
   </div>
 </main>

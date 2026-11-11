@@ -72,9 +72,6 @@ function initList(rows, stats) {
   const genres = [...new Set(rows.flatMap((r) => splitList(r.Genres)))].sort();
   $("fGenre").innerHTML = '<option value="">Todos los géneros</option>' +
     genres.map((g) => `<option value="${esc(g)}">${esc(genreEs(g))}</option>`).join("");
-  $("catalogInfo").textContent =
-    `El catálogo tiene ${fmt(stats.total)} títulos (${fmt(stats.movies)} películas y ${fmt(stats.series)} series) en ${stats.providers} plataformas. ` +
-    `En las tuyas hay ${fmt(stats.mineNew)} que todavía no viste.`;
   renderList();
 }
 

@@ -29,7 +29,6 @@
     <div class="wrap">
       <h2 class="section-title">Arm&aacute; tu perfil en 3 pasos</h2>
       <p class="lead">Tus archivos no salen de tu navegador.</p>
-      <p class="note" id="catalogInfo"></p>
 
       <div class="banner" id="loadedBanner" hidden>
         <div class="banner-icon" aria-hidden="true">&#9989;</div>
@@ -64,6 +63,14 @@
         </div>
         <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
         <div id="uploadMsg" class="msg" role="status"></div>
+        <div id="uploadDone" class="upload-done" role="status" hidden>
+          <div aria-hidden="true">&#9989;</div>
+          <div>
+            <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
+            <p id="uploadDoneText"></p>
+            <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+          </div>
+        </div>
       </div>
       </details>
     </div>
