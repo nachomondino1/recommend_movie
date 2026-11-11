@@ -202,3 +202,34 @@ section[id] { scroll-margin-top: var(--nav-h); }
 .page-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 6px; }
 
 @media (max-width: 440px) { .brand-text { display: none; } .brand { font-size: 1.4rem; } }
+
+/* ---- Filas desplegables de Mi gusto ---------------------------------------------------------- */
+.hbar-item { border-bottom: 1px solid var(--border-soft); }
+.hbar-item:last-child { border-bottom: none; }
+.hbar-item .hbar { margin: 0; padding: 10px 0; cursor: pointer; list-style: none; min-height: 44px; }
+.hbar-item summary::-webkit-details-marker { display: none; }
+.hbar-item summary:hover .hbar-label { text-decoration: underline; }
+.hbar-label { display: block; }
+.hbar-track { display: block; }
+.hbar-fill { display: block; }
+.hbar-value { min-width: 56px; }
+.chev { flex: none; color: var(--muted); transition: transform .15s ease; }
+.hbar-item[open] .chev { transform: rotate(180deg); }
+.hbar-titles { list-style: none; margin: 0 0 12px; padding: 0 0 0 4px; }
+.hbar-titles li { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.hbar-titles .title-link { flex: 1; min-width: 0; }
+.pill--sm { padding: 1px 9px; font-size: .85rem; }
+
+/* ---- Inicio con datos ya cargados -------------------------------------------------------------- */
+.banner { display: flex; gap: 16px; align-items: flex-start; background: var(--accent-soft); border: 1px solid var(--border-soft);
+  border-radius: var(--radius); padding: 18px 20px; margin-top: 16px; }
+.banner-icon { font-size: 1.6rem; line-height: 1.2; }
+.banner-title { font-weight: 700; font-size: 1.1rem; }
+.banner-text { margin: 4px 0 14px; color: var(--muted); }
+.update { margin-top: 16px; }
+.update-summary { cursor: pointer; font-weight: 600; color: var(--accent); padding: 12px 4px; min-height: 44px; display: flex; align-items: center; }
+.update:not([open]) .update-summary::before { content: "\25b8"; margin-right: 8px; }
+.update[open] .update-summary::before { content: "\25be"; margin-right: 8px; }
+.update--static > .update-summary { display: none; }
+.hbar-item .hbar-value { flex: none; min-width: 0; white-space: nowrap; }
+.hbar-item .hbar-label { flex: 0 0 110px; }

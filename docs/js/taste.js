@@ -27,14 +27,17 @@ function groupAvg(rows, keysOf, minN) {
   const acc = new Map();
   for (const r of rows) {
     for (const k of keysOf(r)) {
-      const a = acc.get(k) || { n: 0, sum: 0 };
-      a.n++; a.sum += r.YourRating;
+      const a = acc.get(k) || { n: 0, sum: 0, titles: [] };
+      a.n++; a.sum += r.YourRating; a.titles.push(r);
       acc.set(k, a);
     }
   }
   return [...acc.entries()]
     .filter(([, a]) => a.n >= minN)
-    .map(([label, a]) => ({ label, n: a.n, avg: Math.round((a.sum / a.n) * 100) / 100 }))
+    .map(([label, a]) => ({
+      label, n: a.n, avg: Math.round((a.sum / a.n) * 100) / 100,
+      titles: a.titles.slice().sort((x, y) => y.YourRating - x.YourRating),  // los que se tuvieron en cuenta
+    }))
     .sort((x, y) => y.avg - x.avg);
 }
 

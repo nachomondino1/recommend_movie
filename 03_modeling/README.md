@@ -13,7 +13,11 @@ Lo que hace el sitio (`docs/js/app.js`), todo en el navegador y explicable:
    (`v` = votos, `7` = nota neutra de referencia). Una nota alta con pocos votos se acerca a 7 y baja en la lista. `m` depende de
    la fuente porque las escalas son muy distintas: **25.000** para IMDb (tu watchlist; mediana ~210 mil votos) y **1.000** para TMDB
    (los nuevos; mediana ~600 votos, y se exige un mínimo de 500). La nota que se muestra es la cruda; el orden usa la ponderada.
-4. Marca con "De tus géneros favoritos" los títulos de tus 3 géneros mejor puntuados (descriptivo, de la pestaña "Mi gusto"; no cambia el orden).
+4. Marca con "De tus géneros favoritos" los títulos de tus 3 géneros mejor puntuados (descriptivo; no cambia el orden).
+5. **Directores favoritos**: un director con al menos 2 títulos tuyos y promedio por encima de tu nota media (hasta 3). Sus títulos se marcan
+   con "De tus directores favoritos" y **suben 0,4 puntos** en el orden (`DIRECTOR_BOOST` en `docs/js/profile.js`), y los de la lista de
+   nuevos entran aunque queden fuera de los 60 mejores. Es un impulso chico y fijo, no una predicción: con 2 títulos por director hay
+   poca evidencia, así que solo desempata entre títulos de nota parecida.
 
 El análisis de gusto (`docs/js/taste.js`) es solo estadística descriptiva de tus notas: promedios por género y
 director, y cuánto te separás de la nota de IMDb.
