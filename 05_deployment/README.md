@@ -27,7 +27,8 @@ Cada corrida suma una fila a `01_data_understanding/refresh_log.md`. Después, p
 ## Correr el sitio en local
 
 ```bash
-cd docs && python3 -m http.server 8765    # abrir http://localhost:8765/
+make serve                                # abrir http://localhost:8765/  (PORT=9000 para otro puerto)
+# sin make: cd docs && python3 -m http.server 8765
 ```
 
 ## Qué guarda el navegador del visitante

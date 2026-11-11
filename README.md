@@ -1,14 +1,53 @@
-# recommend_movie
+# Qué ver hoy
 
-Recomendador personal de películas y series: entrena con las notas que puse en
-IMDb y predice qué nota le pondría a un título que todavía no vi, para priorizar
-la watchlist.
+Sitio para decidir qué ver: subís tu export de IMDb, elegís tus plataformas de streaming y te muestra tu watchlist y títulos
+nuevos que no viste, solo en tus plataformas, ordenados por nota ponderada por votos. Se procesa todo en el navegador; el sitio
+no llama a ninguna API.
 
-**Dashboard en vivo:** https://nachomondino1.github.io/recommend_movie/
+**Sitio en vivo:** https://nachomondino1.github.io/recommend_movie/
 
-## MVP público (ramas `staging` → `prod`)
+## Comandos
 
-Versión para que cualquiera la use: subís tu export de IMDb, elegís tus plataformas y te muestra qué ver hoy (tu watchlist y títulos nuevos que no viste) ordenado por nota. Estructura por fases CRISP-DM, como `boardgame`:
+**Correr el sitio en local** (http://localhost:8765):
+
+```bash
+make serve                  # o: make serve PORT=9000
+# equivalente sin make:
+cd docs && python3 -m http.server 8765
+```
+
+Necesita un servidor (no abre con doble clic) porque el sitio carga `data/catalog.json`. Para probarlo con tus datos: elegí plataformas en
+el inicio y arrastrá `data/ratings.csv` y `data/watchlist.csv`.
+
+**Actualizar el catálogo de películas y series** (recolecta de TMDB, arma `docs/data/catalog.json` y commitea en `staging`):
+
+```bash
+make sync                   # o: ./sync_data.sh   (necesita TMDB_TOKEN en .env)
+./sync_data.sh --top 800    # cualquier argumento va a refresh_tmdb_data.py
+```
+
+Cada corrida suma una fila a [`01_data_understanding/refresh_log.md`](01_data_understanding/refresh_log.md) (requests a la API, nuevos, errores, duración).
+
+**Cada paso por separado:**
+
+```bash
+python3 01_data_understanding/collect_initial_data/tmdb/refresh_tmdb_data.py [--dry-run]   # 1. recolectar de TMDB
+python3 01_data_understanding/verify_data_quality.py                                      # 1. verificar calidad
+python3 02_data_preparation/build_catalog.py                                              # 2. armar el catálogo del sitio
+```
+
+**Publicar** (todo cambio entra por `staging`; `prod` solo recibe pull requests):
+
+```bash
+git push origin staging
+gh pr create --base prod --head staging --title "..." --body "..."
+```
+
+**Proyecto personal** (modelo entrenado sobre tus notas): `make setup` una vez, y después `make update`, `make eval`, `make predict TITLE="X"`. Ver [Proyecto personal](#proyecto-personal-modelo-entrenado) más abajo y `make` para la lista completa.
+
+## Estructura por fases (ramas `staging` → `prod`)
+
+Estructura CRISP-DM, como `boardgame`:
 
 | Fase | Carpeta |
 |---|---|
@@ -20,9 +59,9 @@ Versión para que cualquiera la use: subís tu export de IMDb, elegís tus plata
 
 El sitio es `docs/` (lo que publica Pages) y no llama a ninguna API. Datos: `./sync_data.sh`. El proyecto personal (modelo entrenado, `make update`) sigue en estas mismas carpetas (ver "Estructura" más abajo).
 
-## Uso
+## Proyecto personal (modelo entrenado)
 
-Actualizás los datos y regenerás todo con **un comando**:
+Predice qué nota le pondría a un título que todavía no vi, entrenando con las notas que puse en IMDb. Actualizás los datos y regenerás todo con **un comando**:
 
 ```bash
 # 1. bajar ratings.csv y watchlist.csv de IMDb y ponerlos en data/
@@ -43,7 +82,7 @@ make explore     # análisis exploratorio (el sitio público se actualiza con ./
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
 en ambos casos es `make update`.
 
-## Estructura
+## Estructura de carpetas
 
 ```
 data/
