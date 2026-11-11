@@ -46,6 +46,7 @@
 
       <details class="update" id="updateData">
       <summary class="update-summary">Actualizar mis datos de IMDb (pasos 2 y 3)</summary>
+      <div class="steps-row">
       <div class="step">
         <h3><span class="step-n">2</span> Baj&aacute; tus datos de IMDb</h3>
         <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>.</p>
@@ -63,6 +64,15 @@
         </div>
         <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
         <div id="uploadMsg" class="msg" role="status"></div>
+        <div id="uploadDone" class="upload-done" role="status" hidden>
+          <div aria-hidden="true">&#9989;</div>
+          <div>
+            <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
+            <p id="uploadDoneText"></p>
+            <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+          </div>
+        </div>
+      </div>
       </div>
       </details>
     </div>

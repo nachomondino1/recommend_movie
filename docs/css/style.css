@@ -7,6 +7,7 @@
   --bad: #b91c1c;
   --radius-sm: 10px; --radius: 14px; --radius-lg: 18px;
   --nav-h: 60px;
+  --max-w: 1160px;   /* ancho de contenido en desktop; el texto largo se limita aparte (max-width en ch) */
   --shadow-xs: 0 1px 2px rgba(20, 19, 15, .05);
   --shadow-md: 0 8px 24px rgba(20, 19, 15, .12);
 }
@@ -32,7 +33,7 @@ a { color: var(--accent); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .top { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 1px solid var(--border-soft); }
-.top-inner { max-width: 760px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center;
+.top-inner { max-width: var(--max-w); margin: 0 auto; padding: 12px 20px; display: flex; align-items: center;
   justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .brand { font-weight: 700; font-size: 1.1rem; }
 .tabs { display: flex; gap: 6px; }
@@ -41,7 +42,7 @@ a { color: var(--accent); }
 .tab-btn.active { background: var(--accent-soft); color: var(--accent); }
 .link-btn { background: none; border: none; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; padding: 10px 4px; min-height: 44px; }
 .link-btn:hover { color: var(--ink); }
-.wrap { max-width: 760px; margin: 0 auto; padding: 20px 20px 48px; }
+.wrap { max-width: var(--max-w); margin: 0 auto; padding: 20px 20px 48px; }
 .lead { color: var(--muted); }
 .note { color: var(--muted); font-size: .9rem; margin: 8px 0; }
 .msg { color: var(--muted); font-size: .95rem; margin-top: 10px; }
@@ -168,7 +169,7 @@ section[id] { scroll-margin-top: var(--nav-h); }
   padding: 48px 24px 72px; color: #fff;
   background: linear-gradient(to bottom, rgba(10, 12, 18, .50) 0%, rgba(10, 12, 18, .72) 55%, var(--bg) 100%),
               url("../media/hero.jpg") center / cover no-repeat #0f1218; }
-.hero-inner { max-width: 760px; margin: 0 auto; width: 100%; }
+.hero-inner { max-width: var(--max-w); margin: 0 auto; width: 100%; }
 .hero-title { font-size: 2rem; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 18px; color: #fff; }
 .kw--a { color: #fbbf24; }
 .kw--b { color: #a5b4fc; }
@@ -233,3 +234,67 @@ section[id] { scroll-margin-top: var(--nav-h); }
 .update--static > .update-summary { display: none; }
 .hbar-item .hbar-value { flex: none; min-width: 0; white-space: nowrap; }
 .hbar-item .hbar-label { flex: 0 0 110px; }
+
+/* ---- Buscador, orden y chips nuevos de Qué ver ----------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field > label { font-size: .85rem; color: var(--muted); font-weight: 600; }
+.field--search { margin-bottom: 8px; }
+input[type=search] { width: 100%; min-height: 48px; padding: 10px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font: inherit; background: var(--card); color: var(--ink); }
+input[type=search]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.chip--seen { background: var(--bg-subtle); color: var(--ink); border-color: var(--border); font-weight: 600; }
+.chip--muted { color: var(--muted); }
+
+/* ---- Barra de resultados con el ícono de ordenar -------------------------------------------- */
+.results-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0 0; }
+.results-bar .note { margin: 0; }
+.sort { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--border); border-radius: 999px; background: var(--card);
+  padding: 0 6px 0 12px; min-height: 44px; color: var(--muted); cursor: pointer; }
+.sort:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sort-icon { flex: none; }
+.sort select { border: none; background: transparent; min-height: 40px; padding: 0 6px; color: var(--ink); font-weight: 600; cursor: pointer; }
+.sort select:focus { outline: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.upload-done { display: flex; gap: 14px; align-items: flex-start; background: var(--accent-soft); border-radius: var(--radius); padding: 16px 18px; margin-top: 14px; }
+.upload-done-title { font-weight: 700; }
+.upload-done p { margin: 2px 0 12px; color: var(--muted); }
+
+.modal-head h3 .title-link { color: var(--ink); }
+.modal-poster-link { flex: none; display: block; }
+.how { margin-top: 24px; }
+
+/* ---- "Elegí por mí" separado y bloque compacto de búsqueda y filtros --------------------------- */
+.pick-card { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap;
+  background: var(--accent-soft); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 20px; }
+.pick-title { font-weight: 700; font-size: 1.05rem; }
+.pick-sub { color: var(--muted); font-size: .9rem; }
+.explore { background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 14px 16px 12px; }
+.explore-title { font-size: .95rem; font-weight: 700; margin: 0 0 10px; }
+.filters--compact { margin: 10px 0 0; gap: 8px 10px; }
+.filters--compact select { min-height: 40px; max-width: 100%; }
+.filters--compact .check { min-height: 40px; }
+.explore .update { margin-top: 4px; }
+@media (min-width: 641px) { .explore .update-summary { display: none; } }
+@media (max-width: 520px) { .pick-card .btn { width: 100%; } }
+
+/* ---- Desktop: aprovechar el ancho con grillas (sin tocar el diseño mobile) ------------------------ */
+.list { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.steps-row { display: block; }
+.taste-grid { display: block; }
+
+@media (min-width: 900px) {
+  .page { padding-top: 40px; }
+  .list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .item { height: 100%; }
+  .steps-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+  .steps-row .step { margin-top: 16px; }
+  .providers { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .taste-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; align-items: start; }
+  .cards .card { min-width: 180px; }
+  .hero-title { max-width: 18ch; }
+  .modal-box { max-width: 640px; }
+}
+@media (min-width: 1200px) {
+  .list { gap: 18px; }
+}
+@media (min-width: 900px) { .hbar-item .hbar-label { flex-basis: 170px; } }
