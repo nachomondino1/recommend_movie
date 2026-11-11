@@ -1,4 +1,4 @@
-// Arma lo que muestran Qué ver y Mi gusto a partir de los archivos del usuario, sus plataformas y el catálogo.
+// Arma lo que muestran Qué ver y Mi perfil a partir de los archivos del usuario, sus plataformas y el catálogo.
 // Sin llamadas a APIs. Requiere catalog.js, taste.js y storage.js.
 
 // Orden "recomendado": nota ponderada por votos (como el Top 250 de IMDb): rank = v/(v+m)·nota + m/(v+m)·C.

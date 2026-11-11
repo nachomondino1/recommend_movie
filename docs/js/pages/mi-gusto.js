@@ -1,4 +1,4 @@
-// Página "Mi gusto": estadística descriptiva de tus notas (sin predicción).
+// Página "Mi perfil": estadística descriptiva de tus notas (sin predicción).
 // Requiere shared.js, profile.js, catalog.js, taste.js y storage.js.
 
 // Cada fila se despliega y muestra los títulos que se tuvieron en cuenta (con tu nota).

@@ -28,13 +28,13 @@ function poster(r, size, cls) {
     : `<div class="${cls}"></div>`;
 }
 
-// ¿Ya cargó sus archivos? (entonces se habilitan Qué ver y Mi gusto; las plataformas se eligen en Qué ver)
+// ¿Ya cargó sus archivos? (entonces se habilitan Qué ver y Mi perfil; las plataformas se eligen en Qué ver)
 const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
 const NAV = [
   { id: "que-ver", href: "que-ver.html", label: "Qué ver", needsProfile: true },
-  { id: "mi-gusto", href: "mi-gusto.html", label: "Mi gusto", needsProfile: true },
+  { id: "mi-gusto", href: "mi-gusto.html", label: "Mi perfil", needsProfile: true },
 ];
 
 function syncNavHeight() {

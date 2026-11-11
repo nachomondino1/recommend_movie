@@ -51,7 +51,7 @@ function showDone(data) {
     (data.watchlist.length ? "" : " Todavía falta tu watchlist (es opcional): con ella te marcamos lo que ya guardaste.");
   $("uploadDone").hidden = false;
   updateLoadedState();   // primero se actualiza el layout (aparece el cuadro de arriba) y después se scrollea
-  renderSite("inicio");  // el menú ahora incluye Qué ver y Mi gusto
+  renderSite("inicio");  // el menú ahora incluye Qué ver y Mi perfil
   if (catalog.data) showCatalogInfo();
   $("uploadDone").scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
 }
