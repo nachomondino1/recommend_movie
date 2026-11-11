@@ -7,7 +7,7 @@ sería ruido.
 
 Lo que hace el sitio (`docs/js/profile.js` arma los datos y `docs/js/pages/que-ver.js` los muestra), todo en el navegador y explicable:
 
-1. Parte de **todo el catálogo** (hoy ~5.100 títulos) y le suma lo tuyo que no esté ahí. Cada título sabe si está **en tus plataformas**, si **ya lo
+1. Parte de **todo el catálogo** (hoy ~5.100 títulos) y le suma lo tuyo que no esté ahí. Cada título sabe si está **en las plataformas que elegís** (lista desplegable con casillas en "Qué ver", se recuerdan entre visitas; sin ninguna elegida, todo el catálogo cuenta como disponible), si **ya lo
    viste** (por id de IMDb, con tu nota) y si está en tu **watchlist**.
 2. Por defecto lista lo que está **en tus plataformas y todavía no viste**; con el **buscador por nombre** mira el catálogo entero (otras
    plataformas, lo ya visto, lo que no está en ninguna) e ignora los filtros.

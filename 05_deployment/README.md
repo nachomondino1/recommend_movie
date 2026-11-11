@@ -13,7 +13,7 @@ Promover a producción:
 gh pr create --base prod --head staging --title "..." --body "..."
 ```
 
-La página publicada es `docs/` (HTML + CSS + JS sin build): `index.html` (landing + 3 pasos), `que-ver.html` y `mi-gusto.html`; el JS de cada una está en `docs/js/pages/` y lo compartido en `docs/js/shared.js`. El dashboard del proyecto personal original quedó guardado, sin publicar, en `archive/dashboard_personal.html`. Para que sirva `prod`, en GitHub → Settings → Pages el origen debe ser la rama `prod`, carpeta `/docs`. Hoy Pages apunta a otra rama: cambiarlo es una decisión tuya, no se hace desde el código.
+La página publicada es `docs/` (HTML + CSS + JS sin build): `index.html` (landing + 2 pasos), `que-ver.html` y `mi-gusto.html`; el JS de cada una está en `docs/js/pages/` y lo compartido en `docs/js/shared.js`. El dashboard del proyecto personal original quedó guardado, sin publicar, en `archive/dashboard_personal.html`. Para que sirva `prod`, en GitHub → Settings → Pages el origen debe ser la rama `prod`, carpeta `/docs`. Hoy Pages apunta a otra rama: cambiarlo es una decisión tuya, no se hace desde el código.
 
 ## Actualizar los datos
 

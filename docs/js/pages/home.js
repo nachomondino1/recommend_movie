@@ -1,43 +1,18 @@
-// Página de inicio: hero + los 3 pasos (plataformas, descarga de IMDb, carga de archivos).
-// Al guardar los datos lleva a "Qué ver". Requiere shared.js, csv.js, catalog.js y storage.js.
-
-const selected = new Set(loadPlatforms().map((p) => p.id));
+// Página de inicio: hero + los 2 pasos de IMDb (descargar y arrastrar los archivos).
+// Las plataformas se eligen en "Qué ver". Requiere shared.js, csv.js, catalog.js y storage.js.
 
 function setMsg(text, isError) {
   $("uploadMsg").textContent = text;
   $("uploadMsg").className = "msg" + (isError ? " msg--error" : "");
 }
 
-function persistPlatforms() {
-  savePlatforms(catalog.data.providers.filter((p) => selected.has(p.id)).map((p) => ({ id: p.id, name: p.name })));
-}
-
-function renderProviders(list, onToggle) {
-  $("providers").innerHTML = list.map((p) => `
-    <button type="button" class="prov${selected.has(p.id) ? " prov--on" : ""}" data-id="${p.id}"
-      aria-pressed="${selected.has(p.id)}">
-      ${p.logo ? `<img src="${IMG}w92${p.logo}" alt="" loading="lazy">` : ""}
-      <span>${esc(p.name)}</span>
-    </button>`).join("");
-  $("providers").querySelectorAll(".prov").forEach((b) => b.addEventListener("click", () => {
-    const id = Number(b.dataset.id);
-    onToggle(id);
-    b.classList.toggle("prov--on", selected.has(id));
-    b.setAttribute("aria-pressed", selected.has(id));
-  }));
-}
-
-// Con datos ya cargados: el hero lleva directo a las recomendaciones, un aviso lo dice y los pasos 2 y 3
-// quedan plegados para que nadie vuelva a cargar lo que ya está.
-function updateLoadedState(keepOpen = false) {
+// Con datos ya cargados: un aviso en los pasos dice que no hace falta volver a cargarlos.
+function updateLoadedState() {
   const data = loadData();
   const loaded = data.ratings.length > 0;
-  const ready = loaded && selected.size > 0;
-  $("heroCta").textContent = ready ? "Ver mis recomendaciones" : "Empezar";
-  $("heroCta").setAttribute("href", ready ? "que-ver.html" : "#pasos");
+  // El CTA siempre lleva a los pasos: primero se cargan los datos; con datos ya cargados, ahí mismo está el botón a las recomendaciones
+  $("heroCta").textContent = loaded ? "Ver mi carga" : "Empezar";
   $("loadedBanner").hidden = !loaded;
-  $("updateData").open = keepOpen || !loaded;   // tras cargar, queda abierto para que se vea el aviso de "listo"
-  $("updateData").classList.toggle("update--static", !loaded);
   if (loaded) {
     const when = data.savedAt ? ` el ${new Date(data.savedAt).toLocaleDateString("es-AR")}` : "";
     $("loadedText").textContent = `${data.ratings.length} notas y ${data.watchlist.length} títulos en tu watchlist, cargados${when}. ` +
@@ -48,8 +23,6 @@ function updateLoadedState(keepOpen = false) {
 async function ingest(fileList) {
   const files = [...fileList];
   if (!files.length) return;
-  if (!selected.size) { setMsg("Primero elegí al menos una plataforma (paso 1).", true); return; }
-  persistPlatforms();
   $("uploadDone").hidden = true;
   setMsg("Leyendo archivos…");
   const results = await readImdbFiles(files);
@@ -77,7 +50,9 @@ function showDone(data) {
   $("uploadDoneText").textContent = `Cargamos ${data.ratings.length} notas y ${data.watchlist.length} títulos de tu watchlist.` +
     (data.watchlist.length ? "" : " Todavía falta tu watchlist (es opcional): con ella te marcamos lo que ya guardaste.");
   $("uploadDone").hidden = false;
-  updateLoadedState(true);   // primero se actualiza el layout (aparece el cuadro de arriba) y después se scrollea
+  updateLoadedState();   // primero se actualiza el layout (aparece el cuadro de arriba) y después se scrollea
+  renderSite("inicio");  // el menú ahora incluye Qué ver y Mi perfil
+  if (catalog.data) showCatalogInfo();
   $("uploadDone").scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
 }
 
@@ -91,21 +66,7 @@ function wireUpload() {
   zone.addEventListener("drop", (e) => ingest(e.dataTransfer.files));
 }
 
-async function main() {
-  renderSite("inicio");
-  wireUpload();
-  updateLoadedState();
-  try {
-    await loadCatalog();
-  } catch (e) {
-    $("providers").innerHTML = `<div class="msg msg--error">${esc(e.message)}</div>`;
-    return;
-  }
-  renderProviders(catalog.data.providers, (id) => {
-    selected.has(id) ? selected.delete(id) : selected.add(id);
-    persistPlatforms();
-    updateLoadedState();
-  });
-}
-
-main();
+renderSite("inicio");
+wireUpload();
+updateLoadedState();
+loadCatalog().catch(() => {});   // solo para llenar el dato del pie y dejar el catálogo en caché para "Qué ver"
