@@ -6,6 +6,7 @@
   --accent: #3b3fd8; --accent-soft: #eceefc; --accent-contrast: #ffffff;
   --bad: #b91c1c;
   --radius-sm: 10px; --radius: 14px; --radius-lg: 18px;
+  --nav-h: 60px;
   --shadow-xs: 0 1px 2px rgba(20, 19, 15, .05);
   --shadow-md: 0 8px 24px rgba(20, 19, 15, .12);
 }
@@ -58,7 +59,7 @@ a { color: var(--accent); }
 
 /* Onboarding */
 .step { background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 20px; margin-top: 16px; box-shadow: var(--shadow-xs); }
-.step h2 { margin: 0 0 12px; display: flex; align-items: center; gap: 12px; }
+.step h3 { margin: 0 0 12px; display: flex; align-items: center; gap: 12px; }
 .step-n { flex: none; width: 32px; height: 32px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
   display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
 .hint { color: var(--muted); }
@@ -150,4 +151,47 @@ select { min-height: 44px; padding: 8px 12px; border: 2px solid var(--border); b
   .item-score { align-self: flex-start; }
   .hbar-label { flex-basis: 100px; }
   .modal-poster { width: 80px; height: 120px; }
+}
+
+/* ---- Landing: nav, hero, secciones ---------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+.brand { color: var(--ink); text-decoration: none; }
+.top-nav { display: flex; gap: 6px; }
+.top-nav a { color: var(--muted); text-decoration: none; font-weight: 600; padding: 8px 14px; border-radius: 999px; min-height: 44px;
+  display: inline-flex; align-items: center; }
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+section[id] { scroll-margin-top: var(--nav-h); }
+#pasos, #resultados { scroll-margin-top: calc(var(--nav-h) + 8px); }
+
+/* El hero va sobre una foto oscura sea cual sea el modo claro/oscuro: colores propios, no tokens de tema */
+.hero { position: relative; display: flex; align-items: center; min-height: calc(100vh - var(--nav-h)); min-height: calc(100svh - var(--nav-h));
+  padding: 48px 24px 72px; color: #fff;
+  background: linear-gradient(to bottom, rgba(10, 12, 18, .50) 0%, rgba(10, 12, 18, .72) 55%, var(--bg) 100%),
+              url("../media/hero.jpg") center / cover no-repeat #0f1218; }
+.hero-inner { max-width: 760px; margin: 0 auto; width: 100%; }
+.hero-title { font-size: 2rem; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 18px; color: #fff; }
+.kw--a { color: #fbbf24; }
+.kw--b { color: #a5b4fc; }
+.hero-sub { font-size: 1.1rem; color: rgba(255, 255, 255, .92); max-width: 56ch; margin: 0 0 28px; }
+.btn--hero { min-height: 56px; padding: 12px 32px; font-size: 1.1rem; background: #fbbf24; border-color: #fbbf24; color: #1c1b18; }
+.hero-credit { position: absolute; right: 16px; bottom: 12px; font-size: .75rem; color: rgba(255, 255, 255, .7); }
+
+.section { padding: 56px 0 24px; }
+.section--alt { background: var(--bg-subtle); padding-bottom: 48px; margin-top: 32px; }
+.section-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 6px; }
+.results-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 20px; }
+.results-head .section-title { margin: 0; }
+.block-title { font-size: 1.1rem; margin: 28px 0 10px; }
+.foot { padding: 8px 0 32px; }
+.foot .wrap { padding-top: 16px; }
+
+@media (max-width: 520px) {
+  .hero { padding: 32px 16px 56px; }
+  .hero-sub { font-size: 1rem; }
+  .btn--hero { width: 100%; }
+  .section { padding-top: 40px; }
+  .top-inner { flex-wrap: nowrap; gap: 4px; }
+  .brand { font-size: 1rem; white-space: nowrap; }
+  .top-nav { gap: 0; }
+  .top-nav a { padding: 8px 8px; font-size: .85rem; white-space: nowrap; }
 }

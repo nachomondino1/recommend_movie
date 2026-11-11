@@ -12,11 +12,18 @@ const weightedRating = (rating, votes, m) => {
 const MIN_VOTES_SUGGESTED = 500;  // evita sugerir títulos con nota alta pero casi sin votos
 const selected = new Set(loadPlatforms().map((p) => p.id));
 
-function show(screen) {
-  $("screen-onboarding").hidden = screen !== "onboarding";
-  $("screen-app").hidden = screen !== "app";
-  $("tabs").hidden = screen !== "app";
-  $("btnSettings").hidden = screen !== "app";
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Muestra u oculta la sección de recomendaciones y adapta el botón del hero.
+function setResultsVisible(visible) {
+  $("resultados").hidden = !visible;
+  $("navResults").hidden = !visible;
+  $("heroCta").textContent = visible ? "Ver mis recomendaciones" : "Empezar";
+  $("heroCta").setAttribute("href", visible ? "#resultados" : "#pasos");
+}
+
+function goToResults() {
+  $("resultados").scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
 }
 
 function setMsg(text, isError) {
@@ -30,7 +37,7 @@ function persistPlatforms() {
 
 const typeOf = (c) => (c.type === "movie" ? "Movie" : "TV Series");
 
-function buildDashboard(data) {
+function buildDashboard(data, scroll = false) {
   const rated = data.ratings.filter((r) => r.YourRating != null)
     .map((r) => mergeRow(r, catalog.byImdb.get(r.Const)));
   currentTaste = buildTaste(rated);
@@ -79,7 +86,8 @@ function buildDashboard(data) {
     `Catálogo actualizado el ${catalog.data.generated}.`;
   initList(rows);
   renderTaste(currentTaste);
-  show("app");
+  setResultsVisible(true);
+  if (scroll) goToResults();
 }
 
 async function ingest(fileList) {
@@ -101,7 +109,7 @@ async function ingest(fileList) {
   }
   if (!saveData(data)) notes.push("No pude guardar tus datos en este navegador (¿ventana privada?).");
   setMsg(notes.join(" "), notes.length > 0);
-  buildDashboard(data);
+  buildDashboard(data, true);
 }
 
 function updateContinue() {
@@ -126,8 +134,7 @@ function wireOnboarding() {
   ["dragenter", "dragover"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.add("dropzone--over"); }));
   ["dragleave", "drop"].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.remove("dropzone--over"); }));
   zone.addEventListener("drop", (e) => ingest(e.dataTransfer.files));
-  $("btnContinue").addEventListener("click", () => { persistPlatforms(); buildDashboard(loadData()); });
-  $("btnSettings").addEventListener("click", () => { setMsg(""); updateContinue(); show("onboarding"); });
+  $("btnContinue").addEventListener("click", () => { persistPlatforms(); buildDashboard(loadData(), true); });
   $("btnClear").addEventListener("click", () => {
     if (!confirm("¿Borrar tus datos de este navegador?")) return;
     clearAllData();
@@ -159,10 +166,15 @@ function wireApp() {
   }));
 }
 
+function syncNavHeight() {
+  document.documentElement.style.setProperty("--nav-h", document.querySelector(".top").offsetHeight + "px");
+}
+
 async function main() {
+  syncNavHeight();
+  window.addEventListener("resize", syncNavHeight);
   wireOnboarding();
   wireApp();
-  show("onboarding");
   try {
     await loadCatalog();
   } catch (e) {
@@ -171,7 +183,7 @@ async function main() {
   }
   initOnboarding();
   const data = loadData();
-  if (data.ratings.length && selected.size) buildDashboard(data);
+  if (data.ratings.length && selected.size) buildDashboard(data, false);
 }
 
 main();
