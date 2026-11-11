@@ -4,7 +4,7 @@ CRISP-DM: Data Understanding - análisis exploratorio (one-off).
     python 01_data_understanding/exploration.py
 
 Imprime un resumen y guarda 3 gráficos en outputs/. Las conclusiones están en
-docs/2_data_understanding.md; este script se conserva para poder rehacerlas.
+01_data_understanding/data_understanding.md; este script se conserva para poder rehacerlas.
 """
 
 import sys

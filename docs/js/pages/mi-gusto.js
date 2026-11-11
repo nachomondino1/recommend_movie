@@ -1,13 +1,24 @@
 // Página "Mi gusto": estadística descriptiva de tus notas (sin predicción).
 // Requiere shared.js, profile.js, catalog.js, taste.js y storage.js.
 
-function hbarList(id, items) {
+// Cada fila se despliega y muestra los títulos que se tuvieron en cuenta (con tu nota).
+function hbarList(id, items, labelOf = (l) => l) {
   $(id).innerHTML = items.length ? items.map((it) => `
-    <div class="hbar">
-      <div class="hbar-label" title="${esc(it.label)}">${esc(genreEs(it.label))}</div>
-      <div class="hbar-track"><div class="hbar-fill" style="width:${it.avg * 10}%;background:${colorFor(it.avg)}"></div></div>
-      <div class="hbar-value">${it.avg.toFixed(1)}</div>
-    </div>`).join("") : '<div class="empty-note">Todavía no hay suficientes títulos.</div>';
+    <details class="hbar-item">
+      <summary class="hbar">
+        <span class="hbar-label" title="${esc(labelOf(it.label))}">${esc(labelOf(it.label))}</span>
+        <span class="hbar-track"><span class="hbar-fill" style="width:${it.avg * 10}%;background:${colorFor(it.avg)}"></span></span>
+        <span class="hbar-value">${it.avg.toFixed(1)} · ${it.n}</span>
+        <span class="chev" aria-hidden="true">&#9662;</span>
+      </summary>
+      <ul class="hbar-titles">${it.titles.map((t) => `
+        <li>
+          <a class="title-link" href="${esc(t.URL)}" target="_blank" rel="noopener">${esc(t.Title)}</a>
+          <span class="item-meta">${t.Year ?? ""}</span>
+          <span class="pill pill--sm" style="background:${colorFor(t.YourRating)}" title="Tu nota">${t.YourRating}</span>
+        </li>`).join("")}
+      </ul>
+    </details>`).join("") : '<div class="empty-note">Todavía no hay suficientes títulos.</div>';
 }
 
 function titleList(id, items) {
@@ -32,7 +43,7 @@ function renderTaste(t) {
   $("devText").textContent = t.deviation_vs_imdb <= -0.5 ? "Sos más exigente que el promedio de IMDb."
     : t.deviation_vs_imdb >= 0.5 ? "Sos más generoso que el promedio de IMDb."
     : "Puntuás parecido al promedio de IMDb.";
-  hbarList("rankGenre", t.by_genre.slice(0, 8));
+  hbarList("rankGenre", t.by_genre.slice(0, 8), genreEs);
   hbarList("rankDirector", t.by_director);
   titleList("topList", t.top);
   titleList("bottomList", t.bottom);

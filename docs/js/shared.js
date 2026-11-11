@@ -33,7 +33,6 @@ const hasProfile = () => loadData().ratings.length > 0 && loadPlatforms().length
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
 const NAV = [
-  { id: "datos", href: "index.html#pasos", label: "Mis datos" },
   { id: "que-ver", href: "que-ver.html", label: "Qué ver", needsProfile: true },
   { id: "mi-gusto", href: "mi-gusto.html", label: "Mi gusto", needsProfile: true },
 ];

@@ -30,11 +30,22 @@
       <h2 class="section-title">Arm&aacute; tu perfil en 3 pasos</h2>
       <p class="lead">Tus archivos no salen de tu navegador.</p>
 
+      <div class="banner" id="loadedBanner" hidden>
+        <div class="banner-icon" aria-hidden="true">&#9989;</div>
+        <div>
+          <div class="banner-title">Tus datos de IMDb ya est&aacute;n cargados</div>
+          <p class="banner-text" id="loadedText"></p>
+          <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+        </div>
+      </div>
+
       <div class="step">
         <h3><span class="step-n">1</span> Eleg&iacute; tus plataformas</h3>
         <div id="providers" class="providers"><div class="msg">Cargando&hellip;</div></div>
       </div>
 
+      <details class="update" id="updateData">
+      <summary class="update-summary">Actualizar mis datos de IMDb (pasos 2 y 3)</summary>
       <div class="step">
         <h3><span class="step-n">2</span> Baj&aacute; tus datos de IMDb</h3>
         <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>.</p>
@@ -52,8 +63,8 @@
         </div>
         <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
         <div id="uploadMsg" class="msg" role="status"></div>
-        <button type="button" class="btn" id="btnContinue" hidden>Ver mis recomendaciones</button>
       </div>
+      </details>
     </div>
   </section>
 </main>

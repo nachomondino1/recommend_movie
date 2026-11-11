@@ -22,8 +22,10 @@ function metaLine(r) {
 const whereChips = (r) => (r.where || []).map((p) => `<span class="chip">${esc(p)}</span>`).join("");
 
 function whyLine(r) {
-  if (!r.fav || !r.fav.length) return "";
-  return `<div class="item-why">De tus géneros favoritos: ${r.fav.map((g) => esc(genreEs(g))).join(" y ")}</div>`;
+  const lines = [];
+  if (r.favDir && r.favDir.length) lines.push(`De tus directores favoritos: ${r.favDir.map(esc).join(" y ")}`);
+  if (r.fav && r.fav.length) lines.push(`De tus géneros favoritos: ${r.fav.map((g) => esc(genreEs(g))).join(" y ")}`);
+  return lines.map((l) => `<div class="item-why">${l}</div>`).join("");
 }
 
 function initList(rows) {
