@@ -233,3 +233,13 @@ section[id] { scroll-margin-top: var(--nav-h); }
 .update--static > .update-summary { display: none; }
 .hbar-item .hbar-value { flex: none; min-width: 0; white-space: nowrap; }
 .hbar-item .hbar-label { flex: 0 0 110px; }
+
+/* ---- Buscador, orden y chips nuevos de Qué ver ----------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field > label { font-size: .85rem; color: var(--muted); font-weight: 600; }
+.field--search { margin-bottom: 8px; }
+input[type=search] { width: 100%; min-height: 48px; padding: 10px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font: inherit; background: var(--card); color: var(--ink); }
+input[type=search]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.chip--seen { background: var(--bg-subtle); color: var(--ink); border-color: var(--border); font-weight: 600; }
+.chip--muted { color: var(--muted); }

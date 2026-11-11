@@ -90,6 +90,9 @@ async function main() {
     $("providers").innerHTML = `<div class="msg msg--error">${esc(e.message)}</div>`;
     return;
   }
+  const total = catalog.data.titles.length, movies = catalog.data.titles.filter((t) => t.type === "movie").length;
+  $("catalogInfo").textContent = `Catálogo: ${total.toLocaleString("es-AR")} títulos (${movies.toLocaleString("es-AR")} películas y ` +
+    `${(total - movies).toLocaleString("es-AR")} series) en ${catalog.data.providers.length} plataformas, actualizado el ${catalog.data.generated}.`;
   renderProviders(catalog.data.providers, (id) => {
     selected.has(id) ? selected.delete(id) : selected.add(id);
     persistPlatforms();

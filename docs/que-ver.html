@@ -26,19 +26,57 @@
     No encontramos t&iacute;tulos en tus plataformas. Prob&aacute; sumar m&aacute;s en <a href="index.html#pasos">Mis datos</a>.
   </div>
   <div id="hoyBody" hidden>
+    <p class="note" id="catalogInfo"></p>
+
+    <div class="field field--search">
+      <label for="q">Buscar por nombre</label>
+      <input type="search" id="q" placeholder="Ej: Interstellar" autocomplete="off">
+    </div>
+    <p class="note" id="searchNote" hidden>Buscando en todo el cat&aacute;logo: tambi&eacute;n aparecen t&iacute;tulos de otras plataformas y los que ya viste. Los filtros se ignoran mientras busc&aacute;s.</p>
+
     <button type="button" class="btn btn--big" id="pickForMe">&#127922; Eleg&iacute; por m&iacute;</button>
 
+    <details class="update" id="filtersBox">
+    <summary class="update-summary">Filtros y orden</summary>
     <div class="filters">
       <div class="seg" id="fType" role="group" aria-label="Tipo">
         <button type="button" class="seg-btn active" data-type="">Todo</button>
         <button type="button" class="seg-btn" data-type="Movie">Pel&iacute;culas</button>
         <button type="button" class="seg-btn" data-type="TV">Series</button>
       </div>
-      <select id="fGenre" aria-label="G&eacute;nero"></select>
+      <div class="field">
+        <label for="fGenre">G&eacute;nero</label>
+        <select id="fGenre"></select>
+      </div>
       <label class="check"><input type="checkbox" id="fWatchlist"> Solo mi watchlist</label>
     </div>
+
+    <div class="filters">
+      <div class="field">
+        <label for="fSort">Ordenar por</label>
+        <select id="fSort">
+          <option value="recomendado">Recomendado (nota con votos)</option>
+          <option value="nota">Mejor nota</option>
+          <option value="votos">M&aacute;s votos</option>
+          <option value="nuevas">M&aacute;s nuevas</option>
+          <option value="az">Nombre A&ndash;Z</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fMinVotes">Votos m&iacute;nimos</label>
+        <select id="fMinVotes">
+          <option value="0">Cualquiera</option>
+          <option value="100">100 o m&aacute;s</option>
+          <option value="500">500 o m&aacute;s</option>
+          <option value="1000">1.000 o m&aacute;s</option>
+          <option value="5000">5.000 o m&aacute;s</option>
+          <option value="10000">10.000 o m&aacute;s</option>
+        </select>
+      </div>
+    </div>
+    </details>
     <p class="note" id="subtitle"></p>
-    <p class="note">Orden: la nota se pondera por la cantidad de votos (como el Top 250 de IMDb), as&iacute; que una nota alta con pocos votos baja en la lista. Los t&iacute;tulos de tus directores favoritos suben un poco.</p>
+    <p class="note">&ldquo;Recomendado&rdquo; pondera la nota por la cantidad de votos (como el Top 250 de IMDb), as&iacute; que una nota alta con pocos votos baja; los t&iacute;tulos de tus directores favoritos suben un poco. Nota y votos son de TMDB; en tu watchlist tambi&eacute;n ves los de IMDb.</p>
 
     <div id="list" class="list"></div>
     <div class="note" id="resultCount"></div>

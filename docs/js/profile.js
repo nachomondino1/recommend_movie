@@ -1,12 +1,12 @@
 // Arma lo que muestran Qué ver y Mi gusto a partir de los archivos del usuario, sus plataformas y el catálogo.
 // Sin llamadas a APIs. Requiere catalog.js, taste.js y storage.js.
 
-// Orden: nota ponderada por votos (como el Top 250 de IMDb): rank = v/(v+m)·nota + m/(v+m)·C.
-// m = votos a partir de los cuales la nota pesa más que el prior; IMDb y TMDB tienen escalas muy distintas.
-const PRIOR_RATING = 7.0, WEIGHT_VOTES_IMDB = 25000, WEIGHT_VOTES_TMDB = 1000;
-const MIN_VOTES_SUGGESTED = 500;  // evita sugerir títulos con nota alta pero casi sin votos
-const DIRECTOR_BOOST = 0.4;        // puntos que suma al orden un título de un director favorito (nota ponderada: ~6 a 9)
-const FAV_GENRES = 3, FAV_DIRECTORS = 3, MAX_NEW = 60;
+// Orden "recomendado": nota ponderada por votos (como el Top 250 de IMDb): rank = v/(v+m)·nota + m/(v+m)·C.
+// m = votos a partir de los cuales la nota pesa más que el prior. La nota y los votos de TODO el catálogo son de TMDB
+// (así son comparables entre sí); IMDb y TMDB tienen escalas de votos muy distintas, por eso m cambia según la fuente.
+const PRIOR_RATING = 7.0, WEIGHT_VOTES_TMDB = 1000, WEIGHT_VOTES_IMDB = 25000;
+const DIRECTOR_BOOST = 0.4;        // puntos que suma al orden recomendado un título de un director favorito
+const FAV_GENRES = 3, FAV_DIRECTORS = 3;
 
 const weightedRating = (rating, votes, m) => {
   const v = votes || 0;
@@ -15,7 +15,9 @@ const weightedRating = (rating, votes, m) => {
 
 const typeOf = (c) => (c.type === "movie" ? "Movie" : "TV Series");
 
-// selected: Set de ids de plataforma. Devuelve { rows, taste, unavailable }.
+// selected: Set de ids de plataforma.
+// Devuelve { rows, taste, unavailable, stats }. rows incluye TODO el catálogo más lo que el usuario tiene fuera de él;
+// cada fila trae onMine (está en sus plataformas), seen (ya la puntuó), inWatchlist y yourRating.
 function buildProfile(data, selected) {
   const rated = data.ratings.filter((r) => r.YourRating != null)
     .map((r) => mergeRow(r, catalog.byImdb.get(r.Const)));
@@ -25,45 +27,65 @@ function buildProfile(data, selected) {
   const favDirectors = new Set(taste ? taste.by_director.filter((d) => d.avg > taste.mean_rating).slice(0, FAV_DIRECTORS).map((d) => d.label) : []);
   const favOf = (genres) => splitList(genres).filter((g) => favGenres.has(g));
   const favDirOf = (directors) => splitList(directors).filter((d) => favDirectors.has(d));
-  const boost = (rank, favDir) => (rank == null ? null : rank + (favDir.length ? DIRECTOR_BOOST : 0));
-  const ratedIds = new Set(rated.map((r) => r.Const));
-  const seenImdb = new Set([...ratedIds, ...data.watchlist.map((r) => r.Const)]);
-  const seenTitles = new Set([...rated, ...data.watchlist].map((r) => normTitle(r.Title) + "|" + r.Year));
 
-  // 1) Tu watchlist, solo lo disponible en tus plataformas
-  const watch = [];
-  let unavailable = 0;
-  data.watchlist.filter((r) => !ratedIds.has(r.Const)).forEach((r) => {
-    const cat = catalog.byImdb.get(r.Const);
-    const m = mergeRow(r, cat);
-    m.where = cat ? providerNames(cat.providers.filter((id) => selected.has(id))) : [];
-    if (!m.where.length) { unavailable++; return; }
-    const favDir = favDirOf(m.Directors);
-    watch.push({ ...m, fav: favOf(m.Genres), favDir, inWatchlist: true,
-      rank: boost(m.ImdbRating == null ? null : weightedRating(m.ImdbRating, m.NumVotes, WEIGHT_VOTES_IMDB), favDir) });
+  const ratedByImdb = new Map(rated.map((r) => [r.Const, r]));
+  const watchByImdb = new Map(data.watchlist.map((r) => [r.Const, r]));
+
+  const finish = (row) => {
+    row.fav = favOf(row.Genres);
+    row.favDir = favDirOf(row.Directors);
+    const m = row.ratingSource === "IMDb" ? WEIGHT_VOTES_IMDB : WEIGHT_VOTES_TMDB;
+    row.rank = row.rating == null ? null
+      : weightedRating(row.rating, row.votes, m) + (row.favDir.length ? DIRECTOR_BOOST : 0);
+    row.searchText = normTitle(row.Title + " " + (row.altTitle || ""));
+    return row;
+  };
+
+  const rows = [];
+
+  // 1) Todo el catálogo
+  for (const c of catalog.data.titles) {
+    const w = c.imdb ? watchByImdb.get(c.imdb) : null;
+    const rd = c.imdb ? ratedByImdb.get(c.imdb) : null;
+    const csv = rd || w;                                        // lo que el usuario sabe de este título
+    const seen = !!rd;
+    const mine = c.providers.filter((id) => selected.has(id));
+    rows.push(finish({
+      Const: c.imdb || `tmdb:${c.type}:${c.id}`, Title: csv ? csv.Title : c.title, altTitle: csv ? c.title : "",
+      Type: typeOf(c), Year: c.year,
+      Genres: (csv && csv.Genres) || c.genres.join(", "),
+      Directors: (csv && csv.Directors) || c.directors.join(", "),
+      rating: c.rating, votes: c.votes, ratingSource: "TMDB",
+      imdbRating: csv ? csv.ImdbRating : null, imdbVotes: csv ? csv.NumVotes : null,
+      Runtime: c.runtime, poster_path: c.poster, overview: c.overview, seasons: c.seasons,
+      providers: providerNames(c.providers), where: providerNames(mine),
+      others: providerNames(c.providers.filter((id) => !selected.has(id))),
+      onMine: mine.length > 0, inWatchlist: !!w && !rd, seen, yourRating: rd ? rd.YourRating : null,
+      inCatalog: true,
+      URL: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
+    }));
+  }
+
+  // 2) Lo del usuario que no está en el catálogo (no está en ninguna plataforma de la región): solo aparece al buscar
+  const inCatalog = (imdb) => catalog.byImdb.has(imdb);
+  const extra = (r, rd) => finish({
+    Const: r.Const, Title: r.Title, altTitle: "", Type: r.Type, Year: r.Year, Genres: r.Genres, Directors: r.Directors,
+    rating: r.ImdbRating, votes: r.NumVotes, ratingSource: "IMDb", imdbRating: r.ImdbRating, imdbVotes: r.NumVotes,
+    Runtime: r.Runtime, poster_path: null, overview: "", seasons: null, providers: [], where: [], others: [],
+    onMine: false, inWatchlist: !rd, seen: !!rd, yourRating: rd ? rd.YourRating : null, inCatalog: false, URL: r.URL,
   });
+  rated.filter((r) => !inCatalog(r.Const)).forEach((r) => rows.push(extra(r, r)));
+  data.watchlist.filter((r) => !inCatalog(r.Const) && !ratedByImdb.has(r.Const)).forEach((r) => rows.push(extra(r, null)));
 
-  // 2) Títulos nuevos del catálogo en tus plataformas
-  const discovered = catalog.data.titles
-    .filter((c) => c.providers.some((id) => selected.has(id)))
-    .filter((c) => (c.votes || 0) >= MIN_VOTES_SUGGESTED)
-    .filter((c) => !(c.imdb && seenImdb.has(c.imdb)) && !seenTitles.has(normTitle(c.title) + "|" + c.year))
-    .map((c) => {
-      const row = {
-        Const: c.imdb || `tmdb:${c.type}:${c.id}`, Title: c.title, Type: typeOf(c), Year: c.year,
-        Genres: c.genres.join(", "), Directors: c.directors.join(", "), ImdbRating: c.rating, NumVotes: c.votes,
-        Runtime: c.runtime, poster_path: c.poster, overview: c.overview, seasons: c.seasons,
-        providers: providerNames(c.providers), where: providerNames(c.providers.filter((id) => selected.has(id))),
-        inWatchlist: false, URL: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
-      };
-      const favDir = favDirOf(row.Directors);
-      return { ...row, fav: favOf(row.Genres), favDir, rank: boost(weightedRating(row.ImdbRating, row.NumVotes, WEIGHT_VOTES_TMDB), favDir) };
-    })
-    .filter((r) => (r.ImdbRating || 0) >= 6)
-    .sort((a, b) => b.rank - a.rank);
-  // Los 60 mejores nuevos, más todos los de tus directores favoritos aunque queden fuera del corte
-  const top = discovered.slice(0, MAX_NEW);
-  const extra = discovered.slice(MAX_NEW).filter((r) => r.favDir.length);
-
-  return { rows: [...watch, ...top, ...extra], taste, unavailable };
+  const unavailable = rows.filter((r) => r.inWatchlist && !r.onMine).length;
+  const inMine = rows.filter((r) => r.onMine);
+  const stats = {
+    total: catalog.data.titles.length,
+    movies: catalog.data.titles.filter((t) => t.type === "movie").length,
+    series: catalog.data.titles.filter((t) => t.type !== "movie").length,
+    providers: catalog.data.providers.length,
+    mine: inMine.length,
+    mineNew: inMine.filter((r) => !r.seen).length,
+  };
+  return { rows, taste, unavailable, stats };
 }
