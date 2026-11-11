@@ -4,7 +4,7 @@ CRISP-DM: Deployment - dashboard HTML de la watchlist puntuada.
 Lee outputs/watchlist_scored.csv (lo genera 03_modeling/model.py si falta) y escribe un HTML
 autocontenido (sin servidor, sin dependencias) en:
     outputs/watchlist_dashboard.html  - copia local
-    docs/index.html                   - lo que publica GitHub Pages
+    archive/dashboard_personal.html   - copia guardada (NO se publica: docs/ es el sitio del MVP)
 
     python 05_deployment/dashboard.py
 """
@@ -20,11 +20,11 @@ from datetime import date
 
 import pandas as pd
 
-from config import (CATALOG_SCORED_CSV, DOCS, OUTPUTS,
+from config import (CATALOG_SCORED_CSV, OUTPUTS, ROOT,
                         SCORED_CSV, WATCHED_SCORED_CSV)
 from taste import build_taste_stats
 
-DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
+DESTS = [OUTPUTS / "watchlist_dashboard.html", ROOT / "archive" / "dashboard_personal.html"]
 
 TEMPLATE = """<!doctype html>
 <html lang="es">
@@ -1087,8 +1087,7 @@ def build_html() -> None:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(html, encoding="utf-8")
         print(f"Dashboard: {dest}")
-    (DOCS / ".nojekyll").touch()
-    print("Local: abrir con doble clic. Pages: 'make publish' actualiza el sitio.")
+    print("Abrir con doble clic. No se publica: el sitio de docs/ es el MVP público.")
 
 
 if __name__ == "__main__":

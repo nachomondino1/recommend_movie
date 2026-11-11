@@ -25,7 +25,7 @@ $PY 01_data_understanding/verify_data_quality.py
 echo "== Armando el catálogo del sitio =="
 $PY 02_data_preparation/build_catalog.py
 
-git add docs/mvp/data 01_data_understanding/refresh_log.md
+git add docs/data 01_data_understanding/refresh_log.md
 if git diff --cached --quiet; then
   echo "== Sin cambios, nada que commitear =="
 else

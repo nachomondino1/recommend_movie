@@ -173,9 +173,9 @@ asumir que está comprometido y pedirle que lo regenere.
 
 ## Variante multiusuario: catálogo precomputado, sitio sin API (2026-11-11)
 
-Cuando el proyecto pasa de "una persona" a "cualquiera que abra la página" (caso: `docs/mvp/`):
+Cuando el proyecto pasa de "una persona" a "cualquiera que abra la página" (caso: el sitio de `docs/`):
 
-- **El pipeline Python deja de correr por usuario.** Corre una vez en la máquina del autor y publica un **catálogo estático** (`docs/mvp/data/catalog.json`); el navegador del visitante solo lo lee y lo cruza con sus propios datos (ej. su export de IMDb, parseado localmente y guardado en `localStorage`).
+- **El pipeline Python deja de correr por usuario.** Corre una vez en la máquina del autor y publica un **catálogo estático** (`docs/data/catalog.json`); el navegador del visitante solo lo lee y lo cruza con sus propios datos (ej. su export de IMDb, parseado localmente y guardado en `localStorage`).
 - **Nada de tokens en el cliente ni llamadas a la API desde el sitio:** sin token público, sin rate limits, carga instantánea, y **todas** las llamadas salen de los scripts de recolección, así que se pueden registrar.
 - **Log de uso de la API:** cada corrida real del script de recolección agrega una fila a `01_data_understanding/refresh_log.md` (fecha, opciones, requests totales y por endpoint, nuevos, cambiados, errores, duración). Mismo patrón que `boardgame`.
 - **Estructura por fases CRISP-DM** (`01_data_understanding/` … `05_deployment/`), crudos en `data/01_data_understanding/` (gitignoreados), catálogo del sitio versionado, `sync_data.sh` que lo regenera y commitea en `staging`; `prod` solo recibe pull requests desde `staging`.

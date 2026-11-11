@@ -1,6 +1,6 @@
 # Fase 1 — Entender y recolectar los datos
 
-De dónde sale todo lo que muestra el sitio público (`docs/mvp/`).
+De dónde sale todo lo que muestra el sitio público (`docs/`).
 
 ## Fuente
 

@@ -18,7 +18,7 @@ Versión para que cualquiera la use: subís tu export de IMDb, elegís tus plata
 | 4. Evaluación | [`04_evaluation/`](04_evaluation/README.md) |
 | 5. Despliegue (ramas, PR a `prod`) | [`05_deployment/`](05_deployment/README.md) |
 
-El sitio está en `docs/mvp/` y no llama a ninguna API. Datos: `./sync_data.sh`. El proyecto personal (modelo entrenado, `make update`) sigue en estas mismas carpetas (ver "Estructura" más abajo).
+El sitio es `docs/` (lo que publica Pages) y no llama a ninguna API. Datos: `./sync_data.sh`. El proyecto personal (modelo entrenado, `make update`) sigue en estas mismas carpetas (ver "Estructura" más abajo).
 
 ## Uso
 
@@ -28,7 +28,7 @@ Actualizás los datos y regenerás todo con **un comando**:
 # 1. bajar ratings.csv y watchlist.csv de IMDb y ponerlos en data/
 #    (https://www.imdb.com/user/p.uwndhvvnyyx5vbgle5q7rfxsfy/ratings/)
 make update      # enriquece con TMDB, entrena, puntúa la watchlist, regenera el dashboard
-make publish     # sube el dashboard a GitHub Pages
+make explore     # análisis exploratorio (el sitio público se actualiza con ./sync_data.sh)
 ```
 
 | Comando | Qué hace |
@@ -37,7 +37,6 @@ make publish     # sube el dashboard a GitHub Pages
 | `make update` | `tmdb_data.py` (TMDB) → `model.py` (entrena + guarda + puntúa) → `catalog.py` → `dashboard.py` (HTML). |
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
 | `make review TITLE="X" TEXT="..."` | Guardar/actualizar tu reseña personal (texto libre) de un título. |
-| `make publish` | `git add docs/ && commit && push` → Pages se redespliega. |
 | `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas. |
 | `make explore` | Análisis exploratorio (gráficos en `outputs/`). |
 
@@ -71,7 +70,7 @@ data/
 04_evaluation/
   evaluate.py    comparación de modelos (CV), curva de aprendizaje, trayectoria, insights de reseñas
 05_deployment/
-  dashboard.py   generar el HTML (outputs/ + docs/index.html)
+  dashboard.py   generar el dashboard personal (outputs/ + archive/dashboard_personal.html, no se publica)
 docs/            narrativa CRISP-DM (1..6) + index.html publicado por Pages
 models/          modelos entrenados (git-ignored)
 outputs/         gráficos y CSVs locales (git-ignored)

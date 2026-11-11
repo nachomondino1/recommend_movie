@@ -1,7 +1,7 @@
 # Interfaz del proyecto. Correr `make` para ver los comandos.
 PY := ./venv/bin/python
 
-.PHONY: help setup update eval explore predict watched skip review publish
+.PHONY: help setup update eval explore predict watched skip review
 
 help:
 	@echo "make setup                        - crear venv e instalar dependencias (una vez)"
@@ -12,9 +12,8 @@ help:
 	@echo "make review TITLE=\"X\" LIKED=\"...\" DISLIKED=\"...\" - guardar tu reseña (qué te gustó / qué no)"
 	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria + reseñas"
 	@echo "make explore                      - análisis exploratorio (gráficos en outputs/)"
-	@echo "make publish                      - subir el dashboard a GitHub Pages (git add docs + commit + push)"
 	@echo
-	@echo "Flujo habitual: actualizás data/ratings.csv o data/watchlist.csv -> make update -> make publish"
+	@echo "Flujo habitual: actualizás data/ratings.csv o data/watchlist.csv -> make update (el dashboard queda en archive/dashboard_personal.html)"
 
 setup:
 	python3 -m venv venv
@@ -46,7 +45,3 @@ eval:
 
 explore:
 	$(PY) 01_data_understanding/exploration.py
-
-publish:
-	git add docs/index.html docs/.nojekyll
-	git commit -m "Actualizar dashboard" && git push
