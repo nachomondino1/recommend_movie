@@ -1,7 +1,7 @@
 """
 Paths del proyecto y carga de credenciales.
 
-    from src.config import RATINGS_CSV, TMDB_TOKEN, ...
+    from config import RATINGS_CSV, TMDB_TOKEN, ...
 """
 
 import os

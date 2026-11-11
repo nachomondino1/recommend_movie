@@ -27,3 +27,7 @@ outputs/
 
 # Worktrees sueltos de Claude Code (sesiones con aislamiento por worktree)
 .claude/worktrees/
+
+# MVP público: datos crudos de TMDB (se regeneran con refresh_tmdb_data.py)
+data/01_data_understanding/
+data/02_data_preparation/

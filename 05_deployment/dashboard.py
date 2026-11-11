@@ -1,22 +1,28 @@
 """
 CRISP-DM: Deployment - dashboard HTML de la watchlist puntuada.
 
-Lee outputs/watchlist_scored.csv (lo genera src.model si falta) y escribe un HTML
+Lee outputs/watchlist_scored.csv (lo genera 03_modeling/model.py si falta) y escribe un HTML
 autocontenido (sin servidor, sin dependencias) en:
     outputs/watchlist_dashboard.html  - copia local
     docs/index.html                   - lo que publica GitHub Pages
 
-    python -m src.dashboard
+    python 05_deployment/dashboard.py
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import json
 from datetime import date
 
 import pandas as pd
 
-from src.config import (CATALOG_SCORED_CSV, DOCS, OUTPUTS,
+from config import (CATALOG_SCORED_CSV, DOCS, OUTPUTS,
                         SCORED_CSV, WATCHED_SCORED_CSV)
-from src.taste import build_taste_stats
+from taste import build_taste_stats
 
 DESTS = [OUTPUTS / "watchlist_dashboard.html", DOCS / "index.html"]
 
@@ -1044,7 +1050,7 @@ renderCatalog();
 
 def build_html() -> None:
     if not SCORED_CSV.exists():
-        from src.model import score_watchlist
+        from model import score_watchlist
         score_watchlist()
 
     df = pd.read_csv(SCORED_CSV)

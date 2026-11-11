@@ -1,11 +1,17 @@
 """
 CRISP-DM: Data Understanding - análisis exploratorio (one-off).
 
-    python -m notebooks.exploration
+    python 01_data_understanding/exploration.py
 
 Imprime un resumen y guarda 3 gráficos en outputs/. Las conclusiones están en
 docs/2_data_understanding.md; este script se conserva para poder rehacerlas.
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import matplotlib
 
@@ -13,7 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from src.config import OUTPUTS, RATINGS_CSV
+from config import OUTPUTS, RATINGS_CSV
 
 
 def load() -> pd.DataFrame:

@@ -13,7 +13,7 @@
 (Movie / TV Series / TV Mini Series), `IMDb Rating`, `Runtime (mins)`, `Year`,
 `Genres` (lista separada por comas), `Num Votes`, `Release Date`, `Directors`.
 
-## Hallazgos del EDA (`notebooks/exploration.py`, `make explore`)
+## Hallazgos del EDA (`01_data_understanding/exploration.py`, `make explore`)
 - **Distribución de `Your Rating`:** media 5.94, mediana 6, concentrada en 5–7.
   Solo 2 nueves, ningún diez. 24 títulos con nota ≤ 4.
 - **Usuario vs IMDb:** promedia 1.48 puntos por debajo de IMDb. Correlación 0.29.

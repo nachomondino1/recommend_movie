@@ -5,18 +5,24 @@ CRISP-DM: Deployment - catálogo ampliado, fuera de la watchlist (Fase 6).
 Este módulo amplía esa lista con lo más popular/trending en TMDB (vía /discover),
 para que el dashboard también pueda recomendar títulos que el usuario nunca agregó.
 
-    python -m src.catalog     # descubre y puntúa -> outputs/catalog_scored.csv
+    python 03_modeling/catalog.py     # descubre y puntúa -> outputs/catalog_scored.csv
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import json
 
 import pandas as pd
 
-from src.config import (CATALOG_CSV, CATALOG_SCORED_CSV, EXCLUDED_CSV, MODELS,
+from config import (CATALOG_CSV, CATALOG_SCORED_CSV, EXCLUDED_CSV, MODELS,
                         RATINGS_CSV, WATCHLIST_CSV)
-from src.data import TMDBClient, imdb_like_fields, load_reviews, parse_detail
-from src.features import build_rows
-from src.model import load_models
+from tmdb_data import TMDBClient, imdb_like_fields, load_reviews, parse_detail
+from features import build_rows
+from model import load_models
 
 N_MOVIES = 100
 N_TV = 50

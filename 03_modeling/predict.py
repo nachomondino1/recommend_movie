@@ -1,12 +1,18 @@
 """
 Predecir la nota para un título por nombre (no hace falta que esté en la watchlist).
 
-    python -m src.predict "Perfect Days"
+    python 03_modeling/predict.py "Perfect Days"
     make predict TITLE="Perfect Days"
 
 Busca el título en TMDB, arma la fila de features y aplica los modelos guardados
 en models/ (los entrena si faltan).
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import argparse
 import json
@@ -14,10 +20,10 @@ import json
 import numpy as np
 import pandas as pd
 
-from src.config import MODELS
-from src.data import TMDBClient, imdb_like_fields, parse_detail
-from src.features import build, build_row
-from src.model import load_models
+from config import MODELS
+from tmdb_data import TMDBClient, imdb_like_fields, parse_detail
+from features import build, build_row
+from model import load_models
 
 
 def predict_title(name: str) -> dict:

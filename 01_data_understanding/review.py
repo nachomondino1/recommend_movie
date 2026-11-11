@@ -3,9 +3,9 @@ CRISP-DM: Deployment -- reseña personal de un título: qué te gustó y qué no
 
     make review TITLE="Silo" LIKED="personajes bien marcados..." DISLIKED="muy lenta..."
 
-    python -m src.review "Silo" --liked "..." --disliked "..."
+    python 01_data_understanding/review.py "Silo" --liked "..." --disliked "..."
 
-Resuelve el título por nombre vía TMDB (igual que src.curate) y guarda/actualiza una
+Resuelve el título por nombre vía TMDB (igual que curate.py) y guarda/actualiza una
 fila en data/reviews.csv (Const, Title, Liked, Disliked, Date) -- si ya había una
 reseña para ese título, la reemplaza. Al menos uno de los dos campos tiene que tener
 contenido (no hace falta completar ambos). No hace falta que el título esté puntuado
@@ -14,13 +14,19 @@ la muestre, y 'make eval' para ver qué palabras aparecen más en lo que te gust
 que no, juntando todas tus reseñas.
 """
 
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
+
 import argparse
 from datetime import date
 
 import pandas as pd
 
-from src.config import REVIEWS_CSV
-from src.data import TMDBClient
+from config import REVIEWS_CSV
+from tmdb_data import TMDBClient
 
 REVIEWS_COLUMNS = ["Const", "Title", "Liked", "Disliked", "Date"]
 

@@ -5,13 +5,19 @@ A diferencia de model.py/dashboard.py, esto no predice nada: solo resume lo que
 el usuario ya puntuó (data/ratings.csv) - cuántos títulos, con qué notas, qué
 géneros/directores/décadas prefiere. Sin métricas de modelo (MAE/AUC).
 
-    from src.taste import build_taste_stats
+    from taste import build_taste_stats
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import pandas as pd
 
-from src.config import RATINGS_CSV
-from src.data import tmdb_table
+from config import RATINGS_CSV
+from tmdb_data import tmdb_table
 
 MIN_GENRE_N = 3
 MIN_DIRECTOR_N = 2

@@ -5,8 +5,14 @@ CRISP-DM: Data Understanding + Data Preparation (parte 1).
 - Enriquece cada título con datos de TMDB (sinopsis, keywords, elenco, director,
   idioma, métricas) y los cachea en data/cache/.
 
-    python -m src.data          # descarga/actualiza data/cache/tmdb.csv
+    python 01_data_understanding/tmdb_data.py          # descarga/actualiza data/cache/tmdb.csv
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import json
 import time
@@ -16,7 +22,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from src.config import (RATINGS_CSV, REVIEWS_CSV, TMDB_CSV, TMDB_DIR, TMDB_TOKEN,
+from config import (RATINGS_CSV, REVIEWS_CSV, TMDB_CSV, TMDB_DIR, TMDB_TOKEN,
                         WATCHLIST_CSV)
 
 BASE = "https://api.themoviedb.org/3"
