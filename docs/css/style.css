@@ -257,3 +257,7 @@ input[type=search]:focus { outline: none; border-color: var(--accent); box-shado
 .upload-done { display: flex; gap: 14px; align-items: flex-start; background: var(--accent-soft); border-radius: var(--radius); padding: 16px 18px; margin-top: 14px; }
 .upload-done-title { font-weight: 700; }
 .upload-done p { margin: 2px 0 12px; color: var(--muted); }
+
+.modal-head h3 .title-link { color: var(--ink); }
+.modal-poster-link { flex: none; display: block; }
+.how { margin-top: 24px; }

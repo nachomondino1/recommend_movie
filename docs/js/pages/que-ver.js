@@ -123,14 +123,19 @@ function pickForMe() {
   openModal(rows[rows.length - 1].Const, true);
 }
 
+// Los links externos se abren siempre en una pestaña nueva
+const extLink = (href, inner, cls = "") =>
+  `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${inner}</a>`;
+
 function openModal(key, fromPick) {
   const r = state.rows.find((d) => d.Const === key);
   if (!r) return;
+  const site = r.URL.includes("imdb.com") ? "IMDb" : "TMDB";
   $("modalBody").innerHTML = `
     <div class="modal-head">
-      ${poster(r, "w185", "modal-poster")}
+      ${extLink(r.URL, poster(r, "w185", "modal-poster"), "modal-poster-link")}
       <div>
-        <h3>${esc(r.Title)}</h3>
+        <h3>${extLink(r.URL, esc(r.Title), "title-link")}</h3>
         <div class="item-meta">${metaLine(r)}</div>
         ${r.rating != null ? `<div class="item-meta">Nota ${r.rating.toFixed(1)} · ${votesLabel(r.votes)} (${r.ratingSource})</div>` : ""}
         ${imdbLine(r)}
@@ -142,7 +147,7 @@ function openModal(key, fromPick) {
     <p class="modal-text">${esc(r.overview) || "Sin sinopsis."}</p>
     <div class="modal-actions">
       ${fromPick ? '<button type="button" class="btn" id="btnAnother">Elegir otra</button>' : ""}
-      <a class="btn btn--ghost" href="${esc(r.URL)}" target="_blank" rel="noopener">Ver ficha &#8599;</a>
+      ${extLink(r.URL, `Ver en ${site} &#8599;`, "btn btn--ghost")}
     </div>`;
   const again = $("btnAnother");
   if (again) again.addEventListener("click", pickForMe);
@@ -194,9 +199,7 @@ async function main() {
   const { rows, unavailable, stats } = buildProfile(data, selected);
   $("hoyEmpty").hidden = stats.mineNew > 0;
   $("hoyBody").hidden = false;
-  $("subtitle").textContent = (unavailable
-    ? `${unavailable} títulos de tu watchlist no están en tus plataformas. ` : "") +
-    `Catálogo actualizado el ${catalog.data.generated}.`;
+  $("subtitle").textContent = unavailable ? `${unavailable} títulos de tu watchlist no están en tus plataformas.` : "";
   initList(rows, stats);
 }
 
