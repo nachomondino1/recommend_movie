@@ -4,13 +4,19 @@ CRISP-DM: curar la watchlist a mano -- marcar un título como visto o descartado
     make watched TITLE="Perfect Days" RATING=8   # agrega a data/ratings.csv
     make skip TITLE="Some show"                  # agrega a data/excluded.csv
 
-    python -m src.curate watched "Perfect Days" 8
-    python -m src.curate skip "Some show"
+    python 01_data_understanding/curate.py watched "Perfect Days" 8
+    python 01_data_understanding/curate.py skip "Some show"
 
 No hace falta sacar el título de data/watchlist.csv en ningún caso: score_watchlist()
 ya lo omite (por estar puntuado o por estar excluido). Después de usar cualquiera de
 los dos, correr 'make update' para que el modelo y el dashboard reflejen el cambio.
 """
+
+import sys
+from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import argparse
 from datetime import date
@@ -18,8 +24,8 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
-from src.config import EXCLUDED_CSV, RATINGS_CSV, WATCHLIST_CSV
-from src.data import TMDBClient, parse_detail
+from config import EXCLUDED_CSV, RATINGS_CSV, WATCHLIST_CSV
+from tmdb_data import TMDBClient, parse_detail
 
 RATINGS_COLUMNS = [
     "Const", "Your Rating", "Date Rated", "Title", "Original Title", "URL",

@@ -8,16 +8,20 @@ Devuelve X con columnas "crudas": el texto queda como string y las categóricas
 como string; la vectorización pesada (TF-IDF, SVD, target encoding) se hace
 dentro del pipeline de sklearn para que respete la validación cruzada.
 
-    from src.features import build, feature_groups
+    from features import build, feature_groups
 """
 
+import sys
 from pathlib import Path
+
+sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]_*")]
+
 
 import numpy as np
 import pandas as pd
 
-from src.config import RATINGS_CSV, WATCHLIST_CSV
-from src.data import tmdb_table
+from config import RATINGS_CSV, WATCHLIST_CSV
+from tmdb_data import tmdb_table
 
 TOP_LANGS = 4
 

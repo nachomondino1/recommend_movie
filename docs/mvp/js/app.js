@@ -1,6 +1,7 @@
 // Orquestación: catálogo + plataformas + archivos de IMDb -> afinidad -> UI. Sin llamadas a APIs.
 
 let currentTaste = null;
+const MIN_VOTES_SUGGESTED = 500;  // evita sugerir títulos con nota alta pero casi sin votos
 const selected = new Set(loadPlatforms().map((p) => p.id));
 
 function show(screen) {
@@ -45,6 +46,7 @@ function buildDashboard(data) {
   // 2) Títulos nuevos del catálogo en tus plataformas
   const discovered = catalog.data.titles
     .filter((c) => c.providers.some((id) => selected.has(id)))
+    .filter((c) => (c.votes || 0) >= MIN_VOTES_SUGGESTED)
     .filter((c) => !(c.imdb && seenImdb.has(c.imdb)) && !seenTitles.has(normTitle(c.title) + "|" + c.year))
     .map((c) => {
       const row = {

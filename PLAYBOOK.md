@@ -57,6 +57,8 @@ versionado, no una columna derivada).
 
 ## Los módulos de `src/` (uno por responsabilidad)
 
+> En este repo los módulos viven repartidos en las carpetas por fase CRISP-DM (`01_data_understanding/` … `05_deployment/`) en vez de un `src/` único; cada script arma su propio `sys.path`, así que se corren directo (`python 03_modeling/model.py`) o con `make`.
+
 Cada uno hace una sola cosa y se puede correr solo con `python -m src.X`
 para debuggear. El `Makefile` los encadena en el orden correcto.
 

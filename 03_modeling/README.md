@@ -11,4 +11,4 @@ un modelo por usuario exigiría backend. En su lugar usa una regla simple, calcu
 
 Se muestra como "para vos" en la lista: un orden sugerido, no una predicción calibrada.
 
-El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `src/model.py`) sigue en `src/` y se documenta en `docs/4_modeling.md`.
+El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/model.py`) sigue en este mismo directorio y se documenta en `docs/4_modeling.md`.

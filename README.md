@@ -18,7 +18,7 @@ Versión para que cualquiera la use: subís tu export de IMDb, elegís tus plata
 | 4. Evaluación | [`04_evaluation/`](04_evaluation/README.md) |
 | 5. Despliegue (ramas, PR a `prod`) | [`05_deployment/`](05_deployment/README.md) |
 
-El sitio está en `docs/mvp/` y no llama a ninguna API. Datos: `./sync_data.sh`. El proyecto personal (modelo entrenado, `make update`) sigue en `src/` y más abajo.
+El sitio está en `docs/mvp/` y no llama a ninguna API. Datos: `./sync_data.sh`. El proyecto personal (modelo entrenado, `make update`) sigue en estas mismas carpetas (ver "Estructura" más abajo).
 
 ## Uso
 
@@ -34,7 +34,7 @@ make publish     # sube el dashboard a GitHub Pages
 | Comando | Qué hace |
 |---|---|
 | `make setup` | Crear venv e instalar dependencias (una sola vez). Después completar `TMDB_TOKEN` en `.env`. |
-| `make update` | `src.data` (TMDB) → `src.model` (entrena + guarda + puntúa) → `src.dashboard` (HTML). |
+| `make update` | `tmdb_data.py` (TMDB) → `model.py` (entrena + guarda + puntúa) → `catalog.py` → `dashboard.py` (HTML). |
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
 | `make review TITLE="X" TEXT="..."` | Guardar/actualizar tu reseña personal (texto libre) de un título. |
 | `make publish` | `git add docs/ && commit && push` → Pages se redespliega. |
@@ -52,25 +52,34 @@ data/
   reviews.csv                     tu reseña personal por título (versionada; make review)
   metrics_history.csv            scores CV por tamaño de dataset (versionado; crece con make update)
   cache/                          TMDB json + tabla (regenerable, git-ignored)
-src/
+01_data_understanding/
   config.py      paths y carga de .env
-  data.py        cargar CSVs + cliente TMDB + enriquecimiento
-  features.py    matriz de features (IMDb + TMDB); build() y build_row() (1 título)
-  pipeline.py    definición del pipeline (preprocesado + estimadores)
-  model.py       entrenar/guardar, cargar, puntuar watchlist, diagnósticos, insight de reseñas
-  predict.py     nota predicha para un título por nombre (make predict)
+  tmdb_data.py   cargar CSVs + cliente TMDB + enriquecimiento (proyecto personal)
+  taste.py       resumen de tu gusto (por género, director, década)
   curate.py      marcar como vista o "no me interesa" (make watched / make skip)
   review.py      guardar tu reseña personal de un título (make review)
-  dashboard.py   generar el HTML (outputs/ + docs/index.html)
-notebooks/
   exploration.py análisis exploratorio (one-off)
+  collect_initial_data/tmdb/   recolección del catálogo del MVP + refresh_log.md
+02_data_preparation/
+  features.py    matriz de features (IMDb + TMDB); build() y build_row() (1 título)
+  build_catalog.py  catálogo del sitio público (MVP)
+03_modeling/
+  pipeline.py    definición del pipeline (preprocesado + estimadores)
+  model.py       entrenar/guardar, cargar, puntuar watchlist y lo ya visto
+  predict.py     nota predicha para un título por nombre (make predict)
+  catalog.py     descubre y puntúa títulos fuera de tu watchlist
+04_evaluation/
+  evaluate.py    comparación de modelos (CV), curva de aprendizaje, trayectoria, insights de reseñas
+05_deployment/
+  dashboard.py   generar el HTML (outputs/ + docs/index.html)
 docs/            narrativa CRISP-DM (1..6) + index.html publicado por Pages
 models/          modelos entrenados (git-ignored)
 outputs/         gráficos y CSVs locales (git-ignored)
 ```
 
 La metodología sigue CRISP-DM; cada fase está documentada en `docs/` y el código
-en `src/` está ordenado en ese mismo flujo.
+vive en la carpeta numerada de su fase. Cada script se puede correr directo
+(`python 03_modeling/model.py`) o con `make`.
 
 ## Estado actual
 

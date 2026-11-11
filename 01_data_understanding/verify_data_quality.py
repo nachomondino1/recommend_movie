@@ -23,7 +23,7 @@ def pct(n: int, total: int) -> str:
 def main() -> None:
     if not TITLES_JSONL.exists():
         sys.exit("No hay datos todavía: corré refresh_tmdb_data.py primero.")
-    rows = [json.loads(line) for line in TITLES_JSONL.read_text().splitlines() if line.strip()]
+    rows = [json.loads(line) for line in TITLES_JSONL.read_text().split("\n") if line.strip()]
     live = [r for r in rows if r.get("providers")]
     n = len(live)
     print(f"Títulos en el archivo: {len(rows)} | con plataforma hoy: {n}")

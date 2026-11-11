@@ -11,16 +11,25 @@ IMDb (para poder cruzarlos con las notas del usuario) y campos recortados al mí
 
 import argparse
 import json
+import re
 import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "01_data_understanding" / "collect_initial_data" / "tmdb"))
-from tmdb_common import PROVIDERS_JSON, TITLES_JSONL  # noqa: E402
+from tmdb_common import GENRES_JSON, PROVIDERS_JSON, TITLES_JSONL  # noqa: E402
 
 CATALOG_JSON = ROOT / "docs" / "mvp" / "data" / "catalog.json"
 OVERVIEW_MAX = 220
+MIN_TITLES = 150  # plataformas con menos títulos que esto no entran al catálogo
+
+# Plataformas que no son "dónde ver": canales que se contratan dentro de Amazon/Apple (duplican al servicio
+# base), tiendas de compra/alquiler y agregadores. Editá esta lista para sumar o sacar.
+EXCLUDED_PROVIDERS = re.compile(
+    r"channel$|^Amazon Video$|^Apple TV Store$|JustWatch|^Plex$|Tencent|Bloodstream|Artiflix|Artify|Cultpix"
+    r"|^Runtime$|Shahid|Takflix|Eventive|Univer Video|KableOne|Jolt|FOUND TV|CaixaForum", re.I)
 
 # Vocabulario de TMDB -> vocabulario de IMDb ([] = se descarta)
 GENRE_ALIASES = {
@@ -46,31 +55,33 @@ def short(text: str) -> str:
 
 def build() -> dict:
     meta = json.loads(PROVIDERS_JSON.read_text())
-    providers = meta["providers"]
-    id_by_name = {p["name"]: p["id"] for p in providers}
+    allowed = [p for p in meta["providers"] if not EXCLUDED_PROVIDERS.search(p["name"])]
+    id_by_name = {p["name"]: p["id"] for p in allowed}
+    genre_en = json.loads(GENRES_JSON.read_text())  # id -> nombre en inglés (las fichas vienen en español)
+
+    rows = [json.loads(line) for line in TITLES_JSONL.read_text().split("\n") if line.strip()]
+    counts = Counter(id_by_name[n] for r in rows for n in set(r.get("providers", [])) if n in id_by_name)
+    keep = {pid for pid, c in counts.items() if c >= MIN_TITLES}
 
     titles = []
-    for line in TITLES_JSONL.read_text().splitlines():
-        if not line.strip():
-            continue
-        r = json.loads(line)
-        pids = sorted({id_by_name[n] for n in r.get("providers", []) if n in id_by_name})
+    for r in rows:
+        pids = sorted({id_by_name[n] for n in r.get("providers", []) if n in id_by_name} & keep)
         if not pids or not r.get("title"):
             continue
         titles.append({
             "id": r["tmdb_id"], "type": r["media_type"], "imdb": r.get("imdb_id"),
             "title": r["title"], "year": r.get("year"),
-            "genres": norm_genres(r.get("genres", [])), "directors": r.get("directors", []),
+            "genres": norm_genres([genre_en[str(i)] for i in r["genre_ids"] if str(i) in genre_en]), "directors": r.get("directors", []),
             "rating": round(r["vote_average"], 1) if r.get("vote_average") else None,
             "votes": r.get("vote_count"), "poster": r.get("poster_path"),
             "overview": short(r.get("overview")), "runtime": r.get("runtime"),
             "seasons": r.get("seasons"), "providers": pids,
         })
     titles.sort(key=lambda t: -(t["votes"] or 0))
-    used = {pid for t in titles for pid in t["providers"]}
+    providers = sorted((p for p in allowed if p["id"] in keep), key=lambda p: -counts[p["id"]])
     return {
         "generated": date.today().isoformat(), "region": meta["region"], "source": "TMDB",
-        "providers": [p for p in providers if p["id"] in used], "titles": titles,
+        "providers": providers, "titles": titles,
     }
 
 

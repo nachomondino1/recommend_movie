@@ -1,10 +1,10 @@
 # 6. Deployment
 
 ## Arquitectura
-`src/model.py` define **un único** pipeline (preprocesado + modelo) y todo lo que
+`03_modeling/model.py` define **un único** pipeline (preprocesado + modelo) y todo lo que
 lo rodea:
 
-| Función (`src/model.py`) | Rol |
+| Función (`03_modeling/model.py`) | Rol |
 |---|---|
 | `build_regressor` / `build_classifier` | Definición del pipeline final. |
 | `fit_and_save()` | Entrena los 2 modelos con **todos** los ratings y los guarda en `models/` (`regressor.joblib`, `classifier.joblib`, `meta.json`). |
@@ -12,13 +12,13 @@ lo rodea:
 | `score_watchlist()` | Puntúa la watchlist → `outputs/watchlist_scored.csv`. |
 | `compare_models()`, `learning_curve_report()` | Diagnósticos (`make eval`). |
 
-`src/dashboard.py` convierte el CSV puntuado en un HTML autocontenido (sin
+`05_deployment/dashboard.py` convierte el CSV puntuado en un HTML autocontenido (sin
 servidor) con tabla buscable/ordenable (título, director, género), nota predicha
 coloreada y gráfico de distribución. Lo escribe en `outputs/watchlist_dashboard.html`
 y en `docs/index.html` (lo que publica Pages). Los títulos de la watchlist que ya
 figuran puntuados en `ratings.csv` se omiten.
 
-`src/predict.py` (`make predict TITLE="X"`) resuelve un título por nombre con
+`03_modeling/predict.py` (`make predict TITLE="X"`) resuelve un título por nombre con
 `/search/multi` de TMDB, arma la fila con `features.build_row()` y aplica los
 modelos guardados. Sirve para evaluar algo que no está en la watchlist.
 
@@ -35,7 +35,7 @@ entrenamiento, n, mtime de `ratings.csv` y scores de CV.
 
 ## Cómo usarlo
 ```bash
-make update      # src.data -> src.model -> src.dashboard
+make update      # tmdb_data.py -> model.py -> catalog.py -> dashboard.py
 make publish     # git add docs/ && commit && push -> Pages redepliega
 ```
 Para mirar local: abrir `outputs/watchlist_dashboard.html` con doble clic.

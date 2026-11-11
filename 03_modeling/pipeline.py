@@ -2,8 +2,8 @@
 Definición del pipeline final (preprocesado + estimadores).
 
 Va en su propio módulo (no en model.py) para que joblib pueda picklear/unpicklear
-`OverviewEmbedder` sin importar cómo se ejecute el entrenamiento (`python -m
-src.model` lo corre como __main__, y picklear desde __main__ rompe la carga).
+`OverviewEmbedder` sin importar cómo se ejecute el entrenamiento (`python
+03_modeling/model.py` lo corre como __main__, y picklear desde __main__ rompe la carga).
 """
 
 import numpy as np

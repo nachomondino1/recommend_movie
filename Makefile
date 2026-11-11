@@ -23,28 +23,29 @@ setup:
 	@echo "Listo. Completá TMDB_TOKEN en .env"
 
 update:
-	$(PY) -m src.data
-	$(PY) -m src.model
-	$(PY) -m src.catalog
-	$(PY) -m src.dashboard
+	$(PY) 01_data_understanding/tmdb_data.py
+	$(PY) 03_modeling/model.py
+	$(PY) 03_modeling/catalog.py
+	$(PY) 05_deployment/dashboard.py
 
 predict:
-	@$(PY) -m src.predict "$(TITLE)"
+	@$(PY) 03_modeling/predict.py "$(TITLE)"
 
 watched:
-	@$(PY) -m src.curate watched "$(TITLE)" "$(RATING)"
+	@$(PY) 01_data_understanding/curate.py watched "$(TITLE)" "$(RATING)"
 
 skip:
-	@$(PY) -m src.curate skip "$(TITLE)"
+	@$(PY) 01_data_understanding/curate.py skip "$(TITLE)"
 
 review:
-	@$(PY) -m src.review "$(TITLE)" --liked "$(LIKED)" --disliked "$(DISLIKED)"
+	@$(PY) 01_data_understanding/review.py "$(TITLE)" --liked "$(LIKED)" --disliked "$(DISLIKED)"
 
 eval:
-	$(PY) -m src.model --eval
+	$(PY) 03_modeling/model.py
+	$(PY) 04_evaluation/evaluate.py
 
 explore:
-	$(PY) -m notebooks.exploration
+	$(PY) 01_data_understanding/exploration.py
 
 publish:
 	git add docs/index.html docs/.nojekyll

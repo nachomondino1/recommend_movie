@@ -1,13 +1,13 @@
 # 3. Data Preparation
 
-## Pipeline (`src/data.py`, `src/features.py`)
-1. **`src/data.py` → `TMDBClient`** — cliente de la API de TMDB con caché a disco
+## Pipeline (`01_data_understanding/tmdb_data.py`, `02_data_preparation/features.py`)
+1. **`01_data_understanding/tmdb_data.py` → `TMDBClient`** — cliente de la API de TMDB con caché a disco
    (`data/cache/tmdb/{imdb_id}.json`). Resuelve `imdb_id → tmdb_id` con `/find` y
    baja el detalle con `append_to_response=credits,keywords`.
-2. **`src/data.py` → `enrich()`** (`make update`) — junta los `Const` de ratings +
+2. **`01_data_understanding/tmdb_data.py` → `enrich()`** (`make update`) — junta los `Const` de ratings +
    watchlist (~288 únicos), descarga todo y aplana a `data/cache/tmdb.csv`.
    Cobertura típica: sinopsis ~99%, keywords ~97%, elenco ~99%, director ~95%.
-3. **`src/features.py` → `build()`** — arma la matriz `X` (y `y` si hay notas).
+3. **`02_data_preparation/features.py` → `build()`** — arma la matriz `X` (y `y` si hay notas).
 
 ## Features construidas
 | Grupo | Columnas | Notas |

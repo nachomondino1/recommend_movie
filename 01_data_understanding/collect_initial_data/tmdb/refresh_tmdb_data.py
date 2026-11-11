@@ -96,6 +96,7 @@ def make_row(media_type: str, basic: dict, detail: dict) -> dict:
         "original_title": detail.get("original_title") or detail.get("original_name"),
         "year": int(release[:4]) if release[:4].isdigit() else None,
         "genres": [g["name"] for g in detail.get("genres", [])],
+        "genre_ids": [g["id"] for g in detail.get("genres", [])],
         "directors": directors,
         "vote_average": detail.get("vote_average", basic.get("vote_average")),
         "vote_count": detail.get("vote_count", basic.get("vote_count")),
@@ -111,7 +112,7 @@ def make_row(media_type: str, basic: dict, detail: dict) -> dict:
 def load_existing() -> dict:
     rows = {}
     if TITLES_JSONL.exists():
-        for line in TITLES_JSONL.read_text().splitlines():
+        for line in TITLES_JSONL.read_text().split("\n"):
             if line.strip():
                 r = json.loads(line)
                 rows[key_of(r["media_type"], r["tmdb_id"])] = r
@@ -123,7 +124,7 @@ def is_stale(row: dict, max_age_days: int) -> bool:
         age = (date.today() - date.fromisoformat(row["fecha_actualizacion"])).days
     except (KeyError, ValueError):
         return True
-    return age > max_age_days or not row.get("imdb_id")
+    return age > max_age_days or not row.get("imdb_id") or "genre_ids" not in row
 
 
 def fmt_duration(seconds: float) -> str:
@@ -146,7 +147,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--region", default="AR", help="país (código ISO) para las plataformas")
     ap.add_argument("--top", type=int, default=400, help="títulos por plataforma y por tipo (por popularidad)")
-    ap.add_argument("--providers", type=int, default=20, help="cantidad de plataformas a recorrer")
+    ap.add_argument("--providers", type=int, default=100, help="cantidad de plataformas a recorrer (100 = todas las de la región)")
     ap.add_argument("--min-votes", type=int, default=50, help="votos mínimos en TMDB para entrar")
     ap.add_argument("--max-age-days", type=int, default=30, help="no re-pedir el detalle de títulos más nuevos que esto")
     ap.add_argument("--workers", type=int, default=8)
@@ -189,6 +190,7 @@ def main() -> None:
     n_new = sum(1 for k in todo if k not in existing)
     with ThreadPoolExecutor(args.workers) as ex:
         for i, (k, row) in enumerate(ex.map(fetch, todo), 1):
+            row["providers"] = existing.get(k, {}).get("providers")  # para contar bien los cambios de plataforma
             existing[k] = row
             if i % 200 == 0 or i == len(todo):
                 print(f"  detalle {i}/{len(todo)}")
