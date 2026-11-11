@@ -22,6 +22,15 @@ function colorFor(v) {
   return `hsl(${t * 120}, 56%, 36%)`;
 }
 
+const LOW_VOTES = 1000;  // por debajo de esto la nota no es confiable
+
+function votesLabel(n) {
+  if (n == null) return "";
+  if (n >= 1e6) return (Math.round(n / 1e5) / 10).toString().replace(".", ",") + " M votos";
+  if (n >= 1000) return (Math.round(n / 100) / 10).toString().replace(".", ",") + " mil votos";
+  return n + (n === 1 ? " voto" : " votos");
+}
+
 const typeLabel = (r) => (r.Type === "Movie" ? "Película" : "Serie");
 
 function metaLine(r) {
@@ -94,9 +103,10 @@ function renderList() {
         ${whyLine(r)}
         <div class="item-where">${r.inWatchlist ? '<span class="chip chip--accent">En tu watchlist</span>' : ""}${whereChips(r)}</div>
       </div>
-      <div class="item-score" title="Nota del título">
+      <div class="item-score" title="Nota y votos en ${r.inWatchlist ? "IMDb" : "TMDB (menos votantes que IMDb)"}">
         <span class="pill" style="background:${colorFor(r.ImdbRating)}">${r.ImdbRating.toFixed(1)}</span>
         <span class="item-score-l">nota</span>
+        <span class="item-votes${r.NumVotes != null && r.NumVotes < LOW_VOTES ? " item-votes--low" : ""}">${votesLabel(r.NumVotes)}</span>
       </div>
     </article>`).join("")
     : '<div class="empty-state">No hay títulos con estos filtros.</div>';

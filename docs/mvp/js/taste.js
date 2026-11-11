@@ -14,6 +14,7 @@ function mergeRow(r, cat) {
     Genres: r.Genres || (c.genres || []).join(", "),
     Directors: r.Directors || (c.directors || []).join(", "),
     ImdbRating: r.ImdbRating ?? c.rating ?? null,
+    NumVotes: r.NumVotes ?? c.votes ?? null,
     Runtime: r.Runtime ?? c.runtime ?? null,
     poster_path: c.poster || null,
     overview: c.overview || "",

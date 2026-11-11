@@ -51,7 +51,7 @@ function buildDashboard(data) {
     .map((c) => {
       const row = {
         Const: c.imdb || `tmdb:${c.type}:${c.id}`, Title: c.title, Type: typeOf(c), Year: c.year,
-        Genres: c.genres.join(", "), Directors: c.directors.join(", "), ImdbRating: c.rating,
+        Genres: c.genres.join(", "), Directors: c.directors.join(", "), ImdbRating: c.rating, NumVotes: c.votes,
         Runtime: c.runtime, poster_path: c.poster, overview: c.overview, seasons: c.seasons,
         providers: providerNames(c.providers), where: providerNames(c.providers.filter((id) => selected.has(id))),
         inWatchlist: false, URL: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
