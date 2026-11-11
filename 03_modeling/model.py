@@ -1,7 +1,7 @@
 """
 CRISP-DM: Modelado (+ scoring).
 
-Pipeline final (ver docs/4_modeling.md):
+Pipeline final (ver 03_modeling/modeling.md):
     - Regresión : RandomForest sobre el DESVÍO vs IMDb  -> pred = IMDb + desvío
     - Binario   : GradientBoosting sobre  Your Rating >= 7
 

@@ -13,7 +13,8 @@ no llama a ninguna API.
 ```bash
 make serve                  # o: make serve PORT=9000
 # equivalente sin make:
-cd docs && python3 -m http.server 8765
+cd docs
+python3 -m http.server 8765
 ```
 
 Necesita un servidor (no abre con doble clic) porque el sitio carga `data/catalog.json`. Para probarlo con tus datos: elegí plataformas en
@@ -110,13 +111,13 @@ data/
   evaluate.py    comparación de modelos (CV), curva de aprendizaje, trayectoria, insights de reseñas
 05_deployment/
   dashboard.py   generar el dashboard personal (outputs/ + archive/dashboard_personal.html, no se publica)
-docs/            narrativa CRISP-DM (1..6) + index.html publicado por Pages
+docs/            el sitio publicado por Pages: HTML + css/ + js/ + data/ + media/ (sin .md)
 models/          modelos entrenados (git-ignored)
 outputs/         gráficos y CSVs locales (git-ignored)
 ```
 
-La metodología sigue CRISP-DM; cada fase está documentada en `docs/` y el código
-vive en la carpeta numerada de su fase. Cada script se puede correr directo
+La metodología sigue CRISP-DM; cada fase está documentada y tiene su código en la carpeta numerada de su fase
+(`00_business_understanding/` … `05_deployment/`, con la narrativa del proyecto personal en `<fase>.md` y el README del MVP). Cada script se puede correr directo
 (`python 03_modeling/model.py`) o con `make`.
 
 ## Estado actual
@@ -125,7 +126,7 @@ vive en la carpeta numerada de su fase. Cada script se puede correr directo
 - Mejor binario (≥7): Gradient Boosting, **ROC AUC 0.63** (baseline 0.50).
 - Cuello de botella: cantidad de datos (126 títulos puntuados). La curva de
   aprendizaje no saturó → más ratings es la mejora con mejor retorno. Ver
-  [`docs/4_modeling.md`](docs/4_modeling.md).
+  [`03_modeling/modeling.md`](03_modeling/modeling.md).
 
 ## Links
 

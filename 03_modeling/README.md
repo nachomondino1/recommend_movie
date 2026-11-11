@@ -23,4 +23,4 @@ El análisis de gusto (`docs/js/taste.js`) es solo estadística descriptiva de t
 director, y cuánto te separás de la nota de IMDb.
 
 El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/model.py`) sigue en este
-mismo directorio y se documenta en `docs/4_modeling.md`.
+mismo directorio y se documenta en [`modeling.md`](modeling.md).
