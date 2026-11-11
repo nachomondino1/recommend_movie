@@ -195,3 +195,10 @@ section[id] { scroll-margin-top: var(--nav-h); }
   .top-nav { gap: 0; }
   .top-nav a { padding: 8px 8px; font-size: .85rem; white-space: nowrap; }
 }
+
+/* ---- Páginas internas ---------------------------------------------------------------------- */
+.top-nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.page { padding-top: 32px; }
+.page-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 6px; }
+
+@media (max-width: 440px) { .brand-text { display: none; } .brand { font-size: 1.4rem; } }
