@@ -36,8 +36,10 @@
       <input type="search" id="q" placeholder="Buscar por nombre (ej: Interstellar)" aria-label="Buscar por nombre" autocomplete="off">
       <p class="note" id="searchNote" hidden>Buscando en todo el cat&aacute;logo: tambi&eacute;n aparecen t&iacute;tulos de otras plataformas y los que ya viste. Los filtros se ignoran mientras busc&aacute;s.</p>
       <div class="plats-block">
-        <div class="plats-label" id="platsLabel">Plataformas</div>
-        <div class="plats" id="plats" role="group" aria-labelledby="platsLabel"></div>
+        <div class="multiselect" id="platsSelect">
+          <button type="button" class="ms-toggle" id="platsBtn" aria-haspopup="true" aria-expanded="false">Plataformas: todas</button>
+          <div class="ms-menu" id="platsMenu" role="group" aria-label="Plataformas" hidden></div>
+        </div>
         <p class="note" id="platsHint" hidden>Eleg&iacute; tus plataformas para ver solo lo que ten&eacute;s.</p>
       </div>
       <details class="update" id="filtersBox">

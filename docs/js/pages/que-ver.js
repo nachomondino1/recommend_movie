@@ -75,15 +75,30 @@ function initGenres(rows) {
     genres.map((g) => `<option value="${esc(g)}">${esc(genreEs(g))}</option>`).join("");
 }
 
-// ---- plataformas: chips que se prenden y apagan; sin ninguna elegida se ve todo el catálogo -------------------
-function renderPlats() {
-  const none = state.selected.size === 0;
-  $("plats").innerHTML =
-    `<button type="button" class="pchip" data-id="" aria-pressed="${none}">Todas</button>` +
+// ---- plataformas: lista desplegable con casillas (se puede elegir más de una); sin ninguna elegida se ve todo el catálogo ----
+function buildPlatsMenu() {
+  $("platsMenu").innerHTML =
+    `<label class="ms-option ms-all"><input type="checkbox" data-id="" checked><span>Todas</span></label><div class="ms-divider"></div>` +
     catalog.data.providers.map((p) => `
-      <button type="button" class="pchip" data-id="${p.id}" aria-pressed="${state.selected.has(p.id)}">
+      <label class="ms-option">
+        <input type="checkbox" data-id="${p.id}">
         ${p.logo ? `<img src="${IMG}w92${p.logo}" alt="" loading="lazy">` : ""}<span>${esc(p.name)}</span>
-      </button>`).join("");
+      </label>`).join("");
+}
+
+// Sincroniza las casillas y el texto del botón con la selección actual.
+function renderPlats() {
+  const sel = state.selected;
+  $("platsMenu").querySelectorAll("input").forEach((cb) => {
+    cb.checked = cb.dataset.id === "" ? sel.size === 0 : sel.has(Number(cb.dataset.id));
+  });
+  const names = catalog.data.providers.filter((p) => sel.has(p.id)).map((p) => p.name);
+  $("platsBtn").textContent = "Plataformas: " + (names.length === 0 ? "todas" : names.length <= 2 ? names.join(", ") : `${names.length} elegidas`);
+}
+
+function setPlatsOpen(open) {
+  $("platsMenu").hidden = !open;
+  $("platsBtn").setAttribute("aria-expanded", String(open));
 }
 
 function persistPlats() {
@@ -198,18 +213,21 @@ function wire() {
     timer = setTimeout(() => { state.q = e.target.value; resetAndRender(); }, 150);
   });
   $("btnMore").addEventListener("click", () => { state.shown += PAGE_SIZE; renderList(); });
-  $("plats").addEventListener("click", (e) => {
-    const b = e.target.closest(".pchip");
-    if (!b) return;
-    if (b.dataset.id === "") state.selected.clear();
+  $("platsBtn").addEventListener("click", (e) => { e.stopPropagation(); setPlatsOpen($("platsMenu").hidden); });
+  $("platsMenu").addEventListener("click", (e) => e.stopPropagation());
+  $("platsMenu").addEventListener("change", (e) => {
+    const cb = e.target.closest("input");
+    if (!cb) return;
+    if (cb.dataset.id === "") state.selected.clear();
     else {
-      const id = Number(b.dataset.id);
-      state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
+      const id = Number(cb.dataset.id);
+      cb.checked ? state.selected.add(id) : state.selected.delete(id);
     }
     persistPlats();
     renderPlats();
     rebuild();
   });
+  document.addEventListener("click", () => setPlatsOpen(false));
   $("list").addEventListener("click", (e) => {
     const btn = e.target.closest(".item-title");
     if (btn) openModal(btn.dataset.key, false);
@@ -217,7 +235,7 @@ function wire() {
   $("pickForMe").addEventListener("click", pickForMe);
   $("modalClose").addEventListener("click", () => ($("modalOverlay").hidden = true));
   $("modalOverlay").addEventListener("click", (e) => { if (e.target.id === "modalOverlay") $("modalOverlay").hidden = true; });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("modalOverlay").hidden = true; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $("modalOverlay").hidden = true; setPlatsOpen(false); } });
 }
 
 async function main() {
@@ -237,6 +255,7 @@ async function main() {
   const valid = new Set(catalog.data.providers.map((p) => p.id));
   state.selected = new Set(loadPlatforms().map((p) => p.id).filter((id) => valid.has(id)));
   $("hoyBody").hidden = false;
+  buildPlatsMenu();
   renderPlats();
   initGenres(buildProfile(data, new Set()).rows);
   rebuild();
