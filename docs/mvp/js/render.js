@@ -86,11 +86,11 @@ function initList(rows) {
 }
 
 function renderList() {
-  let rows = state.rows.filter((r) => r.ImdbRating != null);
+  let rows = state.rows.filter((r) => r.rank != null);
   if (state.type) rows = rows.filter((r) => (state.type === "Movie") === (r.Type === "Movie"));
   if (state.genre) rows = rows.filter((r) => splitList(r.Genres).includes(state.genre));
   if (state.onlyWatchlist) rows = rows.filter((r) => r.inWatchlist);
-  rows.sort((a, b) => b.ImdbRating - a.ImdbRating);
+  rows.sort((a, b) => b.rank - a.rank);
   state.current = rows;
 
   const visible = rows.slice(0, state.shown);
@@ -118,7 +118,7 @@ function renderList() {
 function pickForMe() {
   const rows = state.current.slice(0, 40);
   if (!rows.length) return;
-  const w = rows.map((r) => Math.max(0.01, r.ImdbRating) ** 2);
+  const w = rows.map((r) => Math.max(0.01, r.rank) ** 2);
   let x = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < rows.length; i++) { x -= w[i]; if (x <= 0) return openModal(rows[i].Const, true); }
   openModal(rows[rows.length - 1].Const, true);

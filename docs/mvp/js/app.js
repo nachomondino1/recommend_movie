@@ -1,6 +1,14 @@
 // Orquestación: catálogo + plataformas + archivos de IMDb -> filtro por plataformas y nota -> UI. Sin llamadas a APIs.
 
 let currentTaste = null;
+// Orden: nota ponderada por votos (como el Top 250 de IMDb): rank = v/(v+m)·nota + m/(v+m)·C.
+// m = votos a partir de los cuales la nota pesa más que el prior; IMDb y TMDB tienen escalas muy distintas.
+const PRIOR_RATING = 7.0, WEIGHT_VOTES_IMDB = 25000, WEIGHT_VOTES_TMDB = 1000;
+const weightedRating = (rating, votes, m) => {
+  const v = votes || 0;
+  return (v / (v + m)) * rating + (m / (v + m)) * PRIOR_RATING;
+};
+
 const MIN_VOTES_SUGGESTED = 500;  // evita sugerir títulos con nota alta pero casi sin votos
 const selected = new Set(loadPlatforms().map((p) => p.id));
 
@@ -40,7 +48,8 @@ function buildDashboard(data) {
     const m = mergeRow(r, cat);
     m.where = cat ? providerNames(cat.providers.filter((id) => selected.has(id))) : [];
     if (!m.where.length) { unavailable++; return; }
-    watch.push({ ...m, fav: favOf(m.Genres), inWatchlist: true });
+    watch.push({ ...m, fav: favOf(m.Genres), inWatchlist: true,
+      rank: m.ImdbRating == null ? null : weightedRating(m.ImdbRating, m.NumVotes, WEIGHT_VOTES_IMDB) });
   });
 
   // 2) Títulos nuevos del catálogo en tus plataformas
@@ -56,10 +65,10 @@ function buildDashboard(data) {
         providers: providerNames(c.providers), where: providerNames(c.providers.filter((id) => selected.has(id))),
         inWatchlist: false, URL: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
       };
-      return { ...row, fav: favOf(row.Genres) };
+      return { ...row, fav: favOf(row.Genres), rank: weightedRating(row.ImdbRating, row.NumVotes, WEIGHT_VOTES_TMDB) };
     })
     .filter((r) => (r.ImdbRating || 0) >= 6)
-    .sort((a, b) => b.ImdbRating - a.ImdbRating)
+    .sort((a, b) => b.rank - a.rank)
     .slice(0, 60);
 
   const rows = [...watch, ...discovered];
