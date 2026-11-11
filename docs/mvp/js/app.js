@@ -1,4 +1,4 @@
-// Orquestación: catálogo + plataformas + archivos de IMDb -> afinidad -> UI. Sin llamadas a APIs.
+// Orquestación: catálogo + plataformas + archivos de IMDb -> filtro por plataformas y nota -> UI. Sin llamadas a APIs.
 
 let currentTaste = null;
 const MIN_VOTES_SUGGESTED = 500;  // evita sugerir títulos con nota alta pero casi sin votos
@@ -26,7 +26,8 @@ function buildDashboard(data) {
   const rated = data.ratings.filter((r) => r.YourRating != null)
     .map((r) => mergeRow(r, catalog.byImdb.get(r.Const)));
   currentTaste = buildTaste(rated);
-  const scorer = buildScorer(rated, currentTaste ? currentTaste.deviation_vs_imdb : 0);
+  const favGenres = new Set(currentTaste ? currentTaste.by_genre.slice(0, 3).map((g) => g.label) : []);
+  const favOf = (genres) => splitList(genres).filter((g) => favGenres.has(g));
   const ratedIds = new Set(rated.map((r) => r.Const));
   const seenImdb = new Set([...ratedIds, ...data.watchlist.map((r) => r.Const)]);
   const seenTitles = new Set([...rated, ...data.watchlist].map((r) => normTitle(r.Title) + "|" + r.Year));
@@ -39,8 +40,7 @@ function buildDashboard(data) {
     const m = mergeRow(r, cat);
     m.where = cat ? providerNames(cat.providers.filter((id) => selected.has(id))) : [];
     if (!m.where.length) { unavailable++; return; }
-    const s = scorer(m);
-    watch.push({ ...m, score: s.score, why: s.why, inWatchlist: true });
+    watch.push({ ...m, fav: favOf(m.Genres), inWatchlist: true });
   });
 
   // 2) Títulos nuevos del catálogo en tus plataformas
@@ -56,11 +56,10 @@ function buildDashboard(data) {
         providers: providerNames(c.providers), where: providerNames(c.providers.filter((id) => selected.has(id))),
         inWatchlist: false, URL: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
       };
-      const s = scorer(row);
-      return { ...row, score: s.score, why: s.why };
+      return { ...row, fav: favOf(row.Genres) };
     })
-    .filter((r) => r.score != null && (r.ImdbRating || 0) >= 6)
-    .sort((a, b) => b.score - a.score)
+    .filter((r) => (r.ImdbRating || 0) >= 6)
+    .sort((a, b) => b.ImdbRating - a.ImdbRating)
     .slice(0, 60);
 
   const rows = [...watch, ...discovered];

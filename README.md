@@ -8,13 +8,13 @@ la watchlist.
 
 ## MVP público (ramas `staging` → `prod`)
 
-Versión para que cualquiera la use: subís tu export de IMDb, elegís tus plataformas y te ordena qué ver (tu watchlist y títulos nuevos) según tu gusto. Estructura por fases CRISP-DM, como `boardgame`:
+Versión para que cualquiera la use: subís tu export de IMDb, elegís tus plataformas y te muestra qué ver hoy (tu watchlist y títulos nuevos que no viste) ordenado por nota. Estructura por fases CRISP-DM, como `boardgame`:
 
 | Fase | Carpeta |
 |---|---|
 | 1. Entender / recolectar (TMDB + **log de la API**) | [`01_data_understanding/`](01_data_understanding/README.md) |
 | 2. Preparar (catálogo del sitio) | [`02_data_preparation/`](02_data_preparation/README.md) |
-| 3. Modelado (regla de afinidad, sin modelo entrenado) | [`03_modeling/`](03_modeling/README.md) |
+| 3. Modelado (el MVP no predice nada: ordena por nota) | [`03_modeling/`](03_modeling/README.md) |
 | 4. Evaluación | [`04_evaluation/`](04_evaluation/README.md) |
 | 5. Despliegue (ramas, PR a `prod`) | [`05_deployment/`](05_deployment/README.md) |
 

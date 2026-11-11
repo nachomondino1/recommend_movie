@@ -1,14 +1,19 @@
 # Fase 3 — Modelado
 
-El MVP público **no entrena ningún modelo**: no hay datos suficientes de un visitante nuevo para eso y
-un modelo por usuario exigiría backend. En su lugar usa una regla simple, calculada en el navegador
-(`docs/mvp/js/score.js`):
+**El MVP público no modela ni predice nada.** Con ~100 notas por persona no hay datos suficientes (en el proyecto
+personal, con 127 notas, el mejor modelo apenas mejoró la regla "IMDb menos 1.3 puntos") y un modelo por visitante
+exigiría un backend. Tampoco hay un puntaje "para vos": inventar un número personalizado con tan poca información
+sería ruido.
 
-- **Afinidad por género:** promedio de tus notas en los géneros del título (solo géneros con ≥ 3 títulos tuyos).
-- **Afinidad por director:** promedio de tus notas en títulos del mismo director (≥ 1).
-- **Con señal:** `score = 0.6 × afinidad + 0.4 × nota del catálogo`.
-- **Sin señal:** `score = nota del catálogo + tu desvío promedio vs. IMDb` (ej. si puntuás 1.5 menos, se resta).
+Lo que hace el sitio (`docs/mvp/js/app.js`), todo en el navegador y explicable:
 
-Se muestra como "para vos" en la lista: un orden sugerido, no una predicción calibrada.
+1. Toma los títulos de tu watchlist y los del catálogo que **están en tus plataformas**.
+2. **Descarta lo que ya viste** (por id de IMDb).
+3. Los **ordena por la nota del título**: IMDb para tu watchlist, TMDB para los nuevos (con un mínimo de 500 votos).
+4. Marca con "De tus géneros favoritos" los títulos de tus 3 géneros mejor puntuados (descriptivo, de la pestaña "Mi gusto"; no cambia el orden).
 
-El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/model.py`) sigue en este mismo directorio y se documenta en `docs/4_modeling.md`.
+El análisis de gusto (`docs/mvp/js/taste.js`) es solo estadística descriptiva de tus notas: promedios por género y
+director, y cuánto te separás de la nota de IMDb.
+
+El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/model.py`) sigue en este
+mismo directorio y se documenta en `docs/4_modeling.md`.

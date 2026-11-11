@@ -2,7 +2,7 @@
 
 **Proyecto personal:** `evaluate.py` compara modelos (CV), calcula la curva de aprendizaje, la trayectoria real de scores y los insights de reseñas (`make eval`).
 
-**MVP público:** pendiente. La regla de afinidad todavía no se evaluó contra notas reales de otras personas.
+**MVP público:** pendiente. Todavía no hay una forma de medir si la lista le sirve a alguien.
 
 Qué medir cuando haya datos:
 - **Con tus datos:** esconder una parte de tus notas, puntuarlas con la regla usando el resto y comparar (correlación y error medio contra tu nota real, y contra la nota de IMDb sola como línea base).

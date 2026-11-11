@@ -25,7 +25,7 @@ function colorFor(v) {
 const typeLabel = (r) => (r.Type === "Movie" ? "Película" : "Serie");
 
 function metaLine(r) {
-  const parts = [r.Year, typeLabel(r), r.ImdbRating != null ? "Nota " + r.ImdbRating : null];
+  const parts = [r.Year, typeLabel(r)];
   if (r.seasons && r.Type !== "Movie") parts.push(r.seasons + (r.seasons === 1 ? " temporada" : " temporadas"));
   else if (r.Runtime) parts.push(Math.round(r.Runtime) + " min");
   return parts.filter(Boolean).map(esc).join(" · ");
@@ -44,8 +44,8 @@ function whereChips(r) {
 }
 
 function whyLine(r) {
-  if (!r.why || !r.why.length) return "";
-  return `<div class="item-why">Te puede gustar: ${r.why.map((g) => esc(genreEs(g))).join(" y ")}</div>`;
+  if (!r.fav || !r.fav.length) return "";
+  return `<div class="item-why">De tus géneros favoritos: ${r.fav.map((g) => esc(genreEs(g))).join(" y ")}</div>`;
 }
 
 // ---- plataformas (onboarding) --------------------------------------------
@@ -77,11 +77,11 @@ function initList(rows) {
 }
 
 function renderList() {
-  let rows = state.rows.filter((r) => r.score != null);
+  let rows = state.rows.filter((r) => r.ImdbRating != null);
   if (state.type) rows = rows.filter((r) => (state.type === "Movie") === (r.Type === "Movie"));
   if (state.genre) rows = rows.filter((r) => splitList(r.Genres).includes(state.genre));
   if (state.onlyWatchlist) rows = rows.filter((r) => r.inWatchlist);
-  rows.sort((a, b) => b.score - a.score);
+  rows.sort((a, b) => b.ImdbRating - a.ImdbRating);
   state.current = rows;
 
   const visible = rows.slice(0, state.shown);
@@ -94,9 +94,9 @@ function renderList() {
         ${whyLine(r)}
         <div class="item-where">${r.inWatchlist ? '<span class="chip chip--accent">En tu watchlist</span>' : ""}${whereChips(r)}</div>
       </div>
-      <div class="item-score" title="Qué tanto encaja con tu gusto">
-        <span class="pill" style="background:${colorFor(r.score)}">${r.score.toFixed(1)}</span>
-        <span class="item-score-l">para vos</span>
+      <div class="item-score" title="Nota del título">
+        <span class="pill" style="background:${colorFor(r.ImdbRating)}">${r.ImdbRating.toFixed(1)}</span>
+        <span class="item-score-l">nota</span>
       </div>
     </article>`).join("")
     : '<div class="empty-state">No hay títulos con estos filtros.</div>';
@@ -108,7 +108,7 @@ function renderList() {
 function pickForMe() {
   const rows = state.current.slice(0, 40);
   if (!rows.length) return;
-  const w = rows.map((r) => Math.max(0.01, r.score) ** 2);
+  const w = rows.map((r) => Math.max(0.01, r.ImdbRating) ** 2);
   let x = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < rows.length; i++) { x -= w[i]; if (x <= 0) return openModal(rows[i].Const, true); }
   openModal(rows[rows.length - 1].Const, true);
