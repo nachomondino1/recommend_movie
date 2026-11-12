@@ -93,6 +93,7 @@ function renderPlats() {
     cb.checked = cb.dataset.id === "" ? sel.size === 0 : sel.has(Number(cb.dataset.id));
   });
   const names = catalog.data.providers.filter((p) => sel.has(p.id)).map((p) => p.name);
+  $("platsBtn").classList.toggle("is-active", names.length > 0);
   $("platsBtn").textContent = "Plataformas: " + (names.length === 0 ? "todas" : names.length <= 2 ? names.join(", ") : `${names.length} elegidas`);
 }
 
@@ -195,7 +196,13 @@ function openModal(key, fromPick) {
   $("modalOverlay").hidden = false;
 }
 
-function resetAndRender() { state.shown = PAGE_SIZE; renderList(); }
+// Un filtro con valor distinto del de por defecto se pinta de acento.
+function markActive() {
+  $("fGenre").classList.toggle("is-active", $("fGenre").value !== "");
+  $("fMinVotes").classList.toggle("is-active", $("fMinVotes").value !== "0");
+}
+
+function resetAndRender() { markActive(); state.shown = PAGE_SIZE; renderList(); }
 
 function wire() {
   document.querySelectorAll("#fType .seg-btn").forEach((b) => b.addEventListener("click", () => {
