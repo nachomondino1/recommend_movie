@@ -8,11 +8,17 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <link rel="stylesheet" href="css/style.css">
+<link rel="preload" as="fetch" href="data/catalog.json" crossorigin="anonymous">
+<script type="speculationrules">{"prerender":[{"urls":["index.html","que-ver.html","mi-gusto.html"],"eagerness":"moderate"}]}</script>
 </head>
 <body>
 <header id="siteHeader"></header>
+<script src="js/storage.js"></script>
+<script src="js/shared.js"></script>
+<script>renderHeader("que-ver")</script>
 
 <main class="wrap page">
   <h1 class="page-title">Qu&eacute; ver hoy</h1>
@@ -97,11 +103,9 @@
   </div>
 </div>
 
-<script src="js/storage.js"></script>
-<script src="js/shared.js"></script>
-<script src="js/catalog.js"></script>
-<script src="js/taste.js"></script>
-<script src="js/profile.js"></script>
-<script src="js/pages/que-ver.js"></script>
+<script defer src="js/catalog.js"></script>
+<script defer src="js/taste.js"></script>
+<script defer src="js/profile.js"></script>
+<script defer src="js/pages/que-ver.js"></script>
 </body>
 </html>
