@@ -2,7 +2,7 @@
 PY := ./venv/bin/python
 PORT ?= 8765
 
-.PHONY: help serve sync setup update eval robust results explore predict watched skip
+.PHONY: help serve sync setup update eval robust results drivers explore predict watched skip
 
 help:
 	@echo "make serve                        - correr el sitio en local: http://localhost:$(PORT)  (PORT=9000 para otro puerto)"
@@ -15,6 +15,7 @@ help:
 	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria + reseñas"
 	@echo "make robust                       - prueba de robustez: ¿algún modelo le gana a la nota de IMDb? (~80 s)"
 	@echo "make results                      - dejar los resultados de make robust listos para la portada de la web (docs/data/model_results.json)"
+	@echo "make drivers                      - versión alternativa: qué variables explican la nota pública de TMDB (sin tus notas)"
 	@echo "make explore                      - análisis exploratorio (gráficos en data/01_data_understanding/exploration/)"
 	@echo
 	@echo "Flujo habitual: actualizás los CSV de data/01_data_understanding/imdb/ -> make update (el dashboard queda en data/05_deployment/)"
@@ -57,6 +58,10 @@ robust:
 
 results:
 	$(PY) 05_deployment/build_results.py
+
+drivers:
+	$(PY) 02_data_preparation/prepare_titles.py
+	$(PY) 03_modeling/drivers_model.py
 
 explore:
 	$(PY) 01_data_understanding/exploration.py
