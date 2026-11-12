@@ -27,29 +27,28 @@
   <!-- Carga de datos: abierta si todavía no hay datos; con datos, queda plegada como "Actualizar mis datos" -->
   <details class="loadbox" id="loadBox" open>
     <summary class="load-summary" id="loadSummary">Cargá tus datos de IMDb</summary>
-    <p class="note">Con tus notas calculamos tu número. Tus archivos no salen de tu navegador.</p>
+    <p class="note">Solo hace falta tu archivo de notas. No sale de tu navegador.</p>
     <div class="steps-row">
       <div class="step">
-        <h3><span class="step-n">1</span> Baj&aacute; tus datos de IMDb</h3>
-        <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>. Con tus notas alcanza; la watchlist es opcional (sirve para ordenar tus pendientes por nota predicha).</p>
+        <h3><span class="step-n">1</span> Baj&aacute; tus notas de IMDb</h3>
+        <p class="hint">En tu p&aacute;gina de notas: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>.</p>
         <p class="hint"><b>&iquest;Desde el celular no ves &ldquo;Exportar&rdquo;?</b> En la app de IMDb no es f&aacute;cil encontrarlo. Abr&iacute; imdb.com desde el navegador del celular y ah&iacute; s&iacute; aparece (si la app intercepta el link, desinstalala un rato) o hacelo desde una computadora.</p>
         <div class="actions">
-          <a class="btn" href="https://www.imdb.com/list/ratings" target="_blank" rel="noopener">Mis notas &#8599;</a>
-          <a class="btn btn--ghost" href="https://www.imdb.com/list/watchlist" target="_blank" rel="noopener">Mi watchlist &#8599;</a>
+          <a class="btn" href="https://www.imdb.com/list/ratings" target="_blank" rel="noopener">Ir a mis notas &#8599;</a>
         </div>
       </div>
       <div class="step">
-        <h3><span class="step-n">2</span> Arrastr&aacute; los archivos ac&aacute;</h3>
-        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Elegir o arrastrar los archivos de IMDb">
+        <h3><span class="step-n">2</span> Arrastr&aacute; el archivo ac&aacute;</h3>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Elegir o arrastrar el archivo de notas de IMDb">
           <div class="dropzone-icon">&#128194;</div>
-          <div>Arrastr&aacute; tus dos archivos o <u>eleg&iacute;los</u></div>
+          <div>Arrastr&aacute; tu archivo de notas o <u>eleg&iacute;lo</u></div>
         </div>
-        <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
+        <input type="file" id="fileInput" accept=".csv,text/csv" hidden>
         <div id="uploadMsg" class="msg" role="status"></div>
         <div id="uploadDone" class="upload-done" role="status" hidden>
           <div aria-hidden="true">&#9989;</div>
           <div>
-            <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
+            <div class="upload-done-title">&iexcl;Listo, ya cargaste tus notas!</div>
             <p id="uploadDoneText"></p>
           </div>
         </div>
@@ -81,12 +80,6 @@
       <div id="results" hidden>
         <h3 class="sub-title" id="resultsTitle"></h3>
         <div class="pred-list" id="resultsList"></div>
-      </div>
-      <div id="watchSection" hidden>
-        <h3 class="sub-title">Tu watchlist, ordenada por nota predicha</h3>
-        <p class="note">Los t&iacute;tulos que guardaste en IMDb y todav&iacute;a no puntuaste, con la nota que seguramente les pondr&iacute;as.</p>
-        <div class="pred-list" id="watchList"></div>
-        <button type="button" class="btn btn--ghost" id="btnMore" hidden>Ver m&aacute;s</button>
       </div>
       <p class="note method" id="method"></p>
     </section>

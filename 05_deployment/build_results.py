@@ -65,6 +65,7 @@ def build_data_description() -> dict:
 
     ratings = pd.read_csv(RATINGS_CSV).dropna(subset=["Your Rating", "IMDb Rating"])
     dev = (ratings["Your Rating"] - ratings["IMDb Rating"]).to_numpy(float)
+    loo = np.abs(dev - (dev.sum() - dev) / (len(dev) - 1))
     tmdb = pd.read_csv(TMDB_CSV)
     cover = {col: int((tmdb[col].fillna("").astype(str).str.len() > 0).sum()) for col in ("overview", "keywords", "cast_top", "director")}
     return {
@@ -73,7 +74,9 @@ def build_data_description() -> dict:
             "name": "Your Rating", "mean": float(y.mean()), "median": float(np.median(y)), "sd": float(y.std()),
             "counts": [int((y == k).sum()) for k in range(1, 11)],
             "liked": int((y >= 7).sum()),
-            "deviation": {"mean": float(dev.mean()), "sd": float(dev.std()), "n": int(len(dev))},
+            "deviation": {"mean": float(dev.mean()), "sd": float(dev.std()), "n": int(len(dev)),
+                          # error de usar el número para estimar cada nota, calculado sin ese título (como en la web)
+                          "mae": float(loo.mean()), "within1": float((loo <= 1).mean()), "within2": float((loo <= 2).mean())},
         },
         "predictors": [{"group": g, "vars": [{"names": cols, "what": what, "kind": kind} for cols, what, kind in rows]}
                        for g, rows in PREDICTORS.items()],

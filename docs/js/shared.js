@@ -37,7 +37,7 @@ function renderHeader(active) {
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="index.html" aria-label="Tu número, inicio">&#127916;<span class="brand-text"> Tu n&uacute;mero</span></a>
+      <a class="brand" href="index.html" aria-label="Recomendador de películas y series, inicio">&#127916;<span class="brand-text"> Recomendador de pel&iacute;culas y series</span></a>
       <nav class="top-nav" aria-label="Secciones">
         ${NAV.filter((n) => !n.needsProfile || profile).map((n) =>
           `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}

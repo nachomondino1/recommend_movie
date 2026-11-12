@@ -140,4 +140,41 @@ document.getElementById("s-best-l").textContent = `diferencia del mejor modelo (
   byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
 })();
 
+// ---------- Ejemplo de la conclusión: cómo se usa el número ----------
+(function ejemplo() {
+  const D = DATA && DATA.data && DATA.data.response.deviation;
+  if (!D) return;
+  const IMDB = 7.5, num = D.mean, pred = Math.min(10, Math.max(1, IMDB + num));
+  const lo1 = Math.max(1, pred - 1), hi1 = Math.min(10, pred + 1), lo2 = Math.max(1, pred - 2), hi2 = Math.min(10, pred + 2);
+  const p1 = fmt(D.within1 * 100, 0), p2 = fmt(D.within2 * 100, 0);
+  const he = document.getElementById("hero-eq");
+  if (he) he.innerHTML = `
+    <div class="heq"><b>${fmt(IMDB, 1)}</b><span>nota de IMDb</span></div><div class="hop">${num < 0 ? "−" : "+"}</div>
+    <div class="heq"><b>${fmt(Math.abs(num), 1)}</b><span>mi número</span></div><div class="hop">=</div>
+    <div class="heq res"><b>${fmt(pred, 1)}</b><span>mi nota estimada</span></div>`;
+  document.getElementById("ex-eq").innerHTML = `
+    <div class="eqn"><b>${fmt(IMDB, 1)}</b><span>nota de IMDb</span></div><div class="op">${num < 0 ? "−" : "+"}</div>
+    <div class="eqn"><b>${fmt(Math.abs(num), 1)}</b><span>mi número</span></div><div class="op">=</div>
+    <div class="eqn res"><b>${fmt(pred, 1)}</b><span>mi nota estimada</span></div>`;
+  // escala del 1 al 10
+  const W = 760, H = 150, m = { l: 20, r: 20 }, x = (v) => m.l + ((v - 1) / 9) * (W - m.l - m.r), y = 78;
+  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">`;
+  s += `<rect x="${x(lo2)}" y="${y - 20}" width="${x(hi2) - x(lo2)}" height="40" rx="8" fill="var(--accent)" opacity=".14"/>`;
+  s += `<rect x="${x(lo1)}" y="${y - 20}" width="${x(hi1) - x(lo1)}" height="40" rx="8" fill="var(--accent)" opacity=".28"/>`;
+  s += `<line x1="${x(1)}" x2="${x(10)}" y1="${y}" y2="${y}" stroke="var(--line-strong)" stroke-width="2"/>`;
+  for (let v = 1; v <= 10; v++) s += `<line x1="${x(v)}" x2="${x(v)}" y1="${y - 5}" y2="${y + 5}" stroke="var(--line-strong)"/><text x="${x(v)}" y="${y + 38}" text-anchor="middle">${v}</text>`;
+  s += `<path d="M ${x(IMDB)} ${y - 30} Q ${(x(IMDB) + x(pred)) / 2} ${y - 62} ${x(pred)} ${y - 30}" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  s += `<text x="${(x(IMDB) + x(pred)) / 2}" y="${y - 52}" text-anchor="middle">${signed(num)}</text>`;
+  s += `<circle cx="${x(IMDB)}" cy="${y}" r="8" fill="var(--surface)" stroke="var(--muted)" stroke-width="2.5"/><text class="lab" x="${x(IMDB)}" y="${y - 18}" text-anchor="middle">IMDb ${fmt(IMDB, 1)}</text>`;
+  s += `<circle cx="${x(pred)}" cy="${y}" r="9" fill="var(--accent)"/><text class="lab lab-base" x="${x(pred)}" y="${y + 56}" text-anchor="middle">${fmt(pred, 1)}</text>`;
+  s += "</svg>";
+  document.getElementById("ex-scale").innerHTML = s;
+  document.getElementById("ex-leg").innerHTML = `<span><i style="background:var(--accent);opacity:.3"></i>Entre ${fmt(lo1, 1)} y ${fmt(hi1, 1)}: ${p1} % de las veces</span><span><i style="background:var(--accent);opacity:.15"></i>Entre ${fmt(lo2, 1)} y ${fmt(hi2, 1)}: ${p2} % de las veces</span>`;
+  document.getElementById("ex-text").innerHTML = `
+    <li><b>Estimación: ${fmt(pred, 1)}</b><span>La nota de IMDb (${fmt(IMDB, 1)}) más mi número (${signed(num)}).</span></li>
+    <li><b>Rango habitual: ${fmt(lo1, 1)} a ${fmt(hi1, 1)}</b><span>Mi nota real quedó a un punto o menos de la estimación el ${p1} % de las veces.</span></li>
+    <li><b>Rango amplio: ${fmt(lo2, 1)} a ${fmt(hi2, 1)}</b><span>A dos puntos o menos el ${p2} % de las veces. Fuera de ese rango pasó el ${fmt(100 - D.within2 * 100, 0)} %.</span></li>
+    <li><b>Error típico: ±${fmt(D.mae, 1)}</b><span>No es un número exacto. Es la mejor pista simple que encontré.</span></li>`;
+})();
+
 })();

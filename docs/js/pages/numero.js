@@ -47,8 +47,7 @@ function wireUpload() {
 
 // Con los archivos ya guardados: se muestra el resultado y se baja hasta tu número (no hay recarga ni cambio de página).
 async function showDone(data) {
-  $("uploadDoneText").textContent = `Cargamos ${data.ratings.length} notas y ${data.watchlist.length} títulos de tu watchlist.` +
-    (data.watchlist.length ? "" : " Todavía falta tu watchlist (es opcional): con ella ordenamos tus pendientes por nota predicha.");
+  $("uploadDoneText").textContent = `Cargamos ${data.ratings.length} notas.`;
   renderHeader("numero");
   await showResults();
   const target = $("resultado");
@@ -123,16 +122,15 @@ function renderGaps(r) {
 
 
 // ---- Predecir una nota ----
-const PAGE_SIZE = 12, MAX_RESULTS = 12, LOW_VOTES = 300;
-let NUMBER = 0, ALL = [], WATCH = [], shown = PAGE_SIZE;
+const MAX_RESULTS = 12, LOW_VOTES = 300;
+let NUMBER = 0, ALL = [];
 
 const votesLabel = (n) => n == null ? "" : n >= 1e6 ? fmtNum(n / 1e6) + " M votos" : n >= 1e5 ? fmtNum(n / 1000, 0) + " mil votos" : n >= 1000 ? fmtNum(n / 1000) + " mil votos" : n + " votos";
 
 // Una fila unificada por título: lo que sabemos de tus archivos manda sobre lo del catálogo.
 function buildRows(data) {
   const mine = new Map();
-  data.ratings.forEach((r) => mine.set(r.Const, { ...r, seen: true }));
-  data.watchlist.forEach((r) => { if (!mine.has(r.Const)) mine.set(r.Const, { ...r, seen: false }); });
+  data.ratings.forEach((r) => mine.set(r.Const, r));
   const rows = [], used = new Set();
   for (const c of catalog.data.titles) {
     const m = c.imdb ? mine.get(c.imdb) : null;
@@ -142,7 +140,7 @@ function buildRows(data) {
       key: c.imdb || `tmdb:${c.type}:${c.id}`, title: m ? m.Title : c.title, altTitle: m ? c.title : "",
       year: c.year, type: c.type === "movie" ? "Película" : "Serie", poster: c.poster,
       base: exact ? m.ImdbRating : c.rating, exact, votes: exact ? m.NumVotes : c.votes,
-      seen: !!m && m.seen, yourRating: m && m.seen ? m.YourRating : null, inWatchlist: !!m && !m.seen,
+      seen: !!m, yourRating: m ? m.YourRating : null,
       url: c.imdb ? `https://www.imdb.com/title/${c.imdb}` : `https://www.themoviedb.org/${c.type}/${c.id}`,
     });
   }
@@ -150,7 +148,7 @@ function buildRows(data) {
   for (const [id, m] of mine) {
     if (used.has(id) || m.ImdbRating == null) continue;
     rows.push({ key: id, title: m.Title, altTitle: "", year: m.Year, type: /movie/i.test(m.Type) ? "Película" : "Serie", poster: null,
-      base: m.ImdbRating, exact: true, votes: m.NumVotes, seen: m.seen, yourRating: m.seen ? m.YourRating : null, inWatchlist: !m.seen, url: m.URL });
+      base: m.ImdbRating, exact: true, votes: m.NumVotes, seen: true, yourRating: m.YourRating, url: m.URL });
   }
   rows.forEach((r) => { r.pred = r.base != null ? predictRating(r.base, NUMBER) : null; r.search = normTitle(r.title + " " + r.altTitle); });
   return rows;
@@ -161,7 +159,7 @@ function rowHtml(r) {
   const img = r.poster ? `<img class="item-poster" src="${IMG}w154${r.poster}" alt="" loading="lazy" width="64" height="96">` : `<div class="item-poster"></div>`;
   const base = r.base == null ? "" : `${r.exact ? "IMDb" : "IMDb ≈"} ${fmtNum(r.base)}`;
   const note = r.seen ? `<span class="chip chip--seen">Ya la puntuaste: ${r.yourRating} · la predicción era ${fmtNum(r.pred)}</span>`
-    : r.inWatchlist ? `<span class="chip chip--accent">En tu watchlist</span>` : "";
+    : "";
   return `<article class="pred">
     ${img}
     <div class="pred-body">
@@ -177,18 +175,12 @@ function rowHtml(r) {
 function renderSearch(q) {
   const tokens = normTitle(q).split(" ").filter(Boolean);
   $("results").hidden = !tokens.length;
-  $("watchSection").hidden = tokens.length > 0 || !WATCH.length;
   if (!tokens.length) return;
   const hits = ALL.filter((r) => tokens.every((t) => r.search.includes(t)))
     .sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
   $("resultsTitle").textContent = hits.length ? `${hits.length > MAX_RESULTS ? `Los ${MAX_RESULTS} más votados de ${hits.length}` : hits.length + (hits.length === 1 ? " resultado" : " resultados")}` : "Sin resultados";
   $("resultsList").innerHTML = hits.length ? hits.slice(0, MAX_RESULTS).map(rowHtml).join("")
     : '<div class="empty-state">No encontré ese título. Probá con otro nombre.</div>';
-}
-
-function renderWatch() {
-  $("watchList").innerHTML = WATCH.slice(0, shown).map(rowHtml).join("");
-  $("btnMore").hidden = shown >= WATCH.length;
 }
 
 
@@ -221,15 +213,11 @@ async function showResults() {
     `Para los títulos que no están en tus archivos usamos la nota de TMDB, que en 188 títulos medidos se parece a la de IMDb ` +
     `(diferencia media de 0,3 puntos); se marcan con ≈. Es una estimación simple: ningún modelo más complejo la mejoró con evidencia suficiente.`;
   ALL = buildRows(data);
-  WATCH = ALL.filter((x) => x.inWatchlist && x.pred != null).sort((a, b) => b.pred - a.pred || (b.votes ?? 0) - (a.votes ?? 0));
-  shown = PAGE_SIZE;
-  renderWatch();
   renderSearch($("q").value);
   if (!wired) {
     wired = true;
     let timer;
     $("q").addEventListener("input", (e) => { clearTimeout(timer); timer = setTimeout(() => renderSearch(e.target.value), 120); });
-    $("btnMore").addEventListener("click", () => { shown += PAGE_SIZE; renderWatch(); });
   }
 }
 

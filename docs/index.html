@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tu número · Un modelo que no le ganó a IMDb</title>
-<meta name="description" content="Intenté predecir con Machine Learning qué nota le voy a poner a una película, y ningún modelo le ganó a la nota de IMDb. Conocé el proyecto y tu propio número.">
+<title>¿Puede un modelo predecir mi nota? · Tu número</title>
+<meta name="description" content="Predecir qué nota le vas a poner a una película según tus gustos: un proyecto personal de Machine Learning que no le ganó a la nota de IMDb. Conocé el proyecto y calculá tu número.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,12 +24,17 @@
 
 <section class="hero" id="inicio">
   <div class="hero-inner">
-    <p class="eyebrow">Un proyecto personal de Machine Learning</p>
-    <h1 class="hero-title">Un modelo que aprende mi gusto. <span class="kw">No le ganó a IMDb.</span></h1>
-    <p class="hero-sub">Usé años de mis notas de IMDb para predecir qué nota le voy a poner a películas que todavía no vi. Probé nueve modelos. Lo mejor que encontré fue una regla simple: la nota de IMDb más tu número.</p>
+    <p class="eyebrow">Proyecto personal · un recomendador hecho con mis notas de IMDb</p>
+    <h1 class="hero-title">Probé si un modelo puede <span class="kw">predecir qué nota le pongo</span> a una película</h1>
+    <p class="hero-sub">No le ganó a la nota de IMDb. Lo que sí me dejó: <b>mi número</b>, cuánto me desvío de ella. Con eso estimo mi nota para cualquier película.</p>
+    <div class="hero-eq" id="hero-eq" aria-label="Ejemplo: 7,5 de IMDb menos 1,5, mi número, da 6,0">
+      <div class="heq"><b>7,5</b><span>nota de IMDb</span></div><div class="hop">−</div>
+      <div class="heq"><b>1,5</b><span>mi número</span></div><div class="hop">=</div>
+      <div class="heq res"><b>6,0</b><span>mi nota estimada</span></div>
+    </div>
     <div class="hero-actions">
       <a class="btn btn--hero" href="numero.html">Conocé tu número</a>
-      <a class="btn btn--ghost btn--hero" href="#flujo">Ver cómo se hizo</a>
+      <a class="btn btn--ghost btn--hero" href="#conclusiones">Ver las conclusiones</a>
     </div>
   </div>
   <div class="hero-credit">Foto: Denise Jans / Unsplash</div>
@@ -37,12 +42,67 @@
 
 <main class="wrap proy">
   <nav class="secnav" aria-label="Secciones de la página">
+    <a href="#conclusiones">Conclusiones</a>
+    <span class="grp">Cómo llegué</span>
     <a href="#flujo">Cómo se hizo</a>
     <a href="#datos">Los datos</a>
-    <a href="#resultados">Qué encontré</a>
-    <a href="#conclusiones">Conclusiones</a>
+    <a href="#resultados">Los modelos</a>
   </nav>
+  <section id="conclusiones" aria-labelledby="h-conclusiones">
+    <p class="phase-tag">Fase 04 · Evaluar contra el objetivo</p>
+    <h2 class="part" id="h-conclusiones">Conclusiones</h2>
+    <p class="part-sub">Lo que me llevo del proyecto. Lo que sigue explica cómo llegué hasta acá.</p>
+
+    <div class="finding">
+      <p class="finding-main">El mejor predictor que encontré es la nota de IMDb reescalada a tu forma de puntuar: la nota de IMDb más tu número.</p>
+      <p class="finding-sub">De nueve modelos probados, ninguno la mejoró con evidencia suficiente.</p>
+    </div>
+
+    <div class="example" aria-labelledby="h-ejemplo">
+      <h3 id="h-ejemplo">Un ejemplo</h3>
+      <p>Una película tiene <b>7,5</b> en IMDb. ¿Qué nota le pondría yo?</p>
+      <div class="eq" id="ex-eq"></div>
+      <div class="chart" id="ex-scale" role="img" aria-label="Escala del 1 al 10 con la nota de IMDb, la nota estimada y su rango"></div>
+      <div class="legend" id="ex-leg"></div>
+      <ul class="tasks" id="ex-text"></ul>
+      <span class="src">Cálculo con mis 126 notas · el error se midió sacando cada título del cálculo de mi número</span>
+      <p class="ex-cta">Tu número va a ser otro. <a href="numero.html">Calculá el tuyo</a>.</p>
+    </div>
+
+    <div class="read">
+      <div>
+        <h3>Lo que encontré</h3>
+        <ul>
+          <li>Puntúo en promedio 1,5 puntos menos que IMDb. Restar eso a la nota de IMDb me da la mejor estimación de mi nota.</li>
+          <li>Es una pista débil: el error típico es de ±1,3 puntos, y acierta a 1 punto o menos solo la mitad de las veces.</li>
+          <li>Los modelos con géneros, director, sinopsis y más no sumaron nada que se pueda distinguir del ruido.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Por qué creo que pasó</h3>
+        <ul>
+          <li>Con 127 notas, la prueba solo detectaría mejoras de 0,11 puntos o más. Una mejora menor no se puede ni descartar ni confirmar.</li>
+          <li>Al sumar títulos, los modelos se acercan a la regla simple pero no la superan. Probablemente me faltan datos.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Lo que aprendí</h3>
+        <ul>
+          <li>Comparar contra una base justa. Contra la nota de IMDb sin reescalar, los modelos parecían buenos.</li>
+          <li>Medir antes de prometer: sin intervalos de confianza, un resultado no es un resultado.</li>
+          <li>Un resultado negativo bien medido también sirve.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="concl-cta">
+      <a class="btn btn--hero" href="numero.html">Conocé tu número</a>
+      <span>Cargás tus notas de IMDb y lo calculás en tu navegador.</span>
+    </div>
+  </section>
+
   <section id="flujo" aria-labelledby="h-flujo">
+    <p class="phase-tag">Metodología · fases 00 a 05</p>
     <h2 class="part" id="h-flujo">Cómo se hizo</h2>
     <p class="part-sub">Un proyecto CRISP-DM: de dos exportaciones de IMDb y una API de películas hasta esta web.</p>
     <div class="route" aria-label="Recorrido del dato">
@@ -211,7 +271,7 @@
               <div class="label">Qué hay</div>
               <ul class="tasks">
                 <li><b>Portada</b><span>Esta página: el proyecto, con el flujo, los datos y los resultados.</span></li>
-                <li><b>Cargar tus datos</b><span>En "Mi número", cada persona arrastra su archivo de notas de IMDb (y, si quiere, su watchlist). Los archivos no salen de su navegador.</span></li>
+                <li><b>Cargar tus datos</b><span>En "Mi número", cada persona arrastra su archivo de notas de IMDb. Con eso alcanza: la watchlist no hace falta. El archivo no sale de su navegador.</span></li>
                 <li><b>Calcular tu número</b><span>Al cargarlos, el navegador calcula en el momento el promedio de (tu nota menos la nota de IMDb), su error típico y qué tan seguido acierta, con un poco de JavaScript (<code>number.js</code>). No hay servidor ni modelo entrenado: es la regla simple.</span></li>
                 <li><b>Predecir una nota</b><span>Buscás una película o serie y ves la nota estimada: la de IMDb más tu número.</span></li>
               </ul>
@@ -237,6 +297,7 @@
 
   
   <section id="datos" aria-labelledby="h-datos">
+    <p class="phase-tag">Fase 01 · Comprender los datos</p>
     <h2 class="part" id="h-datos">Los datos</h2>
     <p class="part-sub">Describir los datos: qué hay en cada fila, qué se quiere predecir y con qué variables.</p>
 
@@ -276,7 +337,8 @@
   </section>
 
 <section id="resultados" aria-labelledby="h-resultados">
-    <h2 class="part" id="h-resultados">Qué encontré</h2>
+    <p class="phase-tag">Fase 03 · Modelar</p>
+    <h2 class="part" id="h-resultados">Los modelos</h2>
     <p class="part-sub">Se compararon nueve modelos contra la regla más simple: la nota de IMDb reescalada a tu forma de puntuar.</p>
     <div class="verdict">
       <h2>Ningún modelo le gana a la nota de IMDb con evidencia suficiente</h2>
@@ -356,41 +418,6 @@
     </footer>
   </section>
 
-  <section id="conclusiones" aria-labelledby="h-conclusiones">
-    <h2 class="part" id="h-conclusiones">Conclusiones</h2>
-    <p class="part-sub">Lo que me llevo del proyecto.</p>
-
-    <div class="finding">
-      <p class="finding-main">El mejor predictor que encontré es la nota de IMDb reescalada a tu forma de puntuar: la nota de IMDb más tu número.</p>
-      <p class="finding-sub">De nueve modelos probados, ninguno la mejoró con evidencia suficiente.</p>
-    </div>
-
-    <div class="read">
-      <div>
-        <h3>Lo que encontré</h3>
-        <ul>
-          <li>Puntúo en promedio 1,5 puntos menos que IMDb. Restar eso a la nota de IMDb me da la mejor estimación de mi nota.</li>
-          <li>Es una pista débil: el error típico es de ±1,3 puntos, y acierta a 1 punto o menos solo la mitad de las veces.</li>
-          <li>Los modelos con géneros, director, sinopsis y más no sumaron nada que se pueda distinguir del ruido.</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Por qué creo que pasó</h3>
-        <ul>
-          <li>Con 127 notas, la prueba solo detectaría mejoras de 0,11 puntos o más. Una mejora menor no se puede ni descartar ni confirmar.</li>
-          <li>Al sumar títulos, los modelos se acercan a la regla simple pero no la superan. Probablemente me faltan datos.</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Lo que aprendí</h3>
-        <ul>
-          <li>Comparar contra una base justa. Contra la nota de IMDb sin reescalar, los modelos parecían buenos.</li>
-          <li>Medir antes de prometer: sin intervalos de confianza, un resultado no es un resultado.</li>
-          <li>Un resultado negativo bien medido también sirve.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
 
   <section class="invite" aria-labelledby="h-invite">
     <h2 class="part" id="h-invite">Lo que quedó: tu número</h2>
