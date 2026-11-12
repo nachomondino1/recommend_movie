@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Qué ver hoy</title>
-<meta name="description" content="Sumá tu historial de IMDb y elegí tus plataformas: te mostramos qué ver hoy entre lo que ya tenés disponible, ordenado por nota y por votos. Todo se procesa en tu navegador.">
+<title>Tu número · La nota de IMDb, ajustada a vos</title>
+<meta name="description" content="La mejor pista para saber si una película te va a gustar es su nota de IMDb más tu desvío. Calculá tu número con tu historial y mirá qué nota le pondrías a lo que no viste. Todo en tu navegador.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,9 +23,10 @@
 
 <section class="hero" id="inicio">
   <div class="hero-inner">
-    <h1 class="hero-title">Encontr&aacute; <span class="kw kw--a">qu&eacute; ver hoy</span> en <span class="kw kw--b">tus plataformas</span></h1>
-    <p class="hero-sub">Sum&aacute; tu historial de IMDb y eleg&iacute; tus plataformas. Te mostramos lo que ya ten&eacute;s disponible, ordenado por nota y por votos, sin repetir lo que ya viste.</p>
-    <a class="btn btn--hero" id="heroCta" href="#pasos">Empezar</a>
+    <p class="eyebrow">Conoc&eacute; tu n&uacute;mero</p>
+    <h1 class="hero-title">La nota de IMDb, <span class="kw">ajustada a vos</span></h1>
+    <p class="hero-sub">La mejor pista para saber si una pel&iacute;cula te va a gustar es su nota de IMDb m&aacute;s tu desv&iacute;o: cu&aacute;nto te alej&aacute;s, en promedio, de esa nota. Calculamos tu desv&iacute;o con tu historial y te decimos qu&eacute; nota le pondr&iacute;as a lo que todav&iacute;a no viste.</p>
+    <a class="btn btn--hero" id="heroCta" href="#pasos">Calcular mi número</a>
   </div>
   <div class="hero-credit">Foto: Denise Jans / Unsplash</div>
 </section>
@@ -34,21 +35,21 @@
   <section class="section" id="pasos">
     <div class="wrap">
       <h2 class="section-title">Carg&aacute; tus datos de IMDb</h2>
-      <p class="lead">Tus archivos no salen de tu navegador.</p>
+      <p class="lead">Con tus notas calculamos tu n&uacute;mero. Tus archivos no salen de tu navegador.</p>
 
       <div class="banner" id="loadedBanner" hidden>
         <div class="banner-icon" aria-hidden="true">&#9989;</div>
         <div>
           <div class="banner-title">&iexcl;Perfecto, ya cargaste tus datos!</div>
           <p class="banner-text" id="loadedText"></p>
-          <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+          <a class="btn" href="numero.html">Ver mi n&uacute;mero</a>
         </div>
       </div>
 
       <div class="steps-row">
         <div class="step">
           <h3><span class="step-n">1</span> Baj&aacute; tus datos de IMDb</h3>
-          <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>.</p>
+          <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>. Con tus notas alcanza; la watchlist es opcional (sirve para ordenar tus pendientes por nota predicha).</p>
           <p class="hint"><b>&iquest;Desde el celular no ves &ldquo;Exportar&rdquo;?</b> En la app de IMDb no es f&aacute;cil encontrarlo. Abr&iacute; imdb.com desde el navegador del celular y ah&iacute; s&iacute; aparece (si la app intercepta el link, desinstalala un rato) o hacelo desde una computadora.</p>
           <div class="actions">
             <a class="btn" href="https://www.imdb.com/list/ratings" target="_blank" rel="noopener">Mis notas &#8599;</a>
@@ -69,7 +70,7 @@
             <div>
               <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
               <p id="uploadDoneText"></p>
-              <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+              <a class="btn" href="numero.html">Ver mi n&uacute;mero</a>
             </div>
           </div>
         </div>
@@ -82,7 +83,6 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script defer src="js/csv.js"></script>
-<script defer src="js/catalog.js"></script>
 <script defer src="js/pages/home.js"></script>
 </body>
 </html>
