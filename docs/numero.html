@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mi número · Tu número</title>
-<meta name="description" content="Cuánto te desviás, en promedio, de la nota de IMDb, y qué tan confiable es ese número.">
+<title>Tu número · Cuánto te desviás de IMDb</title>
+<meta name="description" content="Cargá tus notas de IMDb y descubrí cuánto te desviás, en promedio, de la nota de IMDb. Con tu número estimamos qué nota le pondrías a cualquier película. Todo en tu navegador.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="css/style.css">
-<script type="speculationrules">{"prerender":[{"urls":["index.html","numero.html","predecir.html"],"eagerness":"moderate"}]}</script>
+<link rel="prefetch" as="fetch" href="data/catalog.json" crossorigin="anonymous">
+<script type="speculationrules">{"prerender":[{"urls":["index.html","numero.html"],"eagerness":"moderate"}]}</script>
 </head>
 <body>
 <header id="siteHeader"></header>
@@ -20,13 +21,46 @@
 <script>renderHeader("numero")</script>
 
 <main class="wrap page">
-  <div id="noData" class="empty-state" hidden>
-    Todav&iacute;a no cargaste tus datos. <a href="index.html#pasos">Cargá tus datos de IMDb</a>.
-  </div>
+  <h1 class="page-title">Tu número</h1>
+  <p class="lead">Cuánto te desviás, en promedio, de la nota de IMDb. Con ese número estimamos qué nota le pondrías a cualquier película.</p>
+
+  <!-- Carga de datos: abierta si todavía no hay datos; con datos, queda plegada como "Actualizar mis datos" -->
+  <details class="loadbox" id="loadBox" open>
+    <summary class="load-summary" id="loadSummary">Cargá tus datos de IMDb</summary>
+    <p class="note">Con tus notas calculamos tu número. Tus archivos no salen de tu navegador.</p>
+    <div class="steps-row">
+      <div class="step">
+        <h3><span class="step-n">1</span> Baj&aacute; tus datos de IMDb</h3>
+        <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>. Con tus notas alcanza; la watchlist es opcional (sirve para ordenar tus pendientes por nota predicha).</p>
+        <p class="hint"><b>&iquest;Desde el celular no ves &ldquo;Exportar&rdquo;?</b> En la app de IMDb no es f&aacute;cil encontrarlo. Abr&iacute; imdb.com desde el navegador del celular y ah&iacute; s&iacute; aparece (si la app intercepta el link, desinstalala un rato) o hacelo desde una computadora.</p>
+        <div class="actions">
+          <a class="btn" href="https://www.imdb.com/list/ratings" target="_blank" rel="noopener">Mis notas &#8599;</a>
+          <a class="btn btn--ghost" href="https://www.imdb.com/list/watchlist" target="_blank" rel="noopener">Mi watchlist &#8599;</a>
+        </div>
+      </div>
+      <div class="step">
+        <h3><span class="step-n">2</span> Arrastr&aacute; los archivos ac&aacute;</h3>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Elegir o arrastrar los archivos de IMDb">
+          <div class="dropzone-icon">&#128194;</div>
+          <div>Arrastr&aacute; tus dos archivos o <u>eleg&iacute;los</u></div>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
+        <div id="uploadMsg" class="msg" role="status"></div>
+        <div id="uploadDone" class="upload-done" role="status" hidden>
+          <div aria-hidden="true">&#9989;</div>
+          <div>
+            <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
+            <p id="uploadDoneText"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+
   <div id="notEnough" class="empty-state" hidden></div>
 
   <div id="body" hidden>
-    <section class="number-hero" aria-labelledby="numTitle">
+    <section class="number-hero" id="resultado" aria-labelledby="numTitle">
       <p class="eyebrow" id="numTitle">Tu n&uacute;mero</p>
       <div class="number-big" id="numBig"></div>
       <p class="number-text" id="numText"></p>
@@ -39,29 +73,39 @@
       <div class="reliab-item"><div class="reliab-n" id="rW2"></div><div class="reliab-l">a 2 puntos o menos</div></div>
     </section>
 
+    <!-- Predecir: nota estimada = nota de IMDb + tu número -->
+    <section id="predecir" aria-labelledby="predTitle">
+      <h2 class="block-title" id="predTitle">Predec&iacute; una nota</h2>
+      <p class="note">Busc&aacute; una pel&iacute;cula o serie y mir&aacute; qu&eacute; nota le pondr&iacute;as: la nota de IMDb m&aacute;s tu n&uacute;mero.</p>
+      <input type="search" id="q" placeholder="Buscar por nombre (ej: Interstellar)" aria-label="Buscar por nombre" autocomplete="off">
+      <div id="results" hidden>
+        <h3 class="sub-title" id="resultsTitle"></h3>
+        <div class="pred-list" id="resultsList"></div>
+      </div>
+      <div id="watchSection" hidden>
+        <h3 class="sub-title">Tu watchlist, ordenada por nota predicha</h3>
+        <p class="note">Los t&iacute;tulos que guardaste en IMDb y todav&iacute;a no puntuaste, con la nota que seguramente les pondr&iacute;as.</p>
+        <div class="pred-list" id="watchList"></div>
+        <button type="button" class="btn btn--ghost" id="btnMore" hidden>Ver m&aacute;s</button>
+      </div>
+      <p class="note method" id="method"></p>
+    </section>
+
     <div class="taste-grid">
       <section>
-        <h2 class="block-title">&#128200; Tu nota contra la de IMDb</h2>
+        <h2 class="block-title">Tu nota contra la de IMDb</h2>
         <p class="note">Cada punto es un t&iacute;tulo. La l&iacute;nea punteada es "puntuar igual que IMDb"; la l&iacute;nea s&oacute;lida es la tuya: IMDb m&aacute;s tu n&uacute;mero.</p>
         <div class="block" id="scatter"></div>
       </section>
       <section>
-        <h2 class="block-title">&#128202; C&oacute;mo se reparten tus desv&iacute;os</h2>
+        <h2 class="block-title">C&oacute;mo se reparten tus desv&iacute;os</h2>
         <p class="note">Cu&aacute;ntos t&iacute;tulos quedaron a cada distancia de la nota de IMDb. Cuanto m&aacute;s ancha la distribuci&oacute;n, menos preciso es tu n&uacute;mero.</p>
         <div class="block" id="histo"></div>
       </section>
       <section>
-        <h2 class="block-title">&#9878;&#65039; Donde m&aacute;s te separaste</h2>
+        <h2 class="block-title">Donde m&aacute;s te separaste</h2>
         <p class="note">Los t&iacute;tulos donde tu nota y la de IMDb quedaron m&aacute;s lejos.</p>
         <div class="block" id="gaps"></div>
-      </section>
-      <section>
-        <h2 class="block-title">&#128161; C&oacute;mo se usa</h2>
-        <div class="block how">
-          <p>Para estimar qu&eacute; nota le pondr&iacute;as a una pel&iacute;cula, tom&aacute; la nota de IMDb y sum&aacute; tu n&uacute;mero.</p>
-          <p class="note">Es la regla m&aacute;s simple posible. En pruebas con modelos m&aacute;s complejos (g&eacute;neros, director, sinopsis) ninguno la mejor&oacute; con evidencia suficiente.</p>
-          <a class="btn" href="predecir.html">Predecir una nota</a>
-        </div>
       </section>
     </div>
   </div>
@@ -69,6 +113,9 @@
 
 <footer id="siteFooter"></footer>
 
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script defer src="js/csv.js"></script>
+<script defer src="js/catalog.js"></script>
 <script defer src="js/number.js"></script>
 <script defer src="js/pages/numero.js"></script>
 </body>

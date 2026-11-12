@@ -1,0 +1,368 @@
+{
+ "comp": [
+  {
+   "modelo": "Media de tu nota",
+   "MAE": 1.3204,
+   "RMSE": 1.7436,
+   "±1": 0.3858,
+   "Spearman": -0.3528,
+   "AUC(>=7)": 0.3554,
+   "ΔMAE vs BASE": 0.0366,
+   "IC95 ΔMAE": "[-0.044, +0.118]",
+   "P(mejor que BASE)": 0.1826,
+   "ΔAUC vs BASE": -0.2955,
+   "IC95 ΔAUC": "[-0.432, -0.159]"
+  },
+  {
+   "modelo": "IMDb tal cual",
+   "MAE": 1.674,
+   "RMSE": 2.2602,
+   "±1": 0.4331,
+   "Spearman": 0.287,
+   "AUC(>=7)": 0.6632,
+   "ΔMAE vs BASE": 0.3916,
+   "IC95 ΔMAE": "[+0.189, +0.589]",
+   "P(mejor que BASE)": 0.0004,
+   "ΔAUC vs BASE": 0.0125,
+   "IC95 ΔAUC": "[+0.003, +0.022]"
+  },
+  {
+   "modelo": "IMDb calibrada (BASE)",
+   "MAE": 1.2844,
+   "RMSE": 1.6845,
+   "±1": 0.4961,
+   "Spearman": 0.2574,
+   "AUC(>=7)": 0.6506,
+   "ΔMAE vs BASE": null,
+   "IC95 ΔMAE": null,
+   "P(mejor que BASE)": null,
+   "ΔAUC vs BASE": null,
+   "IC95 ΔAUC": null
+  },
+  {
+   "modelo": "Géneros con encogimiento",
+   "MAE": 1.2733,
+   "RMSE": 1.6854,
+   "±1": 0.5197,
+   "Spearman": 0.2508,
+   "AUC(>=7)": 0.6454,
+   "ΔMAE vs BASE": -0.0112,
+   "IC95 ΔMAE": "[-0.033, +0.010]",
+   "P(mejor que BASE)": 0.8484,
+   "ΔAUC vs BASE": -0.0049,
+   "IC95 ΔAUC": "[-0.033, +0.024]"
+  },
+  {
+   "modelo": "Ridge simple (géneros, año, duración, votos)",
+   "MAE": 1.2855,
+   "RMSE": 1.6988,
+   "±1": 0.4961,
+   "Spearman": 0.2232,
+   "AUC(>=7)": 0.6328,
+   "ΔMAE vs BASE": 0.0013,
+   "IC95 ΔMAE": "[-0.051, +0.052]",
+   "P(mejor que BASE)": 0.4868,
+   "ΔAUC vs BASE": -0.0176,
+   "IC95 ΔAUC": "[-0.083, +0.049]"
+  },
+  {
+   "modelo": "Ridge con todas las variables",
+   "MAE": 1.3045,
+   "RMSE": 1.7104,
+   "±1": 0.4724,
+   "Spearman": 0.2034,
+   "AUC(>=7)": 0.6178,
+   "ΔMAE vs BASE": 0.0201,
+   "IC95 ΔMAE": "[-0.054, +0.098]",
+   "P(mejor que BASE)": 0.3038,
+   "ΔAUC vs BASE": -0.0327,
+   "IC95 ΔAUC": "[-0.121, +0.055]"
+  },
+  {
+   "modelo": "RandomForest (todas)",
+   "MAE": 1.2298,
+   "RMSE": 1.6619,
+   "±1": 0.5512,
+   "Spearman": 0.2973,
+   "AUC(>=7)": 0.6679,
+   "ΔMAE vs BASE": -0.0542,
+   "IC95 ΔMAE": "[-0.119, +0.012]",
+   "P(mejor que BASE)": 0.9474,
+   "ΔAUC vs BASE": 0.0177,
+   "IC95 ΔAUC": "[-0.054, +0.087]"
+  },
+  {
+   "modelo": "GradientBoosting (todas)",
+   "MAE": 1.2205,
+   "RMSE": 1.6643,
+   "±1": 0.5354,
+   "Spearman": 0.2922,
+   "AUC(>=7)": 0.6662,
+   "ΔMAE vs BASE": -0.063,
+   "IC95 ΔMAE": "[-0.140, +0.011]",
+   "P(mejor que BASE)": 0.9466,
+   "ΔAUC vs BASE": 0.0152,
+   "IC95 ΔAUC": "[-0.067, +0.095]"
+  },
+  {
+   "modelo": "Promedio Ridge + RandomForest",
+   "MAE": 1.2449,
+   "RMSE": 1.6679,
+   "±1": 0.5197,
+   "Spearman": 0.2634,
+   "AUC(>=7)": 0.6536,
+   "ΔMAE vs BASE": -0.0396,
+   "IC95 ΔMAE": "[-0.088, +0.010]",
+   "P(mejor que BASE)": 0.9414,
+   "ΔAUC vs BASE": 0.0035,
+   "IC95 ΔAUC": "[-0.056, +0.064]"
+  }
+ ],
+ "lc": {
+  "IMDb calibrada": {
+   "sizes": [
+    30,
+    50,
+    70,
+    90,
+    100
+   ],
+   "mean": [
+    1.4039,
+    1.3683,
+    1.352,
+    1.3451,
+    1.3412
+   ],
+   "se": [
+    0.0478,
+    0.0431,
+    0.0446,
+    0.0444,
+    0.0452
+   ]
+  },
+  "Ridge simple": {
+   "sizes": [
+    30,
+    50,
+    70,
+    90,
+    100
+   ],
+   "mean": [
+    1.433,
+    1.3795,
+    1.3697,
+    1.3528,
+    1.3493
+   ],
+   "se": [
+    0.0477,
+    0.0425,
+    0.0451,
+    0.0455,
+    0.0455
+   ]
+  },
+  "RandomForest": {
+   "sizes": [
+    30,
+    50,
+    70,
+    90,
+    100
+   ],
+   "mean": [
+    1.487,
+    1.3975,
+    1.3644,
+    1.3452,
+    1.3391
+   ],
+   "se": [
+    0.0447,
+    0.0414,
+    0.0431,
+    0.0445,
+    0.0432
+   ]
+  }
+ },
+ "data": {
+  "n_rows": 127,
+  "n_predictors": 42,
+  "response": {
+   "name": "Your Rating",
+   "mean": 5.937007874015748,
+   "median": 6.0,
+   "sd": 1.733178008114578,
+   "counts": [
+    4,
+    4,
+    5,
+    7,
+    21,
+    29,
+    38,
+    17,
+    2,
+    0
+   ],
+   "liked": 57,
+   "deviation": {
+    "mean": -1.484126984126984,
+    "sd": 1.6956252158905636,
+    "n": 126
+   }
+  },
+  "predictors": [
+   {
+    "group": "De IMDb (tu archivo de notas)",
+    "vars": [
+     {
+      "names": [
+       "IMDb Rating"
+      ],
+      "what": "Nota de IMDb del título (si falta, la de TMDB)",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "Year"
+      ],
+      "what": "Año de estreno",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "Runtime (mins)",
+       "runtime_missing"
+      ],
+      "what": "Duración en minutos, y una marca si no figuraba",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "log_votes"
+      ],
+      "what": "Cantidad de votos en IMDb (en escala logarítmica)",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "Title Type"
+      ],
+      "what": "Película o serie",
+      "kind": "categórica"
+     },
+     {
+      "names": [
+       "n_genres"
+      ],
+      "what": "Cuántos géneros tiene",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "genre_*"
+      ],
+      "what": "Un indicador 0/1 por género (22 géneros)",
+      "kind": "categórica (0/1)"
+     },
+     {
+      "names": [
+       "years_since_release"
+      ],
+      "what": "Años entre el estreno y el día que lo puntuaste",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "is_franchise"
+      ],
+      "what": "Si el nombre parece de una secuela (número, parte, volumen)",
+      "kind": "categórica (0/1)"
+     }
+    ]
+   },
+   {
+    "group": "De TMDB (API)",
+    "vars": [
+     {
+      "names": [
+       "tmdb_vote_average",
+       "log_tmdb_votes"
+      ],
+      "what": "Nota y cantidad de votos en TMDB",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "tmdb_popularity"
+      ],
+      "what": "Popularidad en TMDB",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "log_budget"
+      ],
+      "what": "Presupuesto (en escala logarítmica)",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "n_seasons",
+       "n_episodes"
+      ],
+      "what": "Temporadas y episodios (solo series)",
+      "kind": "numérica"
+     },
+     {
+      "names": [
+       "media_type"
+      ],
+      "what": "Película o serie según TMDB",
+      "kind": "categórica"
+     },
+     {
+      "names": [
+       "lang_grouped"
+      ],
+      "what": "Idioma original (los 4 más frecuentes y \"otro\")",
+      "kind": "categórica"
+     },
+     {
+      "names": [
+       "director"
+      ],
+      "what": "Director o creador",
+      "kind": "categórica"
+     },
+     {
+      "names": [
+       "overview"
+      ],
+      "what": "Sinopsis",
+      "kind": "texto"
+     },
+     {
+      "names": [
+       "keywords_txt"
+      ],
+      "what": "Palabras clave de TMDB",
+      "kind": "texto"
+     }
+    ]
+   }
+  ],
+  "tmdb_rows": 288,
+  "tmdb_coverage": {
+   "overview": 287,
+   "keywords": 281,
+   "cast_top": 286,
+   "director": 273
+  }
+ }
+}

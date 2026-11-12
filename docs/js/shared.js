@@ -16,13 +16,14 @@ function colorFor(v) {
   return `hsl(${t * 120}, 40%, 33%)`;
 }
 
-// ¿Ya cargó sus archivos? (entonces se habilitan Mi número y Predecir)
+// ¿Ya cargó sus archivos? (para mostrar tu número y las predicciones)
 const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
+// index.html es la portada (el proyecto: flujo y resultados); numero.html junta cargar datos, tu número y predecir.
 const NAV = [
-  { id: "numero", href: "numero.html", label: "Mi número", needsProfile: true },
-  { id: "predecir", href: "predecir.html", label: "Predecir", needsProfile: true },
+  { id: "proyecto", href: "index.html", label: "Proyecto", needsProfile: false },
+  { id: "numero", href: "numero.html", label: "Mi número", needsProfile: false },
 ];
 
 function syncNavHeight() {

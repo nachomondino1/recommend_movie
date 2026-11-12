@@ -167,3 +167,13 @@ input[type=search]:focus { outline: none; border-color: var(--accent); box-shado
 @view-transition { navigation: auto; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
 @media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
+/* ---- Tu número: carga plegable y títulos de sección ---------------------------------------------------- */
+.loadbox { margin: 20px 0 8px; }
+.load-summary { cursor: pointer; font-weight: 700; font-size: 1.1rem; padding: 12px 0; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.loadbox:not([open]) > .load-summary { font-weight: 600; font-size: 1rem; color: var(--accent); }
+.load-summary::marker { color: var(--accent); }
+.sub-title { font-size: 1.05rem; font-weight: 700; margin: 24px 0 4px; letter-spacing: -0.01em; }
+#predecir { margin-top: 12px; }
+#predecir .block-title { margin-top: 36px; }
+#predecir input[type=search] { margin-top: 8px; }

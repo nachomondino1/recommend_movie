@@ -412,6 +412,10 @@ def robust_learning_curve(cands, X, y, rng):
     ax.legend(); fig.tight_layout()
     fig.savefig(MODELING_DIR / "learning_curve_robust.png", dpi=140)
     print(f"Gráfico: {MODELING_DIR / 'learning_curve_robust.png'}")
+    # Los mismos números en CSV (los lee 05_deployment/build_results.py para la portada de la web)
+    pd.DataFrame([{"modelo": nm.split(" (")[0], "n_train": s, "mae": float(np.mean(res[nm][s])),
+                   "se": float(np.std(res[nm][s]) / np.sqrt(reps))}
+                  for nm in names for s in sizes]).round(4).to_csv(MODELING_DIR / "robustness_learning_curve.csv", index=False)
 
 
 def forest_plot(boots):
