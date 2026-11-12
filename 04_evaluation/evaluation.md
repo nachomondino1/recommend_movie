@@ -1,5 +1,18 @@
 # 5. Evaluation
 
+## Versión 2 (la actual): contra los criterios de éxito
+| Criterio | Resultado |
+|---|---|
+| Predecir mejor que el promedio en datos no vistos | Sí: error medio 0,46 contra 0,77 (R² 0,61) |
+| Poder decir qué variables pesan | Sí: géneros, duración y elenco; formato con matices; guion, música y fotografía no aportan |
+| Robustez | Estable con umbrales de 50, 300 y 1.000 votos y solo películas; solo series casi no se predice (R² 0,14) |
+
+Detalle y lectura en [`03_modeling/drivers.md`](../03_modeling/drivers.md).
+
+---
+
+## Versión 1 (archivada): la nota personal
+
 ## Contra los criterios de éxito (doc 1)
 | Criterio | Umbral | Estado actual | ¿Cumple? |
 |---|---|---|---|

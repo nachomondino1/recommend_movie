@@ -1,80 +1,86 @@
-# Versión alternativa: ¿qué hace que una película tenga buena nota?
+# Versión 2: ¿qué hace que una película tenga buena nota?
 
-Rama `version-tmdb-variables-de-la-nota`. **No usa tus notas de IMDb.** Usa todo el catálogo de TMDB (8.493 títulos;
-6.774 con al menos 100 votos) y la variable respuesta es la **nota pública de TMDB**. Es aprendizaje supervisado
-(regresión), pero la pregunta cambia: ya no es "qué nota le pondré yo" sino "qué variables se asocian con una nota más alta
-o más baja".
+Una sola fuente (la API de TMDB), sin notas personales. Catálogo de **6.774** títulos con al menos
+100 votos (4.768 películas y 2.006 series), de 8.493 en total.
+La respuesta es la nota pública de TMDB. Aprendizaje supervisado, regresión. La pregunta es qué variables se asocian con una
+nota más alta o más baja, no qué nota le pondría una persona.
 
 ```
 make drivers      # prepare_titles.py (02) + drivers_model.py (03): data/03_modeling/drivers_results.json
+make results      # docs/data/model_results.json para la web
 ```
+
+Para el elenco y el equipo hace falta antes `fetch_credits.py` (01), que baja los créditos de TMDB.
 
 ## Qué tan bien se puede predecir
 Validación cruzada de 5 folds repetida 2 veces; todo fuera de muestra.
 
-| Variables | R² | Error medio | Si se predice siempre el promedio |
+| Variables | R² | Error medio | Predecir siempre el promedio |
 |---|---|---|---|
-| Contenido (formato, duración, año, géneros, director, plataformas, largo de sinopsis) | **0,59** | **0,48** | 0,77 |
-| + popularidad y cantidad de votos | 0,66 | 0,42 | 0,77 |
+| Contenido sin elenco ni equipo | 0,59 | 0,48 | 0,77 |
+| **Contenido con elenco y equipo** | **0,61** | **0,46** | 0,77 |
+| + popularidad y votos (circular) | 0,70 | 0,40 | 0,77 |
 
-A diferencia de predecir tu nota personal (127 títulos, sin mejora sobre IMDb), **acá sí hay señal**: el error baja casi
-40 %. Popularidad y votos se dejan afuera del análisis principal: dependen de la nota, no la explican (círculo vicioso).
+Popularidad y votos se dejan afuera del análisis principal: dependen de la nota, no la explican.
 
-## Qué variables pesan más
-Caída del R² al mezclar al azar un grupo en datos no vistos (importancia por permutación), y caída si el modelo nunca lo
-ve (ablación). Cuando las dos difieren mucho, el grupo comparte información con otros.
+## Qué grupos de variables pesan más
+Caída del R² al mezclar al azar un grupo en datos no vistos (permutación) y al sacarlo del modelo (ablación). Si difieren
+mucho, el grupo comparte información con otros.
 
 | Grupo | Permutación | Sin el grupo |
 |---|---|---|
-| Formato (serie o película) | 0,40 | 0,01 |
-| Géneros | 0,19 | 0,07 |
-| Duración | 0,14 | 0,02 |
-| Director | 0,09 | 0,02 |
-| Plataformas | 0,09 | 0,03 |
-| Año de estreno | 0,07 | 0,03 |
-| Largo de la sinopsis | 0,01 | 0,00 |
+| Formato (serie o película) | 0,33 | 0,003 |
+| Géneros | 0,12 | 0,052 |
+| Duración | 0,11 | 0,013 |
+| Elenco | 0,10 | 0,019 |
+| Plataformas | 0,07 | 0,022 |
+| Año de estreno | 0,05 | 0,017 |
+| Director | 0,04 | 0,005 |
+| Guion, música y fotografía | 0,03 | -0,002 |
+| Sinopsis (largo) | 0,00 | -0,003 |
 
-Lectura: el formato "pesa" 0,40 al mezclarlo, pero casi nada al sacarlo, porque la duración y los géneros de series ya
-lo delatan. Lo que aporta información propia son los **géneros** (0,07), el **año** y las **plataformas** (0,03).
+Lectura: el formato "pesa" al mezclarlo pero casi nada al sacarlo, porque la duración y los géneros ya lo delatan. Lo que
+aporta información propia son los **géneros**, el **elenco**, las **plataformas** y el **año**. El guion, la música y la
+fotografía no aportan nada que se distinga del ruido, ni el largo de la sinopsis.
 
-## Efectos ajustados (en puntos de nota, con intervalo de confianza del 95 %)
-Regresión con bootstrap (300 remuestreos). Cada efecto es "manteniendo lo demás igual".
-
+## Efectos ajustados (puntos de nota, IC 95 %, bootstrap de 300 remuestreos)
 | Variable | Efecto |
 |---|---|
-| Es serie (contra película) | +1,24 [1,18; 1,31] |
-| Animación | +0,80 [0,74; 0,86] |
-| Documental | +0,76 [0,61; 0,92] |
-| Cada hora más de duración | +0,45 [0,39; 0,50] |
-| Terror | −0,34 [−0,41; −0,28] |
-| Director con 3 o más títulos en el catálogo | +0,22 [0,19; 0,26] |
-| Drama | +0,20 [0,16; 0,24] |
-| Suspense | −0,12 · Acción −0,10 |
+| Es serie (contra película) | +1,26 [+1,19; +1,32] |
+| Documental | +0,78 [+0,63; +0,95] |
+| Animación | +0,78 [+0,72; +0,84] |
+| Elenco más conocido (+10 de popularidad) | +0,44 [+0,30; +0,56] |
+| Cada hora más de duración | +0,42 [+0,37; +0,47] |
+| Terror | −0,32 [−0,38; −0,25] |
+| Música | +0,23 [+0,09; +0,38] |
+| Director con 3+ títulos en el catálogo | +0,20 [+0,16; +0,24] |
+| Drama | +0,20 [+0,15; +0,24] |
+| Historia | +0,15 [+0,05; +0,25] |
+| Suspense | −0,13 [−0,19; −0,07] |
+| Bélica | +0,12 [+0,01; +0,21] |
 
-Solo películas: documental +1,04, animación +0,98, cada hora de duración +0,85, terror −0,31, director con trayectoria +0,22.
+## Actores (descriptivo)
+Entre 445 actores con al menos 10 títulos, mejor y peor de lo esperable por formato, género,
+duración, año y plataformas (residuo fuera de muestra de un modelo sin elenco). Es una asociación, con márgenes de error amplios.
+
+- Mejor: Benedict Cumberbatch (+0,63), Hailee Steinfeld (+0,55), Scott Adkins (+0,44), Tom Holland (+0,40), Chow Yun-fat (+0,38)
+- Peor: Dakota Johnson (−0,64), Alec Baldwin (−0,62), Danny Glover (−0,58), Adam Sandler (−0,54), Giovanni Ribisi (−0,46)
 
 ## Robustez
 | Prueba | n | R² | Error medio (promedio) |
 |---|---|---|---|
-| Votos ≥ 50 | 8.493 | 0,57 | 0,51 (0,81) |
-| Votos ≥ 300 | 4.533 | 0,59 | 0,44 (0,73) |
-| Votos ≥ 1.000 | 2.759 | 0,57 | 0,41 (0,67) |
-| Solo películas | 4.768 | 0,47 | 0,50 (0,70) |
-| Solo series | 2.006 | **0,11** | 0,44 (0,49) |
+| Votos ≥ 50 | 8.493 | 0,60 | 0,49 (0,81) |
+| Votos ≥ 300 | 4.533 | 0,61 | 0,43 (0,72) |
+| Votos ≥ 1.000 | 2.759 | 0,60 | 0,41 (0,67) |
+| Solo películas | 4.768 | 0,50 | 0,49 (0,70) |
+| Solo series | 2.006 | 0,14 | 0,43 (0,49) |
 
-El resultado se sostiene con distintos umbrales de votos. En **series casi no se puede predecir** la nota con estas
-variables (las notas son más parejas, 7,7 ± 0,6, contra 6,6 ± 0,9 de las películas).
+En series casi no se puede predecir la nota con estas variables: son más parejas.
 
 ## Cuidados al interpretar
-- **Sesgo de selección:** el catálogo son los títulos disponibles en plataformas (los más populares de cada una). La
-  diferencia serie/película (+1,24) refleja en parte cómo vota la gente cada formato y qué series entran al catálogo,
-  no una calidad intrínseca.
-- **Correlación, no causa.** "Los documentales tienen mejor nota" no dice que filmar un documental mejore una película.
-- **Faltan variables:** el crudo no trae elenco, guionista, presupuesto ni premios. **No se puede hablar de actores**
-  sin volver a descargar de TMDB con los créditos.
-- **Duración:** la relación positiva con la nota en películas (0,32 de correlación; de 6,2 en las de 80 a 100 minutos a 7,4
-  en las de más de 150) es conocida; no implica que alargar una película la mejore.
-- **Palabras de la sinopsis:** "filmaffinity" aparece asociada a notas bajas porque algunas sinopsis traen esa firma
-  de la fuente. Es un artefacto de los datos, no un hallazgo.
-- Es una sola semilla de validación cruzada, con 300 remuestreos para los efectos; las conclusiones fuertes (géneros,
-  formato, duración) son estables, los efectos chicos (plataformas, año) no deberían tomarse al pie de la letra.
+- **Sesgo de selección:** títulos disponibles en plataformas; la ventaja de las series refleja en parte cómo vota la gente cada formato.
+- **Correlación, no causa.**
+- **Faltan variables:** presupuesto, premios, marketing. El elenco sale de los 5 primeros del reparto.
+- **Popularidad de los actores:** sube con sus estrenos recientes, así que se parece a la popularidad del título.
+- Una sola semilla de validación cruzada: las conclusiones fuertes (géneros, duración, formato, elenco) son estables; los efectos chicos (año, plataformas) no deberían tomarse al pie de la letra.
+- Palabras de la sinopsis: "filmaffinity" aparece asociada a notas bajas porque algunas sinopsis traen esa firma de la fuente. Es un artefacto, no un hallazgo.

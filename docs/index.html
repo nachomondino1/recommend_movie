@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>¿Puede un modelo predecir mi nota? · Tu número</title>
-<meta name="description" content="Predecir qué nota le vas a poner a una película según tus gustos: un proyecto personal de Machine Learning que no le ganó a la nota de IMDb. Conocé el proyecto y calculá tu número.">
+<title>¿Qué hace que una película tenga buena nota?</title>
+<meta name="description" content="Un proyecto de Machine Learning con 8.493 películas y series de TMDB: qué características pesan más en la nota pública. Género, duración y elenco aportan; guion y música no.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,27 +14,25 @@
 <link rel="stylesheet" href="css/proyecto.css">
 <link rel="preload" as="fetch" href="data/model_results.json" crossorigin="anonymous">
 <link rel="preload" as="image" href="media/hero.jpg" fetchpriority="high">
-<script type="speculationrules">{"prerender":[{"urls":["index.html","numero.html"],"eagerness":"moderate"}]}</script>
 </head>
 <body>
 <header id="siteHeader"></header>
-<script src="js/storage.js"></script>
 <script src="js/shared.js"></script>
-<script>renderHeader("proyecto")</script>
+<script>renderHeader()</script>
 
 <section class="hero" id="inicio">
   <div class="hero-inner">
-    <p class="eyebrow">Proyecto personal · un recomendador hecho con mis notas de IMDb</p>
-    <h1 class="hero-title">Probé si un modelo puede <span class="kw">predecir qué nota le pongo</span> a una película</h1>
-    <p class="hero-sub">No le ganó a la nota de IMDb. Lo que sí me dejó: <b>mi número</b>, cuánto me desvío de ella. Con eso estimo mi nota para cualquier película.</p>
-    <div class="hero-eq" id="hero-eq" aria-label="Ejemplo: 7,5 de IMDb menos 1,5, mi número, da 6,0">
-      <div class="heq"><b>7,5</b><span>nota de IMDb</span></div><div class="hop">−</div>
-      <div class="heq"><b>1,5</b><span>mi número</span></div><div class="hop">=</div>
-      <div class="heq res"><b>6,0</b><span>mi nota estimada</span></div>
+    <p class="eyebrow">Proyecto de datos con Machine Learning · películas y series de TMDB</p>
+    <h1 class="hero-title">¿Qué hace que una película <span class="kw">tenga buena nota?</span></h1>
+    <p class="hero-sub">Entrené un modelo con la nota pública de miles de películas y series para ver qué características pesan más. Esto es lo que encontré.</p>
+    <div class="hero-eq" id="hero-stats">
+      <div class="heq"><b>6.774</b><span>títulos analizados</span></div>
+      <div class="heq"><b>0,46</b><span>error medio del modelo, contra 0,77 de predecir el promedio</span></div>
+      <div class="heq res"><b>61 %</b><span>de la variación de la nota se explica</span></div>
     </div>
     <div class="hero-actions">
-      <a class="btn btn--hero" href="numero.html">Conocé tu número</a>
-      <a class="btn btn--ghost btn--hero" href="#conclusiones">Ver las conclusiones</a>
+      <a class="btn btn--hero" href="#conclusiones">Ver las conclusiones</a>
+      <a class="btn btn--ghost btn--hero" href="#flujo">Ver cómo se hizo</a>
     </div>
   </div>
   <div class="hero-credit">Foto: Denise Jans / Unsplash</div>
@@ -43,156 +41,101 @@
 <main class="wrap proy">
   <nav class="secnav" aria-label="Secciones de la página">
     <a href="#conclusiones">Conclusiones</a>
-    <a href="#masdatos">Con más datos</a>
     <span class="grp">Cómo llegué</span>
     <a href="#flujo">Cómo se hizo</a>
     <a href="#datos">Los datos</a>
     <a href="#resultados">Los modelos</a>
   </nav>
+
+  <!-- ================= CONCLUSIONES ================= -->
   <section id="conclusiones" aria-labelledby="h-conclusiones">
     <p class="phase-tag">Fase 04 · Evaluar contra el objetivo</p>
     <h2 class="part" id="h-conclusiones">Conclusiones</h2>
-    <p class="part-sub">Lo que me llevo del proyecto. Lo que sigue explica cómo llegué hasta acá.</p>
+    <p class="part-sub">Lo que se saca de los resultados. Lo que sigue explica cómo se llegó hasta acá.</p>
 
     <div class="finding">
-      <p class="finding-main">El mejor predictor que encontré es la nota de IMDb reescalada a tu forma de puntuar: la nota de IMDb más tu número.</p>
-      <p class="finding-sub">De nueve modelos probados, ninguno la mejoró con evidencia suficiente.</p>
+      <p class="finding-main">La nota de una película se puede predecir bastante bien solo con sus características, sin mirar un solo voto.</p>
+      <p class="finding-sub">Con formato, duración, año, géneros, elenco y plataformas, el modelo explica el <b data-v="r2pct">61</b> % de la variación de la nota pública y se equivoca <b data-v="mae">0,46</b> puntos en promedio, contra <b data-v="maeBase">0,77</b> si siempre se predijera el promedio.</p>
     </div>
 
-    <div class="example" aria-labelledby="h-ejemplo">
-      <h3 id="h-ejemplo">Un ejemplo</h3>
-      <p>Una película tiene <b>7,5</b> en IMDb. ¿Qué nota le pondría yo?</p>
-      <div class="eq" id="ex-eq"></div>
-      <div class="chart" id="ex-scale" role="img" aria-label="Escala del 1 al 10 con la nota de IMDb, la nota estimada y su rango"></div>
-      <div class="legend" id="ex-leg"></div>
-      <ul class="tasks" id="ex-text"></ul>
-      <span class="src">Cálculo con mis 126 notas · el error se midió sacando cada título del cálculo de mi número</span>
-      <p class="ex-cta">Tu número va a ser otro. <a href="numero.html">Calculá el tuyo</a>.</p>
-    </div>
-
-    <div class="read">
+    <div class="updown">
       <div>
-        <h3>Lo que encontré</h3>
-        <ul>
-          <li>Puntúo en promedio 1,5 puntos menos que IMDb. Restar eso a la nota de IMDb me da la mejor estimación de mi nota.</li>
-          <li>Es una pista débil: el error típico es de ±1,3 puntos, y acierta a 1 punto o menos solo la mitad de las veces.</li>
-          <li>Los modelos con géneros, director, sinopsis y más no sumaron nada que se pueda distinguir del ruido.</li>
-        </ul>
+        <h3>Lo que sube la nota</h3>
+        <ul class="eff-list" id="eff-up"></ul>
       </div>
       <div>
-        <h3>Por qué creo que pasó</h3>
+        <h3>Lo que baja la nota</h3>
+        <ul class="eff-list" id="eff-down"></ul>
+      </div>
+    </div>
+    <p class="note-line">Puntos de nota de TMDB, manteniendo lo demás igual. Sale de una regresión con 300 remuestreos; entre corchetes, el intervalo de confianza.</p>
+
+    <div class="read concl">
+      <div>
+        <h3>El género y la duración dicen más que quién la hace</h3>
+        <p>Los géneros son el grupo que más información propia aporta. El documental y la animación suben la nota cerca de <b data-v="docEff">0,8</b> puntos y el terror la baja unos <b data-v="terrorEff">0,3</b>. Cada hora más de duración suma unos <b data-v="durEff">0,4</b> puntos.</p>
+      </div>
+      <div>
+        <h3>El elenco aporta; el guion y la música, no</h3>
+        <p>Sumar elenco y equipo sube el R² de <b data-v="r2NoCast">0,59</b> a <b data-v="r2">0,61</b>, y casi todo viene del elenco. Un elenco más conocido se asocia con mejor nota. El guion, la música y la fotografía no aportan nada que se distinga del ruido, ni el largo de la sinopsis.</p>
+      </div>
+      <div>
+        <h3>Las series tienen notas más altas y más parejas</h3>
+        <p>Promedian <b data-v="tvMean">7,7</b> contra <b data-v="movieMean">6,6</b> de las películas, con mucha menos dispersión. Por eso casi no se puede predecir la nota de una serie con estas variables (R² <b data-v="tvR2">0,14</b>).</p>
+      </div>
+      <div>
+        <h3>Director, año y plataformas aportan poco</h3>
+        <p>Un director con trayectoria (3 o más títulos en el catálogo) suma unos <b data-v="dirEff">0,2</b> puntos, pero su información ya viene en buena parte del elenco y del género. El año y las plataformas aportan efectos chicos.</p>
+      </div>
+    </div>
+
+    <div class="read concl">
+      <div>
+        <h3>Lo que no se puede concluir</h3>
         <ul>
-          <li>Con 127 notas, la prueba solo detectaría mejoras de 0,11 puntos o más. Una mejora menor no se puede ni descartar ni confirmar.</li>
-          <li>Al sumar títulos, los modelos se acercan a la regla simple pero no la superan. Probablemente me faltan datos.</li>
+          <li><b>Que algo cause la nota.</b> Que los documentales tengan mejor nota no significa que filmar uno mejore una película. Son asociaciones.</li>
+          <li><b>Que valga para todas las películas.</b> El catálogo son los títulos disponibles en plataformas en Argentina, los más populares de cada una. La ventaja de las series refleja en parte quién las vota.</li>
+          <li><b>Nada sobre presupuesto, premios o marketing.</b> No estaban en los datos.</li>
         </ul>
       </div>
       <div>
         <h3>Lo que aprendí</h3>
         <ul>
-          <li>Comparar contra una base justa. Contra la nota de IMDb sin reescalar, los modelos parecían buenos.</li>
-          <li>Medir antes de prometer: sin intervalos de confianza, un resultado no es un resultado.</li>
-          <li>Un resultado negativo bien medido también sirve.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="concl-cta">
-      <a class="btn btn--hero" href="numero.html">Conocé tu número</a>
-      <span>Cargás tus notas de IMDb y lo calculás en tu navegador.</span>
-    </div>
-  </section>
-
-  <section id="masdatos" aria-labelledby="h-masdatos">
-    <p class="phase-tag">Fase 03 · Modelar, segunda versión</p>
-    <h2 class="part" id="h-masdatos">Probé con más datos</h2>
-    <p class="part-sub">Con mis 127 notas no alcanzó. Con las películas y series de todo el catálogo de TMDB la pregunta cambia: ¿qué hace que una película tenga buena nota?</p>
-
-    <div class="verdict">
-      <h2>Con miles de títulos, la nota pública sí se puede predecir</h2>
-      <p>La respuesta es la nota de TMDB, sin ninguna nota mía. Las variables son el formato, la duración, el año, los géneros, el director, el elenco, el equipo, las plataformas y el largo de la sinopsis.</p>
-      <p id="m-cast"></p>
-      <div class="stats" id="m-stats"></div>
-    </div>
-
-    <div class="sect">
-      <h3>Qué variables pesan más</h3>
-      <p>Cuánto empeora la predicción, en datos que el modelo no vio, al mezclar al azar cada grupo de variables (barra azul) y cuánto empeora si el modelo nunca lo ve (barra gris). Cuando las dos difieren mucho, ese grupo comparte información con otros.</p>
-      <div class="chart" id="m-imp" role="img" aria-label="Importancia de cada grupo de variables"></div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>Al mezclarlo en datos nuevos</span><span><i style="background:var(--line-strong)"></i>Al sacarlo del modelo</span></div>
-      <span class="src">Fuente: data/03_modeling/drivers_results.json · caída del R²</span>
-    </div>
-
-    <div class="sect">
-      <h3>Qué sube y qué baja la nota</h3>
-      <p>Efecto de cada variable manteniendo las demás iguales, en puntos de nota, con su intervalo de confianza del 95 %.</p>
-      <div class="chart" id="m-eff" role="img" aria-label="Efectos ajustados en puntos de nota"></div>
-      <span class="src">Fuente: regresión con 300 remuestreos · 03_modeling/drivers_model.py</span>
-    </div>
-
-    <div class="sect">
-      <h3>¿Aguanta otros recortes?</h3>
-      <div class="table-wrap"><table id="m-rob"></table></div>
-      <span class="src">Error medio: menor es mejor. Entre paréntesis, el error de predecir siempre el promedio.</span>
-    </div>
-
-    <div class="sect" id="m-actors" hidden>
-      <h3>Elenco: ¿qué actores se asocian con mejores notas?</h3>
-      <p id="m-actors-sub"></p>
-      <div class="two">
-        <div><div class="label">Mejor de lo esperable</div><div class="table-wrap"><table class="plain" id="m-act-top"></table></div></div>
-        <div><div class="label">Peor de lo esperable</div><div class="table-wrap"><table class="plain" id="m-act-bot"></table></div></div>
-      </div>
-      <p class="note-box">Es una asociación, no un efecto del actor: pueden elegir bien sus proyectos, o ser parte de proyectos que ya iban a salir bien. Con 10 títulos por actor el azar pesa, y por eso conviene mirar la diferencia junto a su error.</p>
-      <span class="src">Fuente: 03_modeling/drivers_model.py · diferencia entre la nota real y la que predice un modelo sin elenco, fuera de muestra</span>
-    </div>
-
-    <div class="read">
-      <div>
-        <h3>Cuidados al interpretar</h3>
-        <ul>
-          <li><b>Sesgo de selección.</b> El catálogo son los títulos disponibles en plataformas. La diferencia entre series y películas refleja en parte cómo vota la gente cada formato, no una calidad intrínseca.</li>
-          <li><b>Correlación, no causa.</b> Que los documentales tengan mejor nota no significa que filmar uno mejore una película.</li>
-          <li><b>En series casi no se predice.</b> Sus notas son más parejas y estas variables no alcanzan.</li>
-          <li><b>La popularidad del elenco es un indicador flojo.</b> La de un actor sube con sus estrenos recientes, así que en parte se parece al círculo vicioso de la popularidad del título.</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Lo que cambia respecto de mi proyecto</h3>
-        <ul>
-          <li>Esta versión responde otra pregunta: qué se asocia con una buena nota pública, no qué nota le pondré yo.</li>
-          <li>Con miles de títulos aparece señal. Con las notas de una sola persona, no.</li>
+          <li>Con pocos datos (mis propias notas de IMDb, 127) no se encontró nada. Con miles de títulos aparecieron patrones claros.</li>
+          <li>Medir la importancia de dos maneras, al mezclar y al sacar un grupo, evita confundir una variable con otra que lleva la misma información.</li>
+          <li>Dejar afuera la popularidad y los votos, que dependen de la nota, cambia lo que el modelo cuenta.</li>
         </ul>
       </div>
     </div>
   </section>
 
+  <!-- ================= CÓMO SE HIZO ================= -->
   <section id="flujo" aria-labelledby="h-flujo">
     <p class="phase-tag">Metodología · fases 00 a 05</p>
     <h2 class="part" id="h-flujo">Cómo se hizo</h2>
-    <p class="part-sub">Un proyecto CRISP-DM: de dos exportaciones de IMDb y una API de películas hasta esta web.</p>
+    <p class="part-sub">Un proyecto CRISP-DM con una sola fuente de datos: la API de TMDB.</p>
+
     <div class="route" aria-label="Recorrido del dato">
-      <span class="node">CSV de IMDb (carga manual)</span><span class="arrow">+</span><span class="node">API de TMDB</span>
-      <span class="arrow">→</span><span class="node">JSON crudo</span>
-      <span class="arrow">→</span><span class="node">Tabla preparada</span>
-      <span class="arrow">→</span><span class="node">Matriz de variables</span>
-      <span class="arrow">→</span><span class="node">Modelos</span>
-      <span class="arrow">→</span><span class="node">Regla: IMDb + tu número</span>
-      <span class="arrow">→</span><span class="node end">Web</span>
+      <span class="node">API de TMDB</span><span class="arrow">→</span><span class="node">JSON crudo</span>
+      <span class="arrow">→</span><span class="node">Tabla de variables</span>
+      <span class="arrow">→</span><span class="node">Modelo de la nota</span>
+      <span class="arrow">→</span><span class="node">Importancia y efectos</span>
+      <span class="arrow">→</span><span class="node end">Esta página</span>
     </div>
-    <p class="route-cap">Cada fase es una carpeta del repo, en el orden de CRISP-DM. Lo que entra y sale de cada una vive en <code>data/&lt;fase&gt;/</code>.</p>
+    <p class="route-cap">Cada fase es una carpeta del repositorio, en el orden de CRISP-DM. Lo que entra y sale de cada una vive en <code>data/&lt;fase&gt;/</code>.</p>
 
     <div class="phases">
       <article class="phase">
         <div class="num">00</div>
         <div>
           <h2>Entender el negocio</h2>
-          <p class="what">Decidir antes de ver una película si te va a gustar, para priorizar la watchlist.</p>
+          <p class="what">Entender qué características de una película o serie se asocian con una nota pública alta o baja.</p>
           <div class="cols">
             <div>
               <div class="label">Qué se define</div>
               <ul class="tasks">
-                <li><b>Objetivo de datos</b><span>Predecir la nota (1 a 10) que le pondrías a un título nuevo, o al menos si lo disfrutarías.</span></li>
-                <li><b>Criterios de éxito</b><span>Mínimo útil: AUC &gt; 0,65 para "nota ≥ 7". Bueno: AUC &gt; 0,75. Regresión: error medio &lt; 1,20.</span></li>
+                <li><b>Objetivo de datos</b><span>Predecir la nota pública de TMDB (de 1 a 10) a partir de las características del título.</span></li>
+                <li><b>Criterio de éxito</b><span>Predecir mejor que el promedio en datos que el modelo no vio, y poder decir qué variables pesan.</span></li>
               </ul>
             </div>
             <div>
@@ -212,27 +155,25 @@
             <div>
               <div class="label">Qué se hace</div>
               <ul class="tasks">
-                <li><b>Carga manual desde IMDb</b><span>Descargás de IMDb, a mano, todas tus puntuaciones y toda tu watchlist en dos archivos CSV, y los copiás al proyecto. Es la fuente principal y no se automatiza.</span></li>
-                <li><b>Recolectar de TMDB</b><span><code>tmdb_data.py</code> baja de TMDB el detalle de cada título y lo guarda tal cual. <code>refresh_tmdb_data.py</code> hace lo mismo para el catálogo del sitio.</span></li>
-                <li><b>Elenco y equipo (segunda versión)</b><span><code>fetch_credits.py</code> baja de TMDB el elenco principal, los directores, guionistas, compositor y director de fotografía de los 8.493 títulos del catálogo.</span></li>
-                <li><b>Describir y explorar</b><span>Qué es cada columna, cuál es la variable que se quiere predecir y cuáles la explican: están en la sección <a href="#datos">Los datos</a>. <code>exploration.py</code> genera tres gráficos: histograma de notas, tu nota contra la de IMDb y nota por género.</span></li>
+                <li><b>Recolectar el catálogo</b><span><code>refresh_tmdb_data.py</code> baja de TMDB los títulos más populares de cada plataforma disponible en Argentina.</span></li>
+                <li><b>Recolectar elencos y equipo</b><span><code>fetch_credits.py</code> baja el reparto principal, los directores, guionistas, compositor y director de fotografía de cada título.</span></li>
+                <li><b>Describir y explorar</b><span>La variable que se quiere predecir y las que la explican están en la sección <a href="#datos">Los datos</a>.</span></li>
                 <li><b>Verificar calidad</b><span><code>verify_data_quality.py</code> revisa formatos y cobertura sin tocar los datos.</span></li>
               </ul>
             </div>
             <div>
               <div class="label">Datos</div>
               <div class="io">
-                <div class="in">imdb/ratings.csv y watchlist.csv (descarga manual desde IMDb)</div>
                 <div class="in">API de TMDB (automático)</div>
-                <div class="out">tmdb/titles/*.json (uno por título)</div>
-                <div class="out">tmdb/tmdb_titles.jsonl (catálogo del sitio)</div>
+                <div class="out">tmdb/tmdb_titles.jsonl</div>
+                <div class="out">tmdb/credits.jsonl</div>
               </div>
             </div>
           </div>
           <div class="facts">
-            <div class="fact"><b>127</b><span>títulos puntuados</span></div>
-            <div class="fact"><b>172</b><span>en la watchlist</span></div>
-            <div class="fact"><b>288</b><span>títulos únicos resueltos en TMDB</span></div>
+            <div class="fact"><b id="f-total">8.493</b><span>películas y series</span></div>
+            <div class="fact"><b id="f-model">6.774</b><span>con al menos 100 votos</span></div>
+            <div class="fact"><b>1</b><span>fuente de datos</span></div>
           </div>
         </div>
       </article>
@@ -241,32 +182,24 @@
         <div class="num">02</div>
         <div>
           <h2>Preparar los datos</h2>
-          <p class="what">Acá sí se transforma: limpiar, dar formato, integrar fuentes y construir las variables para el modelo.</p>
+          <p class="what">Acá sí se transforma: limpiar, dar formato y construir las variables.</p>
           <div class="cols">
             <div>
               <div class="label">Qué se hace</div>
               <ul class="tasks">
-                <li><b>Limpiar</b><span><code>curate.py</code> marca un título como visto (con su nota) o como "no me interesa".</span></li>
-                <li><b>Dar formato e integrar</b><span><code>prepare_tmdb.py</code> aplana el JSON de TMDB a una tabla y la deja lista para cruzar con tus notas.</span></li>
-                <li><b>Construir y seleccionar variables</b><span><code>features.py</code> arma la matriz: nota y votos de IMDb, duración, año, géneros, director, sinopsis y palabras clave.</span></li>
-                <li><b>Catálogo del sitio</b><span><code>build_catalog.py</code> deja un solo archivo con los títulos y sus plataformas.</span></li>
+                <li><b>Limpiar y dar formato</b><span>Un solo vocabulario de géneros (los de series se llevan al de películas) y títulos duplicados fuera.</span></li>
+                <li><b>Construir variables</b><span>Indicadores por género y por plataforma, trayectoria del director y del elenco, largo de la sinopsis.</span></li>
+                <li><b>Seleccionar</b><span>La popularidad y los votos de cada título quedan afuera del análisis principal: dependen de la nota, no la explican.</span></li>
               </ul>
             </div>
             <div>
               <div class="label">Datos</div>
               <div class="io">
-                <div class="in">tmdb/titles/*.json</div>
-                <div class="in">imdb/ratings.csv</div>
-                <div class="out">02_data_preparation/tmdb.csv</div>
-                <div class="out">matriz de 127 filas × 42 columnas (en memoria)</div>
-                <div class="out">docs/data/catalog.json</div>
+                <div class="in">tmdb/tmdb_titles.jsonl, credits.jsonl</div>
+                <div class="out">02_data_preparation/titles_features.csv</div>
               </div>
+              <p class="note-line">Script: <code>02_data_preparation/prepare_titles.py</code></p>
             </div>
-          </div>
-          <div class="facts">
-            <div class="fact"><b>288</b><span>filas en la tabla de TMDB</span></div>
-            <div class="fact"><b>42</b><span>variables por título</span></div>
-            <div class="fact"><b>5.133</b><span>títulos en el catálogo (13 plataformas)</span></div>
           </div>
         </div>
       </article>
@@ -275,34 +208,30 @@
         <div class="num">03</div>
         <div>
           <h2>Modelar</h2>
-          <p class="what">Cuatro tareas de CRISP-DM: elegir la técnica y, en un archivo cada una, diseñar la prueba, construir el modelo y evaluarlo.</p>
+          <p class="what">Cuatro tareas de CRISP-DM, con el código en <code>drivers_model.py</code>.</p>
           <div class="cols">
             <div>
               <div class="label">Qué se hace</div>
               <ul class="tasks">
-                <li><b>Seleccionar la técnica</b><span>Aprendizaje supervisado. La variable respuesta es tu nota (1 a 10) y las variables predictoras son las 42 de <a href="#datos">Los datos</a>. Se prueban dos formulaciones: regresión del desvío contra IMDb y clasificación de "nota ≥ 7". Técnicas: RandomForest, GradientBoosting y regresiones, contra una regla simple como base.</span></li>
-                <li><b>Segunda versión, con más datos</b><span><code>drivers_model.py</code> deja de usar mis notas: predice la nota pública de TMDB de miles de títulos y mide qué grupos de variables pesan más. Resultados en <a href="#masdatos">Probé con más datos</a>.</span></li>
-                <li><b>Diseño de la prueba</b><span><code>test_design.py</code> fija el objetivo ("nota ≥ 7"), la validación cruzada, las bases a superar y las métricas.</span></li>
-                <li><b>Construir el modelo</b><span><code>build_model.py</code> define el pipeline, entrena (RandomForest sobre el desvío contra IMDb), guarda y puntúa.</span></li>
-                <li><b>Evaluar el modelo</b><span><code>assess_model.py</code> compara modelos, arma la curva de aprendizaje y corre la prueba de robustez.</span></li>
+                <li><b>Seleccionar la técnica</b><span>Aprendizaje supervisado, regresión. La respuesta es la nota de TMDB y las predictoras son las de la sección <a href="#datos">Los datos</a>. Modelo: gradient boosting.</span></li>
+                <li><b>Diseño de la prueba</b><span>Validación cruzada de 5 folds repetida 2 veces, siempre en datos no vistos. Base a superar: predecir el promedio. Métricas: R² y error medio.</span></li>
+                <li><b>Construir el modelo</b><span>El director, el elenco y el equipo se codifican con el promedio de nota de sus otros títulos, calculado solo con datos de entrenamiento y dejando afuera el propio título.</span></li>
+                <li><b>Evaluar el modelo</b><span>Importancia de cada grupo de variables (al mezclarlo y al sacarlo), efectos ajustados con bootstrap y pruebas de robustez.</span></li>
               </ul>
             </div>
             <div>
               <div class="label">Datos</div>
               <div class="io">
-                <div class="in">matriz de variables + tus notas</div>
-                <div class="out">03_modeling/models/*.joblib</div>
-                <div class="out">data/03_modeling/*_scored.csv</div>
-                <div class="out">data/03_modeling/robustness_comparison.csv</div>
+                <div class="in">02_data_preparation/titles_features.csv</div>
+                <div class="out">03_modeling/drivers_results.json</div>
               </div>
             </div>
           </div>
           <div class="facts">
-            <div class="fact"><b>9</b><span>modelos comparados contra la nota de IMDb</span></div>
-            <div class="fact"><b>10 × 5</b><span>validación cruzada repetida</span></div>
-            <div class="fact"><b>5.000</b><span>remuestreos para los intervalos de confianza</span></div>
+            <div class="fact"><b>5 × 2</b><span>validación cruzada repetida</span></div>
+            <div class="fact"><b>300</b><span>remuestreos para los intervalos</span></div>
+            <div class="fact"><b>5</b><span>recortes de robustez</span></div>
           </div>
-          <div class="note-box">Resultado en una línea: ningún modelo le gana a la nota de IMDb con evidencia suficiente. El detalle está en la otra vista.</div>
         </div>
       </article>
 
@@ -310,19 +239,19 @@
         <div class="num">04</div>
         <div>
           <h2>Evaluar contra el objetivo</h2>
-          <p class="what">Mirar los resultados con los criterios de éxito de la fase 00.</p>
+          <p class="what">Mirar los resultados con el criterio de éxito de la fase 00.</p>
           <div class="cols">
             <div>
               <div class="label">Qué se concluyó</div>
               <ul class="tasks">
-                <li><b>Error medio</b><span>1,23 con validación cruzada, contra la meta de 1,20. Casi, pero no.</span></li>
-                <li><b>Capacidad de distinguir lo que te gusta</b><span>AUC de 0,56 en el modelo entrenado, contra la meta de 0,65. No se cumple.</span></li>
-                <li><b>Decisión</b><span>El modelo sirve a lo sumo para ordenar la watchlist. La web ofrece la regla simple: nota de IMDb más tu número.</span></li>
+                <li><b>Se cumplió el criterio</b><span>El modelo predice mejor que el promedio, en datos que no vio, y permite decir qué variables pesan.</span></li>
+                <li><b>Lo que se puede decir con confianza</b><span>El género, la duración y el elenco: son efectos grandes y estables ante distintos recortes.</span></li>
+                <li><b>Lo que no</b><span>Los efectos chicos (año, plataformas), cualquier causa, y la nota de las series.</span></li>
               </ul>
             </div>
             <div>
               <div class="label">Dónde vive</div>
-              <div class="io"><div><span class="mono">04_evaluation/evaluation.md</span></div></div>
+              <div class="io"><div><span class="mono">Conclusiones, arriba en esta página</span></div></div>
             </div>
           </div>
         </div>
@@ -332,55 +261,47 @@
         <div class="num">05</div>
         <div>
           <h2>Publicar en la web</h2>
-          <p class="what">Una web estática que corre toda en tu navegador, sin backend ni cuentas.</p>
+          <p class="what">Una página estática: no hay servidor ni base de datos. Todo lo que ves sale de un archivo de resultados.</p>
           <div class="cols">
             <div>
-              <div class="label">Qué hay</div>
+              <div class="label">Cómo se actualiza</div>
               <ul class="tasks">
-                <li><b>Portada</b><span>Esta página: el proyecto, con el flujo, los datos y los resultados.</span></li>
-                <li><b>Cargar tus datos</b><span>En "Mi número", cada persona arrastra su archivo de notas de IMDb. Con eso alcanza: la watchlist no hace falta. El archivo no sale de su navegador.</span></li>
-                <li><b>Calcular tu número</b><span>Al cargarlos, el navegador calcula en el momento el promedio de (tu nota menos la nota de IMDb), su error típico y qué tan seguido acierta, con un poco de JavaScript (<code>number.js</code>). No hay servidor ni modelo entrenado: es la regla simple.</span></li>
-                <li><b>Predecir una nota</b><span>Buscás una película o serie y ves la nota estimada: la de IMDb más tu número.</span></li>
+                <li><b>Correr el análisis</b><span><code>make drivers</code> prepara los datos y entrena los modelos.</span></li>
+                <li><b>Publicar los resultados</b><span><code>make results</code> deja los números listos para esta página.</span></li>
               </ul>
             </div>
             <div>
               <div class="label">Datos</div>
               <div class="io">
-                <div class="in">docs/data/catalog.json</div>
-                <div class="in">los CSV de cada persona (solo en su navegador)</div>
-                <div class="out">docs/ (HTML + CSS + JS)</div>
+                <div class="in">03_modeling/drivers_results.json</div>
+                <div class="out">docs/data/model_results.json</div>
               </div>
             </div>
-          </div>
-          <div class="facts">
-            <div class="fact"><b>−1,5</b><span>desvío medio calculado con mis 126 notas</span></div>
-            <div class="fact"><b>10</b><span>notas como mínimo para calcular tu número</span></div>
-            <div class="fact"><b>0</b><span>servidores</span></div>
           </div>
         </div>
       </article>
     </div>
   </section>
 
-  
+  <!-- ================= LOS DATOS ================= -->
   <section id="datos" aria-labelledby="h-datos">
     <p class="phase-tag">Fase 01 · Comprender los datos</p>
     <h2 class="part" id="h-datos">Los datos</h2>
     <p class="part-sub">Describir los datos: qué hay en cada fila, qué se quiere predecir y con qué variables.</p>
 
     <div class="facts big">
-      <div class="fact"><b id="d-rows"></b><span>filas: un título puntuado por vos</span></div>
-      <div class="fact"><b id="d-pred-n"></b><span>variables predictoras</span></div>
-      <div class="fact"><b>1</b><span>variable respuesta: tu nota</span></div>
+      <div class="fact"><b id="d-rows"></b><span>filas: una película o serie</span></div>
+      <div class="fact"><b id="d-model"></b><span>con al menos 100 votos, las que se analizan</span></div>
+      <div class="fact"><b>1</b><span>variable respuesta: la nota de TMDB</span></div>
     </div>
 
     <div class="sect">
-      <h3>Variable respuesta: tu nota</h3>
-      <p>Es lo que el modelo intenta predecir: la nota de 1 a 10 que le pusiste a cada título. Es aprendizaje supervisado, porque cada fila trae su respuesta.</p>
+      <h3>Variable respuesta: la nota de TMDB</h3>
+      <p>Es lo que el modelo intenta predecir: la nota promedio de 1 a 10 que le dieron los usuarios. Se usan los títulos con al menos 100 votos, porque con menos la nota es muy ruidosa.</p>
       <div class="two">
         <div>
           <div class="chart" id="d-histo" role="img" aria-label="Cantidad de títulos por nota"></div>
-          <span class="src">Fuente: imdb/ratings.csv, columna Your Rating</span>
+          <span class="src">Fuente: tmdb_titles.jsonl, campo vote_average</span>
         </div>
         <div>
           <ul class="tasks" id="d-resp"></ul>
@@ -390,123 +311,89 @@
 
     <div class="sect">
       <h3>Variables predictoras</h3>
-      <p>Lo que se sabe de un título antes de verlo. Una parte sale de tu archivo de IMDb y otra de la API de TMDB.</p>
-      <div id="d-pred"></div>
-      <span class="src">Fuente: 02_data_preparation/features.py</span>
+      <p>Lo que se sabe de un título sin mirar ninguna opinión. Todas salen de TMDB.</p>
+      <div class="table-wrap"><table class="plain" id="d-pred"></table></div>
+      <span class="src">Fuente: 02_data_preparation/prepare_titles.py · la popularidad y los votos del título no entran: dependen de la nota</span>
     </div>
 
     <div class="sect">
-      <h3>Calidad de los datos de TMDB</h3>
-      <p>Cuántos de los títulos tienen cada dato. Lo que falta se completa en la preparación (con la mediana o con un valor "desconocido").</p>
+      <h3>Calidad de los datos</h3>
+      <p>Qué parte de los títulos tiene cada dato. Lo que falta se completa en el modelo (con la mediana o con "sin dato").</p>
       <div id="d-quality" class="quality"></div>
-      <span class="src">Fuente: 02_data_preparation/tmdb.csv</span>
-    </div>
-
-    <div class="sect">
-      <h3>Los datos de la segunda versión</h3>
-      <p>Aprendizaje supervisado con otra respuesta: la <b>nota pública de TMDB</b> de cada título del catálogo, sin ninguna nota mía. Cada fila es una película o serie disponible en plataformas.</p>
-      <div class="table-wrap"><table class="plain">
-        <tr><th>Grupo</th><th>Variables</th></tr>
-        <tr><td>Formato</td><td>Serie o película, cantidad de temporadas</td></tr>
-        <tr><td>Duración y año</td><td>Minutos (o por episodio), año de estreno</td></tr>
-        <tr><td>Géneros</td><td>Un indicador por género (los de series llevados al vocabulario de películas)</td></tr>
-        <tr><td>Director</td><td>Nota promedio de sus otros títulos, cantidad de títulos en el catálogo</td></tr>
-        <tr><td>Elenco</td><td>Nota promedio de los otros títulos de los 5 primeros del reparto, popularidad y trayectoria</td></tr>
-        <tr><td>Guion, música y fotografía</td><td>Nota promedio de los otros títulos de guionistas, compositor y director de fotografía</td></tr>
-        <tr><td>Plataformas</td><td>En cuáles de las 12 más frecuentes está, y en cuántas</td></tr>
-        <tr><td>Sinopsis</td><td>Su largo</td></tr>
-      </table></div>
-      <span class="src">Fuente: 02_data_preparation/prepare_titles.py · la popularidad y los votos del título quedan fuera del análisis principal: dependen de la nota</span>
     </div>
   </section>
 
-<section id="resultados" aria-labelledby="h-resultados">
+  <!-- ================= LOS MODELOS ================= -->
+  <section id="resultados" aria-labelledby="h-resultados">
     <p class="phase-tag">Fase 03 · Modelar</p>
     <h2 class="part" id="h-resultados">Los modelos</h2>
-    <p class="part-sub">Se compararon nueve modelos contra la regla más simple: la nota de IMDb reescalada a tu forma de puntuar.</p>
+    <p class="part-sub">Los resultados completos del análisis, en datos que el modelo no vio.</p>
+
     <div class="verdict">
-      <h2>Ningún modelo le gana a la nota de IMDb con evidencia suficiente</h2>
-      <p>La base es la nota de IMDb reescalada a tu forma de puntuar. Los mejores modelos bajan el error en unas 0,05 a 0,06 puntos, pero el intervalo de confianza incluye el cero, y con 127 notas solo se detectarían mejoras de 0,11 puntos o más.</p>
-      <div class="stats">
-        <div class="stat"><b id="s-base"></b><span>error medio de la base (IMDb calibrada)</span><span class="src">robustness_comparison.csv</span></div>
-        <div class="stat"><b id="s-best"></b><span id="s-best-l"></span><span class="src">robustness_comparison.csv</span></div>
-        <div class="stat"><b>0,11</b><span>mejora mínima detectable con 127 notas (80 % de poder)</span><span class="src">make robust · poder estadístico</span></div>
-        <div class="stat"><b>22 %</b><span>de las mezclas al azar igualan o superan al Ridge simple</span><span class="src">make robust · control de permutación</span></div>
+      <h2>Con miles de títulos, la nota pública sí se puede predecir</h2>
+      <p>La respuesta es la nota de TMDB. Las variables son el formato, la duración, el año, los géneros, el director, el elenco, el equipo, las plataformas y el largo de la sinopsis.</p>
+      <p id="m-cast"></p>
+      <div class="stats" id="m-stats"></div>
+    </div>
+
+    <div class="sect">
+      <h3>Qué variables pesan más</h3>
+      <p>Cuánto empeora la predicción al mezclar al azar cada grupo de variables en datos nuevos (barra azul) y cuánto empeora si el modelo nunca lo ve (barra gris). Cuando las dos difieren mucho, ese grupo comparte información con otros: por ejemplo, el formato "pesa" al mezclarlo, pero casi nada al sacarlo, porque la duración y los géneros ya lo delatan.</p>
+      <div class="chart" id="m-imp" role="img" aria-label="Importancia de cada grupo de variables"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Al mezclarlo en datos nuevos</span><span><i style="background:var(--line-strong)"></i>Al sacarlo del modelo</span></div>
+      <span class="src">Fuente: drivers_results.json · caída del R²</span>
+    </div>
+
+    <div class="sect">
+      <h3>Qué sube y qué baja la nota</h3>
+      <p>Efecto de cada variable manteniendo las demás iguales, en puntos de nota, con su intervalo de confianza del 95 %.</p>
+      <div class="chart" id="m-eff" role="img" aria-label="Efectos ajustados en puntos de nota"></div>
+      <span class="src">Fuente: regresión con 300 remuestreos · 03_modeling/drivers_model.py</span>
+    </div>
+
+    <div class="sect" id="m-actors" hidden>
+      <h3>Elenco: ¿qué actores se asocian con mejores notas?</h3>
+      <p id="m-actors-sub"></p>
+      <div class="two">
+        <div><div class="label">Mejor de lo esperable</div><div class="table-wrap"><table class="plain" id="m-act-top"></table></div></div>
+        <div><div class="label">Peor de lo esperable</div><div class="table-wrap"><table class="plain" id="m-act-bot"></table></div></div>
       </div>
+      <p class="note-box">Es una asociación, no un efecto del actor: pueden elegir bien sus proyectos, o ser parte de proyectos que ya iban a salir bien. Con 10 títulos por actor el azar pesa, y por eso conviene mirar la diferencia junto a su margen de error.</p>
+      <span class="src">Fuente: 03_modeling/drivers_model.py · diferencia entre la nota real y la que predice un modelo sin elenco, fuera de muestra</span>
     </div>
 
     <div class="sect">
-      <h3>Cada modelo contra IMDb</h3>
-      <p>Diferencia de error medio contra la base, con su intervalo de confianza del 95 %. Si la barra cruza la línea del cero, no hay evidencia de que el modelo sea mejor.</p>
-      <div class="chart" id="forest" role="img" aria-label="Diferencia de error medio de cada modelo contra la nota de IMDb calibrada, con intervalo de confianza"></div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>Intervalo de confianza 95 %</span><span>Punto: diferencia media. A la izquierda del cero, mejor que IMDb.</span></div>
-    </div>
-
-    <div class="sect">
-      <h3>Los números de cada modelo</h3>
-      <p>Validación cruzada de 5 folds repetida 10 veces. Cada predicción es sobre un título que el modelo no vio.</p>
-      <div class="table-wrap"><table id="tbl"></table></div>
-      <span class="src">Fuente: data/03_modeling/robustness_comparison.csv · MAE y RMSE: menor es mejor · Spearman y AUC: mayor es mejor</span>
-      <p class="note-box">El Spearman y el AUC negativos o bajos de "Media de tu nota" son un efecto de la validación cruzada: el promedio calculado sin el título se mueve en sentido contrario a su nota. No indican una señal real.</p>
-    </div>
-
-    <div class="sect">
-      <h3>¿Mejora el modelo al sumar datos?</h3>
-      <p>Error medio sobre 25 títulos reservados, entrenando con cada vez más títulos (25 repeticiones, banda de ±1 error estándar).</p>
-      <div class="chart" id="lc" role="img" aria-label="Curva de aprendizaje del error medio según la cantidad de títulos de entrenamiento"></div>
-      <div class="legend" id="lc-leg"></div>
-      <span class="src">Fuente: make robust · curva de aprendizaje repetida</span>
-    </div>
-
-    <div class="sect">
-      <h3>El modelo entrenado, con una sola validación</h3>
-      <p>La comparación estándar de <code>make eval</code>, con una validación cruzada de 5 folds. Es más ruidosa que la prueba de arriba.</p>
-      <div class="table-wrap"><table>
-        <tr><th>Regresión (nota)</th><th>MAE</th><th>RMSE</th><th>±1</th></tr>
-        <tr><td>Media de tu nota</td><td>1,31</td><td>1,73</td><td>39 %</td></tr>
-        <tr><td>Regla fija: IMDb + media del desvío</td><td>1,30</td><td>1,69</td><td>51 %</td></tr>
-        <tr><td>Ridge (nota directa)</td><td>1,50</td><td>1,99</td><td>43 %</td></tr>
-        <tr><td>RandomForest (nota directa)</td><td>1,34</td><td>1,77</td><td>49 %</td></tr>
-        <tr><td>Ridge (desvío)</td><td>1,48</td><td>1,98</td><td>43 %</td></tr>
-        <tr class="base"><td>RandomForest (desvío), el modelo guardado</td><td>1,23</td><td>1,65</td><td>50 %</td></tr>
-      </table></div>
-      <div class="table-wrap"><table>
-        <tr><th>Clasificación ("nota ≥ 7", 45 % de positivos)</th><th>Accuracy</th><th>Balanced acc.</th><th>AUC</th></tr>
-        <tr><td>Baseline (siempre "sí")</td><td>0,55</td><td>0,50</td><td>0,50</td></tr>
-        <tr><td>Regresión logística</td><td>0,57</td><td>0,56</td><td>0,60</td></tr>
-        <tr class="base"><td>GradientBoosting, el modelo guardado</td><td>0,55</td><td>0,55</td><td>0,56</td></tr>
-      </table></div>
-      <span class="src">Fuente: make eval · assess_model.py, comparación estándar</span>
+      <h3>¿Aguanta otros recortes?</h3>
+      <div class="table-wrap"><table id="m-rob"></table></div>
+      <span class="src">Error medio: menor es mejor. Entre paréntesis, el error de predecir siempre el promedio.</span>
     </div>
 
     <div class="read">
       <div>
-        <h3>Cómo leerlo</h3>
+        <h3>Cuidados al interpretar</h3>
         <ul>
-          <li>La nota de IMDb sola, reescalada a tu forma de puntuar, ya es la mejor pista simple. La versión sin reescalar tiene un error de 1,67 solo porque puntuás más bajo que IMDb.</li>
-          <li>Esa pista es débil: ordena mejor que el azar (AUC 0,65), pero no alcanza para decidir sola.</li>
-          <li>Los dos mejores modelos se eligieron entre nueve. Esa ventaja aparente está inflada por la selección.</li>
+          <li><b>Sesgo de selección.</b> El catálogo son los títulos disponibles en plataformas. La diferencia entre series y películas refleja en parte cómo vota la gente cada formato, no una calidad intrínseca.</li>
+          <li><b>Correlación, no causa.</b> Que los documentales tengan mejor nota no significa que filmar uno mejore una película.</li>
+          <li><b>En series casi no se predice.</b> Sus notas son más parejas y estas variables no alcanzan.</li>
+          <li><b>La popularidad del elenco es un indicador flojo.</b> La de un actor sube con sus estrenos recientes, así que en parte se parece a la popularidad del título.</li>
         </ul>
       </div>
       <div>
-        <h3>Lo que no se afirma</h3>
+        <h3>Lo que falta</h3>
         <ul>
-          <li>Que ningún modelo pueda ganarle a IMDb. Con 127 notas, una mejora de 0,05 no se puede ni descartar ni confirmar.</li>
-          <li>Cuántas notas harían falta para lograrlo. La curva de aprendizaje se acerca a IMDb pero no la cruza, y extrapolar sería adivinar.</li>
+          <li>Presupuesto, premios, marketing y fecha de estreno exacta, que podrían explicar parte de la nota.</li>
+          <li>Probar con otros universos de títulos, no solo los disponibles en plataformas.</li>
         </ul>
       </div>
     </div>
-
-    <footer class="proy-foot">
-      <p>Datos: 127 títulos puntuados (126 con nota de IMDb), corrida del 12/11/2026. Se generan con <code>make robust</code> y <code>make eval</code>; la tabla completa está en <code>data/03_modeling/robustness_comparison.csv</code> y la lectura en <code>04_evaluation/evaluation.md</code>.</p>
-    </footer>
   </section>
 
-
   <section class="invite" aria-labelledby="h-invite">
-    <h2 class="part" id="h-invite">Lo que quedó: tu número</h2>
-    <p class="part-sub">Como ningún modelo mejoró la regla simple, la web te da esa regla: la nota de IMDb más tu número. Cargá tus notas y calculalo.</p>
-    <a class="btn btn--hero" href="numero.html">Conocé tu número</a>
+    <h2 class="part" id="h-invite">Reproducilo</h2>
+    <p class="part-sub">El código y los datos están en el repositorio. Con una clave gratuita de la API de TMDB se vuelve a correr todo.</p>
+    <pre class="cmd">make drivers   # prepara los datos y entrena los modelos
+make results   # deja los números listos para esta página</pre>
+    <a class="btn btn--hero" href="https://github.com/nachomondino1/recommend_movie" target="_blank" rel="noopener">Ver el código en GitHub</a>
   </section>
 </main>
 
