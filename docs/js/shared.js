@@ -19,7 +19,7 @@ const typeLabel = (r) => (r.Type === "Movie" ? "Película" : "Serie");
 
 function colorFor(v) {
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
-  return `hsl(${t * 120}, 56%, 36%)`;
+  return `hsl(${t * 120}, 40%, 33%)`;
 }
 
 function poster(r, size, cls) {
@@ -28,13 +28,13 @@ function poster(r, size, cls) {
     : `<div class="${cls}"></div>`;
 }
 
-// ¿Ya cargó sus archivos? (entonces se habilitan Qué ver y Mi perfil; las plataformas se eligen en Qué ver)
+// ¿Ya cargó sus archivos? (entonces se habilitan Qué ver y Mis puntuaciones; las plataformas se eligen en Qué ver)
 const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
 const NAV = [
   { id: "que-ver", href: "que-ver.html", label: "Qué ver", needsProfile: true },
-  { id: "mi-gusto", href: "mi-gusto.html", label: "Mi perfil", needsProfile: true },
+  { id: "mi-gusto", href: "mi-gusto.html", label: "Mis puntuaciones", needsProfile: true },
 ];
 
 function syncNavHeight() {
