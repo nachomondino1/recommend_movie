@@ -165,7 +165,7 @@ section[id] { scroll-margin-top: var(--nav-h); }
 #pasos, #resultados { scroll-margin-top: calc(var(--nav-h) + 8px); }
 
 /* Hero claro: la foto va en escala de grises y muy tenue sobre el fondo de la página (sin el rojo) */
-.hero { position: relative; display: flex; align-items: center; min-height: calc(70vh - var(--nav-h)); min-height: calc(70svh - var(--nav-h));
+.hero { position: relative; display: flex; align-items: center; min-height: calc(100vh - var(--nav-h)); min-height: calc(100svh - var(--nav-h));
   padding: 48px 24px 72px; color: var(--ink); background: var(--bg); overflow: hidden; }
 .hero::before { content: ""; position: absolute; inset: 0; background: url("../media/hero.jpg") center / cover no-repeat;
   filter: grayscale(1) contrast(1.1); opacity: .32; }
@@ -363,3 +363,9 @@ input[type=search] { min-height: 52px; padding: 12px 18px 12px 46px; border-radi
 .lg--ref { width: 16px; height: 3px; border-radius: 2px; background: var(--muted); }
 .histo-ref { height: 3px; }
 .histo-legend { margin-bottom: 14px; } .histo { padding-top: 26px; height: 210px; }
+
+/* ---- Navegación entre páginas: el menú queda quieto y solo cambia el contenido (View Transitions entre documentos) ---- */
+@view-transition { navigation: auto; }
+.top { view-transition-name: site-nav; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
