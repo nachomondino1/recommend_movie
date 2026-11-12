@@ -26,5 +26,5 @@ Lo que hace el sitio (`docs/js/profile.js` arma los datos y `docs/js/pages/que-v
 El análisis de gusto (`docs/js/taste.js`) es solo estadística descriptiva de tus notas: promedios por género y
 director, y cuánto te separás de la nota de IMDb.
 
-El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/model.py`) sigue en este
+El modelo entrenado del proyecto personal (RandomForest sobre el desvío vs. IMDb, `03_modeling/build_model.py`) sigue en este
 mismo directorio y se documenta en [`modeling.md`](modeling.md).

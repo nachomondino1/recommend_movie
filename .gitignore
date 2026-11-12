@@ -16,14 +16,14 @@ __pycache__/
 # Credenciales
 .env
 
-# Caché de TMDB (regenera src/data.py)
-data/cache/
-
 # Modelos entrenados (regenera src/model.py)
 models/
 
-# Gráficos y CSVs locales
-outputs/
+# Salidas generadas por fase (gráficos y puntuaciones; se regeneran). Se versionan metrics_history.csv y robustness_comparison.csv
+data/01_data_understanding/exploration/
+data/03_modeling/*.png
+data/03_modeling/*_scored.csv
+data/05_deployment/
 
 # Worktrees sueltos de Claude Code (sesiones con aislamiento por worktree)
 .claude/worktrees/

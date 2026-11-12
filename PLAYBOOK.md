@@ -38,12 +38,12 @@ Todo archivo del proyecto cae en una de tres categorías. Confundirlas es el
 error más común al arrancar:
 
 1. **Fuente de verdad, versionada.** Los CSV que el usuario edita a mano o
-   re-exporta (`data/ratings.csv`, `data/watchlist.csv` en este proyecto).
+   re-exporta (`data/01_data_understanding/imdb/ratings.csv` y `watchlist.csv` en este proyecto).
    Chicos, legibles, versionados en git porque son el único dato que no se
    puede regenerar.
 2. **Derivado, regenerable, gitignored.** Todo lo que sale de correr el
-   pipeline sobre (1): caché de la API externa (`data/cache/`), modelos
-   entrenados (`models/`), CSVs/gráficos de salida (`outputs/`). Si se borra
+   pipeline sobre (1): caché de la API externa (JSON crudo en `data/01_data_understanding/`, tablas en `data/02_data_preparation/`), modelos
+   entrenados (`models/`), CSVs/gráficos de salida (`data/<fase>/`, junto a lo que entra en esa fase). Si se borra
    la carpeta entera, `make update` la reconstruye. Por eso nunca va a git.
 3. **Código + docs.** `src/`, `Makefile`, `docs/` (si hay narrativa del
    proyecto). Versionado, obviamente.
@@ -52,7 +52,7 @@ Regla rápida para decidir dónde va algo nuevo: **¿se puede recalcular
 corriendo el pipeline sobre los CSV de (1)?** Si sí, va gitignored en (2).
 Si no — es un dato que el usuario aportó y no existe en ningún otro lado —
 va versionado en (1), aunque sea un CSV chiquito nuevo (ejemplo real: cuando
-se agregó "marcar como no me interesa", se creó `data/excluded.csv`
+se agregó "marcar como no me interesa", se creó `data/01_data_understanding/imdb/excluded.csv`
 versionado, no una columna derivada).
 
 ## Los módulos de `src/` (uno por responsabilidad)
@@ -68,7 +68,7 @@ para debuggear. El `Makefile` los encadena en el orden correcto.
   Todo lo demás importa de aquí, nunca hardcodea un path.
 - **`data.py`** — carga de los CSV fuente + **cliente de la API externa**.
   El cliente:
-  - cachea cada respuesta en disco, un archivo por entidad (`data/cache/tmdb/{id}.json`
+  - cachea cada respuesta en disco, un archivo por entidad (`data/01_data_understanding/tmdb/titles/{id}.json`
     en este proyecto), clave estable (el id externo, no el nombre).
   - antes de pedir, mira si ya está cacheado — si sí, no vuelve a pegarle a
     la API.
@@ -85,14 +85,18 @@ para debuggear. El `Makefile` los encadena en el orden correcto.
   (para predecir algo que no está en ningún CSV todavía). Ambas delegan a un
   `_engineer()` privado compartido — si la lógica de features vive en dos
   lugares separados, en algún momento se desincroniza.
-- **`pipeline.py`** — el pipeline de sklearn (o la librería que sea) **en su
-  propio módulo**, separado de `model.py`. Motivo concreto: si el pipeline
-  tiene una clase custom (un transformer, un encoder) y vive en el mismo
-  módulo que se ejecuta como `__main__`, el pickle del modelo guardado no se
-  puede cargar después (`pickle` necesita poder importar la clase por su
-  módulo real). Separarlo evita este bug, que es silencioso hasta que
-  alguien intenta cargar el modelo desde otro script.
-- **`model.py`** — `fit_and_save()` (entrena, guarda modelo(s) +
+- **`test_design.py`** (CRISP-DM *Generate test design*) — lo que define qué es un
+  buen resultado: el objetivo ("me gustó" = nota >= 7), la validación cruzada
+  sembrada, las **bases a superar** (promedio; la nota de IMDb *calibrada* a la
+  escala del usuario, no la cruda), las métricas y el bootstrap pareado. Lo
+  importan los otros dos, así entrenar y comparar usan las mismas reglas.
+- **`build_model.py`** (*Build model*) — el pipeline de sklearn, entrenar y guardar,
+  puntuar y predecir. Si el pipeline tiene una clase custom (un transformer) y el
+  archivo se ejecuta como `__main__`, el pickle del modelo guardado no se puede
+  cargar después (`pickle` necesita importar la clase por su módulo real). Solución
+  sin separar en otro archivo: el bloque final hace `import build_model;
+  build_model.main()`, así la clase queda registrada bajo `build_model`.
+  También: `fit_and_save()` (entrena, guarda modelo(s) +
   metadata + una fila en un historial de métricas versionado) y
   `load_models()` con **re-train perezoso**: compara el `mtime` del CSV
   fuente contra el `mtime` del modelo guardado, y si el CSV es más nuevo,
@@ -100,13 +104,16 @@ para debuggear. El `Makefile` los encadena en el orden correcto.
   paso separado — pasa automáticamente la primera vez que algo pide el
   modelo después de haber editado los datos. También vive aquí el scoring:
   aplicar el modelo ya entrenado a datos nuevos y guardar el CSV de salida.
+- **`assess_model.py`** (*Assess model*) — comparar modelos, curva de aprendizaje,
+  trayectoria real de métricas y la prueba de robustez (CV repetida, IC por
+  bootstrap, control de permutación, poder estadístico).
 - **`dashboard.py`** — genera **un solo HTML autocontenido**: los datos de
   salida se vuelcan como JSON embebido dentro del `<script>` del HTML, JS
   vanilla sin build step ni librerías pesadas. No hay servidor ni API en
   runtime — el HTML ya tiene todo adentro. Esto es lo que hace que
   "publicar" sea trivial (copiar un archivo a `docs/`) y que GitHub Pages
   alcance sin backend.
-- **Módulos de "curación" chicos** (`curate.py`, `review.py` en este
+- **Módulos de "curación" chicos** (`curate.py` en este
   proyecto) — comandos de una línea para que el usuario anote su propio
   dataset sin editar CSVs a mano: resuelven el nombre/id contra la misma API
   externa que ya usa `data.py` (reusar el cliente, no duplicar lógica de
@@ -120,7 +127,7 @@ Makefile). Convención de targets que funcionó bien:
 ```makefile
 setup:    # venv + pip install + copiar .env.example -> .env (una vez)
 update:   # data -> model -> (catálogo/scoring extra) -> dashboard, en ese orden
-eval:     # diagnósticos (métricas, curva de aprendizaje) sin tocar outputs de producción
+eval:     # diagnósticos (métricas, curva de aprendizaje) sin tocar las salidas de producción
 predict:  # ad-hoc, una entidad suelta por nombre, sin pasar por CSV
 publish:  # git add docs/ + commit + push (deploy = commit a main con Pages apuntando a /docs)
 ```
@@ -147,10 +154,10 @@ asumir que está comprometido y pedirle que lo regenere.
 4. Armar `config.py` con los paths antes que nada — evita el reflejo de
    hardcodear paths en cada módulo.
 5. `data.py` (carga + cliente con caché) → `features.py` (`build()` +
-   `build_row()`) → `pipeline.py` → `model.py` (`fit_and_save()` +
-   `load_models()` con re-train perezoso) → `dashboard.py`.
+   `build_row()`) → `test_design.py` → `build_model.py` (`fit_and_save()` +
+   `load_models()` con re-train perezoso) → `assess_model.py` → `dashboard.py`.
 6. `Makefile` con `setup`/`update`/`publish` como mínimo.
-7. `.gitignore`: todo lo de la categoría 2 (cache, models, outputs, venv,
+7. `.gitignore`: todo lo de la categoría 2 (cache, models, salidas por fase, venv,
    .env) desde el primer commit, antes de que algo pesado se cuele al repo.
 
 ## Lecciones operativas (no son del dominio, son de cómo trabajar)
@@ -161,7 +168,7 @@ asumir que está comprometido y pedirle que lo regenere.
   otra sesión editando el mismo archivo en vivo. Coordinar por `SendMessage`
   en vez de pisar a ciegas.
 - **Probar el dashboard generado** antes de dar por terminada una fase:
-  regenerar solo el HTML (no todo `make update`) si los CSV de `outputs/`
+  regenerar solo el HTML (no todo `make update`) si los CSV de `data/03_modeling/`
   ya existen, abrirlo en el browser pane, probar explícitamente en mobile
   (375px) y no solo desktop — la mayoría de los bugs de layout en este tipo
   de dashboard aparecen solo en mobile.

@@ -9,7 +9,7 @@ requests a la API (total y por endpoint), cuántos títulos cambiaron, nuevos, e
     python3 ... --top 800 --providers 25      # más profundo (más requests)
     python3 ... --dry-run                     # muestra qué cambiaría, sin escribir nada
 
-Necesita TMDB_TOKEN en .env. Salida: data/01_data_understanding/tmdb_titles.jsonl (una fila
+Necesita TMDB_TOKEN en .env. Salida: data/01_data_understanding/tmdb/tmdb_titles.jsonl (una fila
 por título), tmdb_providers.json y tmdb_genres.json. El catálogo del sitio se arma en la
 fase 2 (02_data_preparation/build_catalog.py).
 """

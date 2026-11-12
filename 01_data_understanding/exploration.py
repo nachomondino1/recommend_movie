@@ -3,7 +3,7 @@ CRISP-DM: Data Understanding - análisis exploratorio (one-off).
 
     python 01_data_understanding/exploration.py
 
-Imprime un resumen y guarda 3 gráficos en outputs/. Las conclusiones están en
+Imprime un resumen y guarda 3 gráficos en data/01_data_understanding/exploration/. Las conclusiones están en
 01_data_understanding/data_understanding.md; este script se conserva para poder rehacerlas.
 """
 
@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from config import OUTPUTS, RATINGS_CSV
+from config import PLOTS_DIR, RATINGS_CSV
 
 
 def load() -> pd.DataFrame:
@@ -64,7 +64,7 @@ def plots(df: pd.DataFrame) -> None:
     df["Your Rating"].plot.hist(bins=range(1, 12), rwidth=0.9, ax=ax)
     ax.set(title="Distribución de mis notas", xlabel="Your Rating")
     ax.set_xticks(range(1, 11))
-    fig.tight_layout(); fig.savefig(OUTPUTS / "01_hist_rating.png", dpi=120); plt.close(fig)
+    fig.tight_layout(); fig.savefig(PLOTS_DIR / "01_hist_rating.png", dpi=120); plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.scatter(df["IMDb Rating"], df["Your Rating"], alpha=0.6)
@@ -72,16 +72,16 @@ def plots(df: pd.DataFrame) -> None:
     ax.set(xlim=(0, 10), ylim=(0, 10), xlabel="IMDb Rating", ylabel="Mi Rating",
            title="Mi nota vs IMDb")
     ax.legend()
-    fig.tight_layout(); fig.savefig(OUTPUTS / "02_scatter_yo_vs_imdb.png", dpi=120); plt.close(fig)
+    fig.tight_layout(); fig.savefig(PLOTS_DIR / "02_scatter_yo_vs_imdb.png", dpi=120); plt.close(fig)
 
     g = df.assign(Genre=df["Genres"].str.split(", ")).explode("Genre")
     by_genre = g.groupby("Genre")["Your Rating"].mean().sort_values()
     fig, ax = plt.subplots(figsize=(7, max(4, 0.35 * len(by_genre))))
     by_genre.plot.barh(ax=ax)
     ax.set(title="Mi nota promedio por género", xlabel="Nota promedio")
-    fig.tight_layout(); fig.savefig(OUTPUTS / "03_nota_por_genero.png", dpi=120); plt.close(fig)
+    fig.tight_layout(); fig.savefig(PLOTS_DIR / "03_nota_por_genero.png", dpi=120); plt.close(fig)
 
-    print(f"\nGráficos en {OUTPUTS}/")
+    print(f"\nGráficos en {PLOTS_DIR}/")
 
 
 if __name__ == "__main__":

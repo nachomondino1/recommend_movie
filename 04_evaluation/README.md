@@ -1,6 +1,6 @@
 # Fase 4 — Evaluación
 
-**Proyecto personal:** `evaluate.py` compara modelos (CV), calcula la curva de aprendizaje, la trayectoria real de scores y los insights de reseñas (`make eval`).
+**Proyecto personal:** `03_modeling/assess_model.py` compara modelos (CV), calcula la curva de aprendizaje, la trayectoria real de scores y los insights de reseñas (`make eval`).
 
 **MVP público:** pendiente. Todavía no hay una forma de medir si la lista le sirve a alguien.
 

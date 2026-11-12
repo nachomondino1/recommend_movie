@@ -18,7 +18,7 @@ python3 -m http.server 8765
 ```
 
 Necesita un servidor (no abre con doble clic) porque el sitio carga `data/catalog.json`. Para probarlo con tus datos: elegí plataformas en
-el inicio y arrastrá `data/ratings.csv` y `data/watchlist.csv`.
+el inicio y arrastrá `data/01_data_understanding/imdb/ratings.csv` y `watchlist.csv`.
 
 **Actualizar el catálogo de películas y series** (recolecta de TMDB, arma `docs/data/catalog.json` y commitea en `staging`):
 
@@ -74,11 +74,11 @@ make explore     # análisis exploratorio (el sitio público se actualiza con ./
 | Comando | Qué hace |
 |---|---|
 | `make setup` | Crear venv e instalar dependencias (una sola vez). Después completar `TMDB_TOKEN` en `.env`. |
-| `make update` | `tmdb_data.py` (TMDB) → `model.py` (entrena + guarda + puntúa) → `catalog.py` → `dashboard.py` (HTML). |
+| `make update` | `tmdb_data.py` (TMDB, crudo) → `prepare_tmdb.py` (tabla) → `build_model.py` (entrena + guarda + puntúa) → `build_model.py catalog` → `dashboard.py` (HTML). |
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
-| `make review TITLE="X" TEXT="..."` | Guardar/actualizar tu reseña personal (texto libre) de un título. |
-| `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas. |
-| `make explore` | Análisis exploratorio (gráficos en `outputs/`). |
+| `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas (`assess_model.py`). |
+| `make robust` | Prueba de robustez (~80 s): ¿algún modelo le gana de verdad a la nota de IMDb? |
+| `make explore` | Análisis exploratorio (gráficos en `data/01_data_understanding/exploration/`). |
 
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
 en ambos casos es `make update`.
@@ -86,39 +86,39 @@ en ambos casos es `make update`.
 ## Estructura de carpetas
 
 ```
-data/
-  ratings.csv, watchlist.csv     exportaciones de IMDb (versionadas)
-  reviews.csv                     tu reseña personal por título (versionada; make review)
-  metrics_history.csv            scores CV por tamaño de dataset (versionado; crece con make update)
-  cache/                          TMDB json + tabla (regenerable, git-ignored)
+data/                              todo lo que entra y sale de cada fase, en la carpeta de su fase
+  01_data_understanding/
+    imdb/                        ratings.csv, watchlist.csv (exportaciones de IMDb) y reviews.csv
+    tmdb/                        JSON crudo de TMDB: titles/ (uno por título) y el catálogo del sitio (jsonl + json)
+    exploration/                 gráficos del análisis exploratorio (git-ignored)
+  03_modeling/                   puntuaciones (*_scored.csv), gráficos de evaluación y las métricas
+                                 (metrics_history.csv y robustness_comparison.csv se versionan)
+  05_deployment/                 dashboard personal generado (git-ignored)
+  02_data_preparation/           tablas ya preparadas: tmdb.csv, catalog.csv (regenerables, git-ignored)
 01_data_understanding/
   config.py      paths y carga de .env
-  tmdb_data.py   cargar CSVs + cliente TMDB + enriquecimiento (proyecto personal)
-  taste.py       resumen de tu gusto (por género, director, década)
-  curate.py      marcar como vista o "no me interesa" (make watched / make skip)
-  review.py      guardar tu reseña personal de un título (make review)
+  tmdb_data.py   cliente de TMDB + descarga del JSON crudo (recolectar, sin modificar)
   exploration.py análisis exploratorio (one-off)
   collect_initial_data/tmdb/   recolección del catálogo del MVP + refresh_log.md
 02_data_preparation/
+  prepare_tmdb.py  JSON crudo de TMDB -> tabla (format + integrate data)
   features.py    matriz de features (IMDb + TMDB); build() y build_row() (1 título)
+  curate.py      marcar como vista o "no me interesa" (make watched / make skip)
   build_catalog.py  catálogo del sitio público (MVP)
-03_modeling/
-  pipeline.py    definición del pipeline (preprocesado + estimadores)
-  model.py       entrenar/guardar, cargar, puntuar watchlist y lo ya visto
-  predict.py     nota predicha para un título por nombre (make predict)
-  catalog.py     descubre y puntúa títulos fuera de tu watchlist
-04_evaluation/
-  evaluate.py    comparación de modelos (CV), curva de aprendizaje, trayectoria, insights de reseñas
+03_modeling/                     las 3 tareas de modelado de CRISP-DM, un archivo cada una
+  test_design.py   Generate test design: objetivo (nota >= 7), CV, bases a superar, métricas, bootstrap
+  build_model.py   Build model: pipeline, entrenar/guardar, puntuar (watchlist, vistos, catálogo), predecir un título
+  assess_model.py  Assess model: comparar modelos, curva de aprendizaje, trayectoria y prueba de robustez
+  models/          modelos entrenados (git-ignored)
+04_evaluation/     narrativa de la evaluación contra los criterios de éxito (evaluation.md)
 05_deployment/
-  dashboard.py   generar el dashboard personal (outputs/ + archive/dashboard_personal.html, no se publica)
+  dashboard.py   generar el dashboard personal (data/05_deployment/, no se publica)
 docs/            el sitio publicado por Pages: HTML + css/ + js/ + data/ + media/ (sin .md)
-models/          modelos entrenados (git-ignored)
-outputs/         gráficos y CSVs locales (git-ignored)
 ```
 
 La metodología sigue CRISP-DM; cada fase está documentada y tiene su código en la carpeta numerada de su fase
 (`00_business_understanding/` … `05_deployment/`, con la narrativa del proyecto personal en `<fase>.md` y el README del MVP). Cada script se puede correr directo
-(`python 03_modeling/model.py`) o con `make`.
+(`python 03_modeling/build_model.py`) o con `make`.
 
 ## Estado actual
 
