@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from config import RATINGS_CSV, WATCHLIST_CSV
-from tmdb_data import tmdb_table
+from prepare_tmdb import tmdb_table
 
 TOP_LANGS = 4
 

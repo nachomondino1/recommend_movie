@@ -2,7 +2,7 @@
 PY := ./venv/bin/python
 PORT ?= 8765
 
-.PHONY: help serve sync setup update eval explore predict watched skip review
+.PHONY: help serve sync setup update eval robust explore predict watched skip
 
 help:
 	@echo "make serve                        - correr el sitio en local: http://localhost:$(PORT)  (PORT=9000 para otro puerto)"
@@ -10,13 +10,13 @@ help:
 	@echo "make setup                        - crear venv e instalar dependencias (una vez)"
 	@echo "make update                       - re-enriquecer TMDB, re-entrenar, re-puntuar y regenerar el dashboard"
 	@echo "make predict TITLE=\"X\"            - nota predicha para un título por nombre"
-	@echo "make watched TITLE=\"X\" RATING=N   - marcar como vista y puntuada (agrega a data/ratings.csv)"
+	@echo "make watched TITLE=\"X\" RATING=N   - marcar como vista y puntuada (agrega a data/01_data_understanding/imdb/ratings.csv)"
 	@echo "make skip TITLE=\"X\"               - marcar 'no me interesa' (se saca del dashboard sin puntuar)"
-	@echo "make review TITLE=\"X\" LIKED=\"...\" DISLIKED=\"...\" - guardar tu reseña (qué te gustó / qué no)"
 	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria + reseñas"
-	@echo "make explore                      - análisis exploratorio (gráficos en outputs/)"
+	@echo "make robust                       - prueba de robustez: ¿algún modelo le gana a la nota de IMDb? (~80 s)"
+	@echo "make explore                      - análisis exploratorio (gráficos en data/01_data_understanding/exploration/)"
 	@echo
-	@echo "Flujo habitual: actualizás data/ratings.csv o data/watchlist.csv -> make update (el dashboard queda en archive/dashboard_personal.html)"
+	@echo "Flujo habitual: actualizás los CSV de data/01_data_understanding/imdb/ -> make update (el dashboard queda en data/05_deployment/)"
 
 serve:
 	@echo "Sitio en http://localhost:$(PORT)  (Ctrl+C para frenarlo)"
@@ -33,25 +33,26 @@ setup:
 
 update:
 	$(PY) 01_data_understanding/tmdb_data.py
-	$(PY) 03_modeling/model.py
-	$(PY) 03_modeling/catalog.py
+	$(PY) 02_data_preparation/prepare_tmdb.py
+	$(PY) 03_modeling/build_model.py
+	$(PY) 03_modeling/build_model.py catalog
 	$(PY) 05_deployment/dashboard.py
 
 predict:
-	@$(PY) 03_modeling/predict.py "$(TITLE)"
+	@$(PY) 03_modeling/build_model.py predict "$(TITLE)"
 
 watched:
-	@$(PY) 01_data_understanding/curate.py watched "$(TITLE)" "$(RATING)"
+	@$(PY) 02_data_preparation/curate.py watched "$(TITLE)" "$(RATING)"
 
 skip:
-	@$(PY) 01_data_understanding/curate.py skip "$(TITLE)"
-
-review:
-	@$(PY) 01_data_understanding/review.py "$(TITLE)" --liked "$(LIKED)" --disliked "$(DISLIKED)"
+	@$(PY) 02_data_preparation/curate.py skip "$(TITLE)"
 
 eval:
-	$(PY) 03_modeling/model.py
-	$(PY) 04_evaluation/evaluate.py
+	$(PY) 03_modeling/build_model.py
+	$(PY) 03_modeling/assess_model.py
+
+robust:
+	$(PY) 03_modeling/assess_model.py --only-robust
 
 explore:
 	$(PY) 01_data_understanding/exploration.py

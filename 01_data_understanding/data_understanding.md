@@ -3,10 +3,10 @@
 ## Fuentes
 | Archivo | Filas | Descripción |
 |---|---|---|
-| `data/ratings.csv` | 126 | Exportación de IMDb: títulos vistos y puntuados. Columna objetivo: `Your Rating`. |
-| `data/watchlist.csv` | ~172 | Exportación de IMDb: títulos por ver (sin nota). Es el set sobre el que se predice al final. |
-| `data/cache/tmdb/*.json` | ~288 | Detalle crudo de TMDB por título (caché). |
-| `data/cache/tmdb.csv` | ~288 | Campos de TMDB aplanados: sinopsis, keywords, elenco, director, idioma, país, etc. |
+| `data/01_data_understanding/imdb/ratings.csv` | 126 | Exportación de IMDb: títulos vistos y puntuados. Columna objetivo: `Your Rating`. |
+| `data/01_data_understanding/imdb/watchlist.csv` | ~172 | Exportación de IMDb: títulos por ver (sin nota). Es el set sobre el que se predice al final. |
+| `data/01_data_understanding/tmdb/titles/*.json` | ~288 | Detalle crudo de TMDB por título (caché). |
+| `data/02_data_preparation/tmdb.csv` (tabla preparada) | ~288 | Campos de TMDB aplanados: sinopsis, keywords, elenco, director, idioma, país, etc. |
 
 ## Columnas de ratings.csv
 `Const` (id IMDb), `Your Rating` (1–10), `Date Rated`, `Title`, `Title Type`

@@ -1,11 +1,11 @@
 """
-CRISP-DM: Data Understanding + Data Preparation (parte 1).
+CRISP-DM · Comprensión de los datos (recolectar, SIN modificar): cliente de TMDB y descarga del JSON crudo.
 
-- Carga las exportaciones de IMDb (ratings.csv, watchlist.csv).
-- Enriquece cada título con datos de TMDB (sinopsis, keywords, elenco, director,
-  idioma, métricas) y los cachea en data/cache/.
+Acá solo se baja lo que TMDB devuelve para cada título de tus exportaciones de IMDb y se guarda tal cual
+(un JSON por título en data/01_data_understanding/tmdb/titles/). Aplanarlo a una tabla, limpiarlo y
+combinarlo es Preparación de datos: 02_data_preparation/prepare_tmdb.py.
 
-    python 01_data_understanding/tmdb_data.py          # descarga/actualiza data/cache/tmdb.csv
+    python 01_data_understanding/tmdb_data.py     # baja/actualiza el JSON crudo de cada título
 """
 
 import sys
@@ -16,35 +16,13 @@ sys.path[:0] = [str(d) for d in Path(__file__).resolve().parents[1].glob("0[1-5]
 
 import json
 import time
-from functools import lru_cache
 
-import numpy as np
 import pandas as pd
 import requests
 
-from config import (RATINGS_CSV, REVIEWS_CSV, TMDB_CSV, TMDB_DIR, TMDB_TOKEN,
-                        WATCHLIST_CSV)
+from config import RATINGS_CSV, TMDB_DIR, TMDB_TOKEN, WATCHLIST_CSV
 
 BASE = "https://api.themoviedb.org/3"
-TOP_CAST = 8
-
-
-# --------------------------------------------------------------------------- #
-# Carga de CSVs de IMDb
-# --------------------------------------------------------------------------- #
-def load_ratings() -> pd.DataFrame:
-    return pd.read_csv(RATINGS_CSV)
-
-
-def load_watchlist() -> pd.DataFrame:
-    return pd.read_csv(WATCHLIST_CSV)
-
-
-def load_reviews() -> pd.DataFrame:
-    """data/reviews.csv (Const, Title, Liked, Disliked, Date) -- vacío si no existe."""
-    if not REVIEWS_CSV.exists():
-        return pd.DataFrame(columns=["Const", "Title", "Liked", "Disliked", "Date"])
-    return pd.read_csv(REVIEWS_CSV)
 
 
 # --------------------------------------------------------------------------- #
@@ -55,7 +33,7 @@ class TMDBError(RuntimeError):
 
 
 class TMDBClient:
-    """find(imdb_id) -> detalle crudo, cacheado en data/cache/tmdb/{id}.json."""
+    """find(imdb_id) -> detalle crudo, cacheado en data/01_data_understanding/tmdb/titles/{id}.json."""
 
     def __init__(self, token: str = TMDB_TOKEN, pause: float = 0.05):
         if not token:
@@ -131,7 +109,7 @@ class TMDBClient:
 
     def discover(self, media_type: str, n: int, min_votes: int = 100) -> list[dict]:
         """IDs de /discover/{media_type} ordenados por popularidad, acotado a n
-        (usado por src/catalog.py para armar el catálogo ampliado, Fase 6)."""
+        (usado por build_model.py para armar el catálogo ampliado)."""
         out, page = [], 1
         while len(out) < n and page <= 20:
             res = self._get(f"/discover/{media_type}", page=page, sort_by="popularity.desc",
@@ -158,108 +136,22 @@ class TMDBClient:
 
 
 # --------------------------------------------------------------------------- #
-# Aplanado del JSON de TMDB a fila tabular
+# Recolección
 # --------------------------------------------------------------------------- #
-def _join(values, sep="|") -> str:
-    return sep.join(str(v) for v in values if v)
-
-
-def parse_detail(detail: dict) -> dict:
-    """Aplana el JSON crudo de TMDB a las columnas de data/cache/tmdb.csv."""
-    if not detail.get("tmdb_found"):
-        return {"imdb_id": detail.get("imdb_id"), "tmdb_found": False}
-
-    mt = detail.get("media_type")
-    credits = detail.get("credits", {})
-    cast = [c["name"] for c in credits.get("cast", [])[:TOP_CAST]]
-    if mt == "movie":
-        directors = [c["name"] for c in credits.get("crew", []) if c.get("job") == "Director"]
-        runtime = detail.get("runtime")
-    else:
-        directors = [p["name"] for p in detail.get("created_by", [])]
-        ert = detail.get("episode_run_time") or []
-        runtime = ert[0] if ert else None
-    kw = detail.get("keywords", {})
-    keywords = [k["name"] for k in (kw.get("keywords") or kw.get("results") or [])]
-
-    return {
-        "imdb_id": detail["imdb_id"],
-        "tmdb_found": True,
-        "media_type": mt,
-        "tmdb_title": detail.get("title") or detail.get("name"),
-        "overview": detail.get("overview") or "",
-        "tmdb_genres": _join(g["name"] for g in detail.get("genres", [])),
-        "keywords": _join(keywords),
-        "cast_top": _join(cast),
-        "director": _join(directors),
-        "tmdb_runtime": runtime,
-        "original_language": detail.get("original_language"),
-        "countries": _join(c["iso_3166_1"] for c in detail.get("production_countries", [])),
-        "tmdb_vote_average": detail.get("vote_average"),
-        "tmdb_vote_count": detail.get("vote_count"),
-        "tmdb_popularity": detail.get("popularity"),
-        "poster_path": detail.get("poster_path"),
-        "providers_flatrate": _join(detail.get("providers_flatrate_ar") or []),
-        "budget": detail.get("budget"),
-        "revenue": detail.get("revenue"),
-        "n_seasons": detail.get("number_of_seasons"),
-        "n_episodes": detail.get("number_of_episodes"),
-        "release_date": detail.get("release_date") or detail.get("first_air_date"),
-    }
-
-
-def imdb_like_fields(detail: dict, parsed: dict) -> dict:
-    """Aplana un detalle de TMDB a las columnas 'estilo IMDb' (Title, Year, Genres...)
-    para títulos que no vienen de una exportación real de IMDb: búsqueda por nombre
-    (src/predict.py) o catálogo ampliado (src/catalog.py, Fase 6)."""
-    date_ = detail.get("release_date") or detail.get("first_air_date") or ""
-    year = int(date_[:4]) if date_[:4].isdigit() else np.nan
-    return {
-        "Title": detail.get("title") or detail.get("name"),
-        "Title Type": "Movie" if detail.get("media_type") == "movie" else "TV Series",
-        "Year": year,
-        "IMDb Rating": np.nan,  # -> build()/_engineer() usa tmdb_vote_average como sustituto
-        "Runtime (mins)": parsed.get("tmdb_runtime"),
-        "Genres": (parsed.get("tmdb_genres") or "").replace("|", ", "),
-        "Num Votes": detail.get("vote_count"),
-    }
-
-
-# --------------------------------------------------------------------------- #
-# Orquestación
-# --------------------------------------------------------------------------- #
-def enrich(force: bool = False) -> pd.DataFrame:
-    """Resuelve todos los títulos de ratings + watchlist y escribe data/cache/tmdb.csv."""
-    ids = sorted(set(load_ratings()["Const"].dropna()) | set(load_watchlist()["Const"].dropna()))
+def collect_raw(force: bool = False) -> list[dict]:
+    """Resuelve todos los títulos de ratings + watchlist y devuelve el JSON crudo de cada uno
+    (lo baja si no está en la caché; no transforma nada)."""
+    ids = sorted(set(pd.read_csv(RATINGS_CSV)["Const"].dropna()) | set(pd.read_csv(WATCHLIST_CSV)["Const"].dropna()))
     client = TMDBClient()
     print(f"Títulos únicos a resolver: {len(ids)}")
-
-    rows, missing = [], []
+    raws = []
     for i, imdb_id in enumerate(ids, 1):
-        row = parse_detail(client.fetch(imdb_id, force=force))
-        rows.append(row)
-        if not row["tmdb_found"]:
-            missing.append(imdb_id)
+        raws.append(client.fetch(imdb_id, force=force))
         if i % 25 == 0 or i == len(ids):
             print(f"  {i}/{len(ids)}")
-
-    df = pd.DataFrame(rows)
-    df.to_csv(TMDB_CSV, index=False)
-    print(f"\nGuardado: {TMDB_CSV}  ({len(df)} filas)")
-    print(f"Sin match en TMDB: {len(missing)}  {missing or ''}")
-    for col in ("overview", "keywords", "cast_top", "director"):
-        n = (df[col].fillna("").astype(str).str.len() > 0).sum()
-        print(f"  cobertura {col:15s}: {n}/{len(df)}")
-    return df
-
-
-@lru_cache(maxsize=1)
-def tmdb_table() -> pd.DataFrame:
-    """data/cache/tmdb.csv como DataFrame (lo genera enrich() si falta)."""
-    if not TMDB_CSV.exists():
-        enrich()
-    return pd.read_csv(TMDB_CSV)
+    return raws
 
 
 if __name__ == "__main__":
-    enrich()
+    raws = collect_raw()
+    print(f"JSON crudo en {TMDB_DIR}  ({sum(1 for r in raws if r.get('tmdb_found'))}/{len(raws)} con match en TMDB)")

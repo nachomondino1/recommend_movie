@@ -1,10 +1,10 @@
 """
 CRISP-DM: Deployment - dashboard HTML de la watchlist puntuada.
 
-Lee outputs/watchlist_scored.csv (lo genera 03_modeling/model.py si falta) y escribe un HTML
+Lee data/03_modeling/watchlist_scored.csv (lo genera 03_modeling/build_model.py si falta) y escribe un HTML
 autocontenido (sin servidor, sin dependencias) en:
-    outputs/watchlist_dashboard.html  - copia local
-    archive/dashboard_personal.html   - copia guardada (NO se publica: docs/ es el sitio del MVP)
+    data/05_deployment/watchlist_dashboard.html  - copia local
+    docs/old_version/dashboard_personal.html   - copia guardada (git-ignored, no se publica)
 
     python 05_deployment/dashboard.py
 """
@@ -20,11 +20,69 @@ from datetime import date
 
 import pandas as pd
 
-from config import (CATALOG_SCORED_CSV, OUTPUTS, ROOT,
+from config import (CATALOG_SCORED_CSV, DEPLOY_DIR, RATINGS_CSV, ROOT,
                         SCORED_CSV, WATCHED_SCORED_CSV)
-from taste import build_taste_stats
+from prepare_tmdb import tmdb_table
 
-DESTS = [OUTPUTS / "watchlist_dashboard.html", ROOT / "archive" / "dashboard_personal.html"]
+DESTS = [DEPLOY_DIR / "watchlist_dashboard.html", ROOT / "docs" / "old_version" / "dashboard_personal.html"]
+
+# --- Resumen del gusto para el panel del dashboard (descriptivo, no predice) ---
+MIN_GENRE_N = 3
+MIN_DIRECTOR_N = 2
+TOP_DIRECTORS = 8
+TOP_TITLES = 5
+
+
+def _group_avg(df: pd.DataFrame, col: str, sep: str | None, min_n: int) -> list[dict]:
+    if sep:
+        exploded = df.assign(**{col: df[col].fillna("").str.split(sep)}).explode(col)
+        exploded[col] = exploded[col].str.strip()
+        exploded = exploded[exploded[col] != ""]
+    else:
+        exploded = df[df[col].fillna("") != ""]
+    g = exploded.groupby(col)["Your Rating"].agg(n="count", avg="mean")
+    g = g[g["n"] >= min_n].sort_values("avg", ascending=False)
+    return [{"label": label, "n": int(row["n"]), "avg": round(row["avg"], 2)}
+            for label, row in g.iterrows()]
+
+
+def _title_cards(df: pd.DataFrame, ascending: bool) -> list[dict]:
+    cols = ["Title", "Your Rating", "IMDb Rating", "Year", "Genres", "poster_path", "URL"]
+    picked = df.sort_values("Your Rating", ascending=ascending).head(TOP_TITLES)
+    return picked[cols].to_dict("records")
+
+
+def build_taste_stats() -> dict:
+    df = pd.read_csv(RATINGS_CSV)
+    df = df.merge(tmdb_table()[["imdb_id", "poster_path", "director"]],
+                  left_on="Const", right_on="imdb_id", how="left")
+    df["Directors"] = df["Directors"].fillna(df["director"])
+    df["type_label"] = df["Title Type"].where(df["Title Type"] == "Movie", "Serie")
+    df["decade"] = (df["Year"] // 10 * 10).astype("Int64").astype(str) + "s"
+
+    rating_counts = (df["Your Rating"].value_counts()
+                     .reindex(range(1, 11), fill_value=0).tolist())
+
+    by_decade = (df.groupby("decade")["Your Rating"].agg(n="count", avg="mean")
+                 .reset_index().sort_values("decade"))
+    by_decade["avg"] = by_decade["avg"].round(2)
+
+    return {
+        "n_rated": len(df),
+        "n_movies": int((df["Title Type"] == "Movie").sum()),
+        "n_series": int((df["Title Type"] != "Movie").sum()),
+        "mean_rating": round(df["Your Rating"].mean(), 2),
+        "median_rating": float(df["Your Rating"].median()),
+        "deviation_vs_imdb": round((df["Your Rating"] - df["IMDb Rating"]).mean(), 2),
+        "rating_counts": rating_counts,
+        "by_type": _group_avg(df, "type_label", sep=None, min_n=1),
+        "by_genre": _group_avg(df, "Genres", sep=", ", min_n=MIN_GENRE_N),
+        "by_director": _group_avg(df, "Directors", sep=None, min_n=MIN_DIRECTOR_N)[:TOP_DIRECTORS],
+        "by_decade": by_decade.to_dict("records"),
+        "top": _title_cards(df, ascending=False),
+        "bottom": _title_cards(df, ascending=True),
+    }
+
 
 TEMPLATE = """<!doctype html>
 <html lang="es">
@@ -572,8 +630,8 @@ function reviewSectionsHtml(r) {{
   if (!liked && !disliked) {{
     return `<div class="modal-review modal-review-empty">
       <div class="modal-section-label">Tu rese&ntilde;a</div>
-      <p>Todav&iacute;a no dejaste una rese&ntilde;a para este t&iacute;tulo.</p>
-      <code>make review TITLE="${{escapeHtml(r.Title)}}" LIKED="..." DISLIKED="..."</code></div>`;
+      <p>Todav&iacute;a no hay una rese&ntilde;a para este t&iacute;tulo.</p>
+      </div>`;
   }}
   const date = r.review_date ? `<div class="modal-review-date">${{r.review_date}}</div>` : "";
   return liked + disliked + date;
@@ -1050,7 +1108,7 @@ renderCatalog();
 
 def build_html() -> None:
     if not SCORED_CSV.exists():
-        from model import score_watchlist
+        from build_model import score_watchlist
         score_watchlist()
 
     df = pd.read_csv(SCORED_CSV)

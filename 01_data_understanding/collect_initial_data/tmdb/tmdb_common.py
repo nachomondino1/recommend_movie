@@ -17,9 +17,10 @@ ROOT = Path(__file__).resolve().parents[3]
 DATA_RAW = ROOT / "data" / "01_data_understanding"
 DATA_PREPARED = ROOT / "data" / "02_data_preparation"
 REFRESH_LOG = ROOT / "01_data_understanding" / "refresh_log.md"
-TITLES_JSONL = DATA_RAW / "tmdb_titles.jsonl"
-PROVIDERS_JSON = DATA_RAW / "tmdb_providers.json"
-GENRES_JSON = DATA_RAW / "tmdb_genres.json"
+TMDB_RAW = DATA_RAW / "tmdb"   # lo crudo de TMDB para el catálogo del sitio
+TITLES_JSONL = TMDB_RAW / "tmdb_titles.jsonl"
+PROVIDERS_JSON = TMDB_RAW / "tmdb_providers.json"
+GENRES_JSON = TMDB_RAW / "tmdb_genres.json"
 
 BASE = "https://api.themoviedb.org/3"
 

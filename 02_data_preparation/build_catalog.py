@@ -1,7 +1,7 @@
 """
 Fase 2 (CRISP-DM) - Preparación: arma el catálogo que consume el sitio.
 
-Lee data/01_data_understanding/tmdb_titles.jsonl (crudo, vocabulario de TMDB) y escribe
+Lee data/01_data_understanding/tmdb/tmdb_titles.jsonl (crudo, vocabulario de TMDB) y escribe
 docs/data/catalog.json: solo títulos con plataforma, géneros pasados al vocabulario de
 IMDb (para poder cruzarlos con las notas del usuario) y campos recortados al mínimo.
 
