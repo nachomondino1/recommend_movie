@@ -84,6 +84,20 @@ def build_data_description() -> dict:
     }
 
 
+def build_drivers() -> dict | None:
+    """Resultados de la versión "qué variables explican la nota pública de TMDB" (`make drivers`), solo agregados."""
+    f = MODELING_DIR / "drivers_results.json"
+    if not f.exists():
+        return None
+    d = json.loads(f.read_text())
+    keep = ("n", "n_movies", "n_tv", "min_votes", "rating_mean", "rating_sd", "performance", "importance", "robustness")
+    out = {k: d[k] for k in keep}
+    out["effects"] = d["effects"][:12]                      # los 12 efectos más grandes (ya vienen ordenados)
+    out["raw_by_genre"] = d["raw_by_genre"]
+    out["actors"] = d.get("actors")
+    return out
+
+
 def main() -> None:
     comp = pd.read_csv(MODELING_DIR / "robustness_comparison.csv")
     curve = pd.read_csv(MODELING_DIR / "robustness_learning_curve.csv")
@@ -91,7 +105,7 @@ def main() -> None:
           for name, g in curve.groupby("modelo", sort=False)}
     # NaN (la fila de la base no tiene diferencias contra sí misma) no es JSON válido: va como null
     comp_rows = json.loads(comp.to_json(orient="records", force_ascii=False))
-    OUT.write_text(json.dumps({"comp": comp_rows, "lc": lc, "data": build_data_description()}, ensure_ascii=False, indent=1))
+    OUT.write_text(json.dumps({"comp": comp_rows, "lc": lc, "data": build_data_description(), "drivers": build_drivers()}, ensure_ascii=False, indent=1))
     print(f"Guardado: {OUT}  ({len(comp_rows)} modelos, {len(lc)} curvas)")
 
 

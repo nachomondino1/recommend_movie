@@ -26,6 +26,9 @@ import pandas as pd
 from config import PREP_DIR
 
 RAW = Path(__file__).resolve().parents[1] / "data" / "01_data_understanding" / "tmdb" / "tmdb_titles.jsonl"
+CREDITS = RAW.with_name("credits.jsonl")      # lo baja 01_data_understanding/collect_initial_data/tmdb/fetch_credits.py
+TOP_N = 5                                    # cuántos del reparto cuentan como "elenco principal"
+STAR_POPULARITY = 15                         # un actor con más popularidad que esto en TMDB se cuenta como "conocido"
 OUT = PREP_DIR / "titles_features.csv"
 MIN_GENRE_N = 100       # un género entra como variable si tiene al menos tantos títulos
 N_PROVIDERS = 12        # plataformas más frecuentes que entran como variable
@@ -73,7 +76,28 @@ def build() -> pd.DataFrame:
     top = df["providers"].explode().value_counts().head(N_PROVIDERS).index
     for p in top:
         out[f"p_{p}"] = df["providers"].map(lambda ps, p=p: int(p in ps))
-    return out
+    return add_credits(out)
+
+
+def add_credits(out: pd.DataFrame) -> pd.DataFrame:
+    """Suma variables de elenco y equipo si ya se bajaron los créditos (fetch_credits.py)."""
+    if not CREDITS.exists():
+        return out
+    cr = pd.DataFrame(json.loads(line) for line in CREDITS.open())
+    out = out.merge(cr, on=["media_type", "tmdb_id"], how="left")
+    cast = out["cast"].map(lambda c: c if isinstance(c, list) else [])
+    top = cast.map(lambda c: c[:TOP_N])
+    # cuántos títulos tiene en el catálogo cada actor: una medida de trayectoria, sin mirar la nota
+    freq = pd.Series([a["id"] for c in top for a in c]).value_counts()
+    out["has_credits"] = cast.map(len).gt(0).astype(int)
+    out["cast_ids"] = top.map(lambda c: "|".join(str(a["id"]) for a in c))
+    out["cast_pop_mean"] = top.map(lambda c: np.mean([a["popularity"] or 0 for a in c]) if c else 0.0)
+    out["cast_pop_max"] = top.map(lambda c: max([a["popularity"] or 0 for a in c], default=0.0))
+    out["cast_n_stars"] = top.map(lambda c: sum((a["popularity"] or 0) >= STAR_POPULARITY for a in c))
+    out["cast_titles_mean"] = top.map(lambda c: np.mean([freq.get(a["id"], 0) for a in c]) if c else 0.0)
+    for col, name in [("writers", "writers_ids"), ("composers", "composers_ids"), ("cinematographers", "dop_ids")]:
+        out[name] = out[col].map(lambda l: "|".join(str(x["id"]) for x in l[:3]) if isinstance(l, list) else "")
+    return out.drop(columns=["cast", "writers", "composers", "cinematographers", "directors"], errors="ignore")
 
 
 if __name__ == "__main__":

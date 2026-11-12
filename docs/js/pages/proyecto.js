@@ -177,4 +177,67 @@ document.getElementById("s-best-l").textContent = `diferencia del mejor modelo (
     <li><b>Error típico: ±${fmt(D.mae, 1)}</b><span>No es un número exacto. Es la mejor pista simple que encontré.</span></li>`;
 })();
 
+// ---------- Segunda versión: qué variables explican la nota pública (catálogo de TMDB) ----------
+(function masDatos() {
+  const M = DATA && DATA.drivers;
+  if (!M) return;
+  const perf = M.performance.contenido, series = M.robustness.find((r) => r.label === "Solo series");
+  document.getElementById("m-stats").innerHTML = [
+    [fmt(M.n, 0), `películas y series con al menos ${fmt(M.min_votes, 0)} votos`, "drivers_results.json"],
+    [fmt(perf.r2, 2), "R²: parte de la variación de la nota que se explica", "validación cruzada"],
+    [`${fmt(perf.mae, 2)} contra ${fmt(perf.mae_base, 2)}`, "error medio contra predecir siempre el promedio", "validación cruzada"],
+    [series ? fmt(series.r2, 2) : "—", "R² solo en series: casi no se predice", "prueba de robustez"],
+  ].map(([b, l, src]) => `<div class="stat"><b>${b}</b><span>${l}</span><span class="src">${src}</span></div>`).join("");
+
+  // qué aportan el elenco y el equipo
+  const sin = M.performance["sin elenco ni equipo"], ab = (g) => (M.importance.find((o) => o.group === g) || {}).ablation_drop;
+  if (sin) {
+    const el = ab("Elenco"), eq = ab("Guion, música y fotografía");
+    document.getElementById("m-cast").textContent = `Sumar elenco y equipo mejora poco: el R² pasa de ${fmt(sin.r2, 2)} a ${fmt(perf.r2, 2)}. ` +
+      (el > 0.01 ? "El elenco aporta información propia. " : "El elenco no aporta mucho por sí solo. ") +
+      (eq <= 0.005 ? "El guion, la música y la fotografía no aportan nada que se distinga del ruido." : "El guion, la música y la fotografía aportan algo.");
+  }
+
+  // actores
+  if (M.actors) {
+    document.getElementById("m-actors").hidden = false;
+    document.getElementById("m-actors-sub").textContent = `Actores del elenco principal con al menos ${M.actors.min_titles} títulos en el catálogo (${fmt(M.actors.n_actors, 0)} actores). Se ordenan por cuánto mejor, o peor, es la nota de sus títulos de lo que se esperaría por formato, género, duración, año y plataformas.`;
+    const rows = (list) => `<tr><th>Actor</th><th>Títulos</th><th>Diferencia</th></tr>` + list.map((a) => `<tr><td>${a.name}</td><td>${a.n}</td><td>${sgn(a.resid, 2)} ± ${fmt(1.96 * a.se, 2)}</td></tr>`).join("");
+    document.getElementById("m-act-top").innerHTML = rows(M.actors.top);
+    document.getElementById("m-act-bot").innerHTML = rows(M.actors.bottom);
+  }
+
+  // importancia por grupo
+  const imp = M.importance, W = 760, rowH = 46, m = { l: 210, r: 60, t: 8, b: 8 }, H = m.t + m.b + rowH * imp.length;
+  const mx = Math.max(...imp.map((o) => Math.max(o.perm_drop, o.ablation_drop))), x = (v) => (v / mx) * (W - m.l - m.r);
+  let s = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">`;
+  imp.forEach((o, i) => {
+    const y = m.t + i * rowH;
+    s += `<text class="lab" x="${m.l - 12}" y="${y + 20}" text-anchor="end">${o.group}</text>`;
+    s += `<rect x="${m.l}" y="${y + 6}" width="${Math.max(x(o.perm_drop), 1)}" height="14" rx="3" fill="var(--accent)"/><text x="${m.l + x(o.perm_drop) + 6}" y="${y + 18}">${fmt(o.perm_drop, 2)}</text>`;
+    s += `<rect x="${m.l}" y="${y + 24}" width="${Math.max(x(Math.max(o.ablation_drop, 0)), 1)}" height="10" rx="3" fill="var(--line-strong)"/><text x="${m.l + x(Math.max(o.ablation_drop, 0)) + 6}" y="${y + 34}">${fmt(o.ablation_drop, 2)}</text>`;
+  });
+  document.getElementById("m-imp").innerHTML = s + "</svg>";
+
+  // efectos ajustados
+  const eff = [...M.effects].sort((a, b) => b.effect - a.effect), ew = 760, erow = 34, em = { l: 280, r: 24, t: 8, b: 40 };
+  const eh = em.t + em.b + erow * eff.length, lo = -0.6, hi = 1.5, ex = (v) => em.l + ((v - lo) / (hi - lo)) * (ew - em.l - em.r);
+  let e = `<svg viewBox="0 0 ${ew} ${eh}" aria-hidden="true">`;
+  [-0.5, 0, 0.5, 1, 1.5].forEach((t) => { e += `<line class="grid" x1="${ex(t)}" x2="${ex(t)}" y1="${em.t}" y2="${eh - em.b}"/><text x="${ex(t)}" y="${eh - em.b + 18}" text-anchor="middle">${t > 0 ? "+" : t < 0 ? "−" : ""}${fmt(Math.abs(t), 1)}</text>`; });
+  e += `<line class="zero" x1="${ex(0)}" x2="${ex(0)}" y1="${em.t}" y2="${eh - em.b}"/>`;
+  e += `<text x="${(em.l + ew - em.r) / 2}" y="${eh - 4}" text-anchor="middle">Puntos de nota (TMDB)</text>`;
+  eff.forEach((r, i) => {
+    const y = em.t + i * erow + erow / 2;
+    e += `<text class="lab" x="${em.l - 12}" y="${y + 4}" text-anchor="end">${r.var}</text>`;
+    e += `<line x1="${ex(r.lo)}" x2="${ex(r.hi)}" y1="${y}" y2="${y}" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>`;
+    e += `<circle cx="${ex(r.effect)}" cy="${y}" r="5.5" fill="var(--surface)" stroke="var(--accent)" stroke-width="2.5"/>`;
+    e += `<text x="${ex(r.hi) + 8}" y="${y + 4}">${sgn(r.effect, 2)}</text>`;
+  });
+  document.getElementById("m-eff").innerHTML = e + "</svg>";
+
+  // robustez
+  document.getElementById("m-rob").innerHTML = `<tr><th>Recorte</th><th>Títulos</th><th>R²</th><th>Error medio</th></tr>` +
+    [{ label: "Todo el catálogo (≥ 100 votos)", n: M.n, ...perf }, ...M.robustness].map((r) => `<tr><td>${r.label}</td><td>${fmt(r.n, 0)}</td><td>${fmt(r.r2, 2)}</td><td>${fmt(r.mae, 2)} (${fmt(r.mae_base, 2)})</td></tr>`).join("");
+})();
+
 })();

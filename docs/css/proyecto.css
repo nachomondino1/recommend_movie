@@ -156,3 +156,6 @@
 .heq.res b { color: var(--accent); }
 .hop { font-size: 1.6rem; color: var(--muted); }
 @media (max-width: 520px) { .heq { min-width: 0; padding: 8px 12px; } }
+
+.proy .secnav { scrollbar-width: none; }
+.proy .secnav::-webkit-scrollbar { display: none; }
