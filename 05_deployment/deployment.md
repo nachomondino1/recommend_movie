@@ -1,43 +1,43 @@
 # 6. Deployment
 
 ## Arquitectura
-`03_modeling/model.py` define **un único** pipeline (preprocesado + modelo) y todo lo que
+`03_modeling/build_model.py` define **un único** pipeline (preprocesado + modelo) y todo lo que
 lo rodea:
 
-| Función (`03_modeling/model.py`) | Rol |
+| Función (`03_modeling/build_model.py`) | Rol |
 |---|---|
 | `build_regressor` / `build_classifier` | Definición del pipeline final. |
 | `fit_and_save()` | Entrena los 2 modelos con **todos** los ratings y los guarda en `models/` (`regressor.joblib`, `classifier.joblib`, `meta.json`). |
 | `load_models()` | Carga de `models/`. Si faltan, entrena. Si `ratings.csv` es más nuevo que el modelo guardado, re-entrena y avisa. |
-| `score_watchlist()` | Puntúa la watchlist → `outputs/watchlist_scored.csv`. |
+| `score_watchlist()` | Puntúa la watchlist → `data/03_modeling/watchlist_scored.csv`. |
 | `compare_models()`, `learning_curve_report()` | Diagnósticos (`make eval`). |
 
 `05_deployment/dashboard.py` convierte el CSV puntuado en un HTML autocontenido (sin
 servidor) con tabla buscable/ordenable (título, director, género), nota predicha
-coloreada y gráfico de distribución. Lo escribe en `outputs/watchlist_dashboard.html`
-y en `archive/dashboard_personal.html` (guardado, ya no se publica; el sitio de `docs/` es el MVP público). Los títulos de la watchlist que ya
+coloreada y gráfico de distribución. Lo escribe en `data/05_deployment/watchlist_dashboard.html`
+y en `docs/old_version/dashboard_personal.html` (guardado, git-ignored, no se publica; el sitio de `docs/` es el MVP público). Los títulos de la watchlist que ya
 figuran puntuados en `ratings.csv` se omiten.
 
-`03_modeling/predict.py` (`make predict TITLE="X"`) resuelve un título por nombre con
+`predict_title()` de `build_model.py` (`make predict TITLE="X"`) resuelve un título por nombre con
 `/search/multi` de TMDB, arma la fila con `features.build_row()` y aplica los
 modelos guardados. Sirve para evaluar algo que no está en la watchlist.
 
 `metrics_history.csv` (versionado) acumula una fila por tamaño de dataset con la
 fecha y los scores de CV. `make eval` grafica esa **trayectoria real** en
-`outputs/metrics_history.png` (distinta de la curva de aprendizaje, que es simulada).
+`data/03_modeling/metrics_history.png` (distinta de la curva de aprendizaje, que es simulada).
 
 Modelos:
 - **Regresión** `RandomForestRegressor` sobre el desvío vs IMDb → `pred_rating = IMDb + desvío`.
 - **Binario** `GradientBoostingClassifier` sobre `Your Rating ≥ 7` → `p_like`.
 
-`models/` está en `.gitignore` (se regenera). `meta.json` guarda fecha de
+`03_modeling/models/` está en `.gitignore` (se regenera). `meta.json` guarda fecha de
 entrenamiento, n, mtime de `ratings.csv` y scores de CV.
 
 ## Cómo usarlo
 ```bash
-make update      # tmdb_data.py -> model.py -> catalog.py -> dashboard.py
+make update      # tmdb_data.py -> build_model.py -> build_model.py catalog -> dashboard.py
 ```
-Para mirar local: abrir `outputs/watchlist_dashboard.html` con doble clic.
+Para mirar local: abrir `data/05_deployment/watchlist_dashboard.html` con doble clic.
 
 ## GitHub Pages (acceso desde el teléfono)
 Alta (una sola vez): repo en GitHub → **Settings → Pages** → *Source: Deploy from

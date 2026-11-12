@@ -30,7 +30,7 @@
 Modelo apto para **sugerir un orden** de la watchlist, no para decidir por el
 usuario. Volver a evaluar cuando haya más ratings.
 
-## Prueba de robustez: ¿algo le gana a la nota de IMDb? (`python 04_evaluation/robustness.py`)
+## Prueba de robustez: ¿algo le gana a la nota de IMDb? (`make robust`, o `python 03_modeling/assess_model.py --only-robust`)
 n = 127 notas. CV de 5 folds repetida 10 veces, bootstrap pareado de 5.000 remuestreos sobre los
 títulos. La base justa es la nota de IMDb **calibrada** a tu escala (a + b·IMDb), no la cruda
 (que tiene MAE 1,67 solo porque vos puntuás más bajo que IMDb).
