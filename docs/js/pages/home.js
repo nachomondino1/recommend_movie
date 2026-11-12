@@ -51,7 +51,7 @@ function showDone(data) {
     (data.watchlist.length ? "" : " Todavía falta tu watchlist (es opcional): con ella te marcamos lo que ya guardaste.");
   $("uploadDone").hidden = false;
   updateLoadedState();   // primero se actualiza el layout (aparece el cuadro de arriba) y después se scrollea
-  renderSite("inicio");  // el menú ahora incluye Qué ver y Mis puntuaciones
+  renderHeader("inicio");  // el menú ahora incluye Qué ver y Mis puntuaciones
   if (catalog.data) showCatalogInfo();
   $("uploadDone").scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
 }
@@ -69,4 +69,7 @@ function wireUpload() {
 renderSite("inicio");
 wireUpload();
 updateLoadedState();
-loadCatalog().catch(() => {});   // solo para llenar el dato del pie y dejar el catálogo en caché para "Qué ver"
+// El catálogo (2,5 MB) no frena la portada: se baja cuando el navegador está libre, para llenar el dato del pie
+// y dejarlo en la caché HTTP para "Qué ver".
+const warmCatalog = () => loadCatalog().catch(() => {});
+if ("requestIdleCallback" in window) requestIdleCallback(warmCatalog, { timeout: 3000 }); else setTimeout(warmCatalog, 1500);

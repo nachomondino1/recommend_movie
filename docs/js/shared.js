@@ -41,7 +41,9 @@ function syncNavHeight() {
   document.documentElement.style.setProperty("--nav-h", document.querySelector(".top").offsetHeight + "px");
 }
 
-function renderSite(active) {
+// El encabezado se dibuja ANTES del primer pintado: cada página llama renderHeader("<id>") en un <script> sincrónico
+// justo debajo de <header id="siteHeader">, así el menú no aparece tarde ni empuja el contenido.
+function renderHeader(active) {
   const profile = hasProfile();
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
@@ -52,6 +54,12 @@ function renderSite(active) {
           `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}
       </nav>
     </div>`;
+  syncNavHeight();
+}
+
+// Pie de página (y encabezado, si la página no lo dibujó antes). Se llama una vez por página.
+function renderSite(active) {
+  if (!$("siteHeader").firstElementChild) renderHeader(active);
   $("siteFooter").className = "foot";
   $("siteFooter").innerHTML = `
     <div class="wrap">
@@ -66,5 +74,5 @@ function renderSite(active) {
     location.href = "index.html";
   });
   syncNavHeight();
-  window.addEventListener("resize", syncNavHeight);
 }
+window.addEventListener("resize", () => { if (document.querySelector(".top")) syncNavHeight(); });
