@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Predecir una nota · Tu número</title>
+<meta name="description" content="Buscá una película o serie y mirá qué nota le pondrías: la nota de IMDb más tu número.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<link rel="stylesheet" href="css/style.css">
+<link rel="preload" as="fetch" href="data/catalog.json" crossorigin="anonymous">
+<script type="speculationrules">{"prerender":[{"urls":["index.html","numero.html","predecir.html"],"eagerness":"moderate"}]}</script>
+</head>
+<body>
+<header id="siteHeader"></header>
+<script src="js/storage.js"></script>
+<script src="js/shared.js"></script>
+<script>renderHeader("predecir")</script>
+
+<main class="wrap page">
+  <h1 class="page-title">Predecir una nota</h1>
+  <p class="lead">Buscá una pel&iacute;cula o serie y mir&aacute; qu&eacute; nota le pondr&iacute;as: la nota de IMDb m&aacute;s tu n&uacute;mero.</p>
+
+  <div id="noData" class="empty-state" hidden>
+    Todav&iacute;a no cargaste tus datos. <a href="index.html#pasos">Cargá tus datos de IMDb</a>.
+  </div>
+  <div id="notEnough" class="empty-state" hidden></div>
+
+  <div id="body" hidden>
+    <div class="pred-number"><span>Tu n&uacute;mero</span> <b id="myNumber"></b> <a href="numero.html">Ver c&oacute;mo sale</a></div>
+    <input type="search" id="q" placeholder="Buscar por nombre (ej: Interstellar)" aria-label="Buscar por nombre" autocomplete="off">
+
+    <section id="results" hidden>
+      <h2 class="block-title" id="resultsTitle"></h2>
+      <div class="pred-list" id="resultsList"></div>
+    </section>
+
+    <section id="watchSection" hidden>
+      <h2 class="block-title">&#127916; Tu watchlist, ordenada por nota predicha</h2>
+      <p class="note">Los t&iacute;tulos que guardaste en IMDb y todav&iacute;a no puntuaste, con la nota que seguramente les pondr&iacute;as.</p>
+      <div class="pred-list" id="watchList"></div>
+      <button type="button" class="btn btn--ghost" id="btnMore" hidden>Ver m&aacute;s</button>
+    </section>
+
+    <p class="note method" id="method"></p>
+  </div>
+</main>
+
+<footer id="siteFooter"></footer>
+
+<script defer src="js/catalog.js"></script>
+<script defer src="js/number.js"></script>
+<script defer src="js/pages/predecir.js"></script>
+</body>
+</html>

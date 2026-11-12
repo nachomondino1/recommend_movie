@@ -1,4 +1,4 @@
-// Helpers y componentes compartidos por las tres páginas (index, que-ver, mi-gusto).
+// Helpers y componentes compartidos por las tres páginas (index, numero, predecir).
 // Requiere storage.js cargado antes. El encabezado y el pie se escriben UNA vez, acá (renderSite).
 
 const $ = (id) => document.getElementById(id);
@@ -7,34 +7,22 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => (
 const IMG = "https://image.tmdb.org/t/p/";
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const GENRE_ES = {
-  Action: "Acción", Adventure: "Aventura", Animation: "Animación", Biography: "Biografía",
-  Comedy: "Comedia", Crime: "Crimen", Documentary: "Documental", Drama: "Drama", Family: "Familia",
-  Fantasy: "Fantasía", History: "Historia", Horror: "Terror", Music: "Música", Musical: "Musical",
-  Mystery: "Misterio", Romance: "Romance", "Sci-Fi": "Ciencia ficción", Sport: "Deportes",
-  Thriller: "Suspenso", War: "Bélica", Western: "Western", "Reality-TV": "Reality",
-};
-const genreEs = (g) => GENRE_ES[g] || g;
-const typeLabel = (r) => (r.Type === "Movie" ? "Película" : "Serie");
+// Números con coma decimal (es-AR); signed() agrega el + a los positivos.
+const fmtNum = (n, d = 1) => Number(n).toLocaleString("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const signed = (n, d = 1) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n), d);
 
 function colorFor(v) {
   const t = Math.max(0, Math.min(1, (v - 3) / 5));
   return `hsl(${t * 120}, 40%, 33%)`;
 }
 
-function poster(r, size, cls) {
-  return r.poster_path
-    ? `<img class="${cls}" src="${IMG}${size}${r.poster_path}" alt="" loading="lazy">`
-    : `<div class="${cls}"></div>`;
-}
-
-// ¿Ya cargó sus archivos? (entonces se habilitan Qué ver y Mis puntuaciones; las plataformas se eligen en Qué ver)
+// ¿Ya cargó sus archivos? (entonces se habilitan Mi número y Predecir)
 const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
 const NAV = [
-  { id: "que-ver", href: "que-ver.html", label: "Qué ver", needsProfile: true },
-  { id: "mi-gusto", href: "mi-gusto.html", label: "Mis puntuaciones", needsProfile: true },
+  { id: "numero", href: "numero.html", label: "Mi número", needsProfile: true },
+  { id: "predecir", href: "predecir.html", label: "Predecir", needsProfile: true },
 ];
 
 function syncNavHeight() {
@@ -48,7 +36,7 @@ function renderHeader(active) {
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="index.html" aria-label="Qué ver hoy, inicio">&#127916;<span class="brand-text"> Qu&eacute; ver hoy</span></a>
+      <a class="brand" href="index.html" aria-label="Tu número, inicio">&#127916;<span class="brand-text"> Tu n&uacute;mero</span></a>
       <nav class="top-nav" aria-label="Secciones">
         ${NAV.filter((n) => !n.needsProfile || profile).map((n) =>
           `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}
