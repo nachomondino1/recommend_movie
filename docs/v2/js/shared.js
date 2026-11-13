@@ -50,7 +50,7 @@ function renderHeader(active) {
   // Barra principal: igual en las tres versiones. Subbarra: las pestañas de ESTA versión (solo si tiene más de una).
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="${up}index.html" aria-label="Qué hace buena a una película, inicio">&#127916;<span class="brand-text"> Qu&eacute; hace buena a una pel&iacute;cula</span></a>
+      <a class="brand" href="${up}index.html" aria-label="Recomendador de películas y series, inicio">&#127916;<span class="brand-text"> Recomendador de pel&iacute;culas y series</span></a>
       ${versionTabs()}
       <nav class="top-nav" aria-label="Enlaces">
         <a href="https://github.com/nachomondino1/recommend_movie" target="_blank" rel="noopener">C&oacute;digo &#8599;</a>

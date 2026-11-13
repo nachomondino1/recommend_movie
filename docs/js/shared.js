@@ -60,7 +60,7 @@ function renderHeader() {
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="${up}index.html" aria-label="Qué hace buena a una película, inicio">&#127916;<span class="brand-text"> Qu&eacute; hace buena a una pel&iacute;cula</span></a>
+      <a class="brand" href="${up}index.html" aria-label="Recomendador de películas y series, inicio">&#127916;<span class="brand-text"> Recomendador de pel&iacute;culas y series</span></a>
       ${versionTabs()}
       <nav class="top-nav" aria-label="Enlaces">
         <a href="${REPO}" target="_blank" rel="noopener">C&oacute;digo &#8599;</a>
