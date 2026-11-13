@@ -1,67 +1,76 @@
-// Helpers y componentes compartidos por las tres páginas (index, numero, predecir).
-// Requiere storage.js cargado antes. El encabezado y el pie se escriben UNA vez, acá (renderSite).
+// Encabezado, pie, contacto y medición de visitas compartidos. Se escriben UNA vez, acá: la página llama renderHeader() en un <script> sincrónico
+// justo debajo de <header id="siteHeader"> (así el menú no aparece tarde ni empuja el contenido) y renderSite() al final.
 
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => (
-  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const IMG = "https://image.tmdb.org/t/p/";
-const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const REPO = "https://github.com/nachomondino1/recommend_movie";
 
-// Números con coma decimal (es-AR); signed() agrega el + a los positivos.
-const fmtNum = (n, d = 1) => Number(n).toLocaleString("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d });
-const signed = (n, d = 1) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n), d);
-
-function colorFor(v) {
-  const t = Math.max(0, Math.min(1, (v - 3) / 5));
-  return `hsl(${t * 120}, 40%, 33%)`;
+// ---- Medición de visitas (GoatCounter, sin cookies). Solo se activa si SITE.goatcounter tiene un código. ----
+function loadAnalytics() {
+  if (!SITE.goatcounter || document.querySelector("script[data-goatcounter]")) return;
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "https://gc.zgo.at/count.js";
+  s.dataset.goatcounter = `https://${SITE.goatcounter}.goatcounter.com/count`;
+  document.head.appendChild(s);
 }
 
-// ¿Ya cargó sus archivos? (para mostrar tu número y las predicciones)
-const hasProfile = () => loadData().ratings.length > 0;
+// Cuenta un evento propio (un enlace tocado, una sección vista). Cada evento aparece en el panel como una "página" más,
+// con el prefijo del tipo: p. ej. "enlace/codigo", "seccion/resultados", "version/v1". Si no hay medidor, no hace nada.
+function track(name, title) {
+  try {
+    if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: title || name, event: true });
+  } catch (e) { /* medir nunca debe romper la página */ }
+}
 
-// Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
-// index.html es la portada (el proyecto: flujo y resultados); numero.html junta cargar datos, tu número y predecir.
-const NAV = [
-  { id: "proyecto", href: "index.html", label: "Proyecto", needsProfile: false },
-  { id: "numero", href: "numero.html", label: "Mi número", needsProfile: false },
-];
+// Cuenta una sola vez cada sección de la página cuando aparece en pantalla (para ver hasta dónde llega la gente).
+function trackSections(ids) {
+  if (!SITE.goatcounter || !("IntersectionObserver" in window)) return;
+  const seen = new Set();
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting && !seen.has(e.target.id)) { seen.add(e.target.id); track(`seccion/${e.target.id}`, `Sección ${e.target.id}`); }
+  }), { threshold: 0.25 });
+  ids.forEach((id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+}
+
+// ---- Contacto: solo aparecen los canales que tengan dato en js/config.js ----
+function contactHtml(c) {
+  const links = [];
+  if (c.whatsapp) links.push(`<a class="contact-btn" data-track="contacto/whatsapp" target="_blank" rel="noopener" href="https://wa.me/${c.whatsapp}?text=${encodeURIComponent(c.whatsappText || "")}">WhatsApp</a>`);
+  if (c.linkedin) links.push(`<a class="contact-btn" data-track="contacto/linkedin" target="_blank" rel="noopener" href="${c.linkedin}">LinkedIn</a>`);
+  if (c.email) links.push(`<a class="contact-btn" data-track="contacto/email" href="mailto:${c.email}">${c.email}</a>`);
+  return links.length ? `<div class="contact"><p class="contact-title">¿Querés comentarme algo?</p><div class="contact-links">${links.join("")}</div></div>` : "";
+}
 
 function syncNavHeight() {
   document.documentElement.style.setProperty("--nav-h", document.querySelector(".top").offsetHeight + "px");
 }
 
-// El encabezado se dibuja ANTES del primer pintado: cada página llama renderHeader("<id>") en un <script> sincrónico
-// justo debajo de <header id="siteHeader">, así el menú no aparece tarde ni empuja el contenido.
-function renderHeader(active) {
-  const profile = hasProfile();
+function renderHeader() {
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="index.html" aria-label="Recomendador de películas y series, inicio">&#127916;<span class="brand-text"> Recomendador de pel&iacute;culas y series</span></a>
-      <nav class="top-nav" aria-label="Secciones">
-        ${NAV.filter((n) => !n.needsProfile || profile).map((n) =>
-          `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}
+      <a class="brand" href="index.html" aria-label="Qué hace buena a una película, inicio">&#127916;<span class="brand-text"> Qu&eacute; hace buena a una pel&iacute;cula</span></a>
+      <nav class="top-nav" aria-label="Enlaces">
+        <a href="${REPO}" target="_blank" rel="noopener">C&oacute;digo &#8599;</a>
       </nav>
     </div>`;
   syncNavHeight();
 }
 
 // Pie de página (y encabezado, si la página no lo dibujó antes). Se llama una vez por página.
-function renderSite(active) {
-  if (!$("siteHeader").firstElementChild) renderHeader(active);
+function renderSite() {
+  if (!$("siteHeader").firstElementChild) renderHeader();
   $("siteFooter").className = "foot";
   $("siteFooter").innerHTML = `
     <div class="wrap">
+      ${contactHtml(SITE.contact)}
       <p class="note">Datos de pel&iacute;culas y series: <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>.
-        Este sitio no est&aacute; afiliado a IMDb ni a TMDB.</p>
-      <p class="note" id="catalogInfo"></p>
-      <p class="note"><button type="button" class="link-btn" id="btnClear">Borrar mis datos de este navegador</button></p>
+        Este producto usa la API de TMDB pero no est&aacute; avalado ni certificado por TMDB.</p>
+      ${SITE.goatcounter ? '<p class="note">Esta p&aacute;gina mide las visitas de forma an&oacute;nima, sin cookies, con <a href="https://www.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a>.</p>' : ""}
     </div>`;
-  $("btnClear").addEventListener("click", () => {
-    if (!confirm("¿Borrar tus datos de este navegador?")) return;
-    clearAllData();
-    location.href = "index.html";
-  });
+  // Los enlaces con data-track cuentan el toque como evento
+  document.querySelectorAll("[data-track]").forEach((a) => a.addEventListener("click", () => track(a.dataset.track)));
+  loadAnalytics();
   syncNavHeight();
 }
 window.addEventListener("resize", () => { if (document.querySelector(".top")) syncNavHeight(); });
