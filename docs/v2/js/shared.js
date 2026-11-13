@@ -33,11 +33,11 @@ function syncNavHeight() {
 // Pestañas de versión: el mismo selector en las tres versiones del sitio (V1, V2 y V3 = la actual, en la raíz).
 // Los enlaces son relativos: desde /v1/ o /v2/ se sube un nivel; desde la raíz se baja.
 function versionTabs() {
-  const here = /\/v([12])\//.exec(location.pathname);
-  const current = here ? Number(here[1]) : 3, up = here ? "../" : "";
-  const tabs = [[1, `${up}v1/index.html`, "«Qué ver hoy»"], [2, `${up}v2/index.html`, "«Tu número»"], [3, `${up}index.html`, "la actual"]];
+  const here = /\/v([123])\//.exec(location.pathname);
+  const current = here ? Number(here[1]) : 0, up = here ? "../" : "";     // 0 = la landing, en la raíz
+  const tabs = [[1, `${up}v1/index.html`, "«Qué ver hoy»"], [2, `${up}v2/index.html`, "«Tu número»"], [3, `${up}v3/index.html`, "la actual"]];
   return `<nav class="vtabs" aria-label="Versiones del proyecto">${tabs.map(([n, href, name]) =>
-    `<a href="${href}" title="Versión ${n}, ${name}"${n === current ? ' aria-current="true"' : ""}${n === 3 ? ' data-track="version/v3"' : ` data-track="version/v${n}"`}><span class="vlong">Versión</span><span class="vshort">V</span><span>${n}</span></a>`).join("")}</nav>`;
+    `<a href="${href}" title="Versión ${n}, ${name}"${n === current ? ' aria-current="true"' : ""} data-track="version/v${n}"><span class="vlong">Versión</span><span class="vshort">V</span><span>${n}</span></a>`).join("")}</nav>`;
 }
 
 // El encabezado se dibuja ANTES del primer pintado: cada página llama renderHeader("<id>") en un <script> sincrónico
@@ -45,7 +45,7 @@ function versionTabs() {
 function renderHeader(active) {
   const profile = hasProfile();
   const items = NAV.filter((n) => !n.needsProfile || profile);
-  const up = /\/v[12]\//.test(location.pathname) ? "../" : "";
+  const up = /\/v[123]\//.test(location.pathname) ? "../" : "";
   $("siteHeader").className = "top";
   // Barra principal: igual en las tres versiones. Subbarra: las pestañas de ESTA versión (solo si tiene más de una).
   $("siteHeader").innerHTML = `

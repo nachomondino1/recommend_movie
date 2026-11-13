@@ -14,7 +14,7 @@ help:
 	@echo "make skip TITLE=\"X\"               - marcar 'no me interesa' (se saca del dashboard sin puntuar)"
 	@echo "make eval                         - diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria + reseñas"
 	@echo "make robust                       - prueba de robustez: ¿algún modelo le gana a la nota de IMDb? (~80 s)"
-	@echo "make results                      - dejar los resultados de make robust listos para la portada de la web (docs/data/model_results.json)"
+	@echo "make results                      - dejar los resultados de make robust listos para la portada de la web (docs/v3/data/model_results.json)"
 	@echo "make drivers                      - versión alternativa: qué variables explican la nota pública de TMDB (sin tus notas)"
 	@echo "make explore                      - análisis exploratorio (gráficos en data/01_data_understanding/exploration/)"
 	@echo

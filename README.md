@@ -3,7 +3,7 @@
 Proyecto de datos con Machine Learning y una sola fuente, la API de TMDB: con la nota pública de miles de películas y
 series (8.493, de las plataformas disponibles en Argentina) se entrena un modelo y se mide qué características pesan más.
 La web publica el flujo CRISP-DM completo, las conclusiones y los resultados. No hay servidor: todo sale de un archivo de
-resultados (`docs/data/model_results.json`).
+resultados (`docs/v3/data/model_results.json`).
 
 **Sitio en vivo:** https://nachomondino1.github.io/recommend_movie/
 
@@ -20,7 +20,7 @@ resultados (`docs/data/model_results.json`).
 
 ```bash
 make drivers     # prepare_titles.py (fase 02) + drivers_model.py (fase 03): data/03_modeling/drivers_results.json
-make results     # deja docs/data/model_results.json listo para la web
+make results     # deja docs/v3/data/model_results.json listo para la web
 make serve       # http://localhost:8765
 ```
 
@@ -39,7 +39,7 @@ cd docs
 python3 -m http.server 8765
 ```
 
-Necesita un servidor (no abre con doble clic) porque la página carga `data/model_results.json`.
+Necesita un servidor (no abre con doble clic) porque la versión 3 carga `data/model_results.json`.
 
 **Actualizar el catálogo de películas y series** (recolecta de TMDB, arma `docs/data/catalog.json` y commitea en `staging`):
 
@@ -99,7 +99,7 @@ make explore     # análisis exploratorio (el sitio público se actualiza con ./
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
 | `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas (`assess_model.py`). |
 | `make robust` | Prueba de robustez (~80 s): ¿algún modelo le gana de verdad a la nota de IMDb? |
-| `make results` | Deja los resultados de `make robust` listos para la portada de la web (`docs/data/model_results.json`). |
+| `make results` | Deja los resultados de `make robust` listos para la portada de la web (`docs/v3/data/model_results.json`). |
 | `make explore` | Análisis exploratorio (gráficos en `data/01_data_understanding/exploration/`). |
 
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:

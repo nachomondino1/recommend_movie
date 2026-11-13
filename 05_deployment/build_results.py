@@ -1,12 +1,12 @@
 """
-CRISP-DM · Despliegue: arma los datos de la página web (docs/index.html).
+CRISP-DM · Despliegue: arma los datos de la página web (docs/v3/index.html).
 
 Junta en un solo JSON, que lee el navegador, (1) la descripción de los datos de TMDB (variable respuesta, variables
 predictoras y calidad) y (2) los resultados del modelado (`make drivers`, en data/03_modeling/drivers_results.json).
 Son solo agregados. La web no recalcula nada: solo dibuja estos números.
 
     make drivers      # corre prepare_titles.py y drivers_model.py
-    make results      # deja docs/data/model_results.json listo para la web
+    make results      # deja docs/v3/data/model_results.json listo para la web
 """
 
 import sys
@@ -22,7 +22,7 @@ import pandas as pd
 
 from config import DOCS, MODELING_DIR, PREP_DIR
 
-OUT = DOCS / "data" / "model_results.json"
+OUT = DOCS / "v3" / "data" / "model_results.json"      # la versión 3 vive en docs/v3
 
 # Variables predictoras por grupo: (columnas, qué es, tipo). Las columnas tienen que existir en titles_features.csv;
 # si se agrega o saca una variable en prepare_titles.py, build_data_description() avisa en vez de dejar la web vieja.
