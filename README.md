@@ -7,7 +7,11 @@ resultados (`docs/data/model_results.json`).
 
 **Sitio en vivo:** https://nachomondino1.github.io/recommend_movie/
 
-> **Versión 1 (en el historial y en el código):** el proyecto empezó prediciendo la nota *personal* a partir de las 127 notas de
+> **Las tres versiones están publicadas:** la actual en la raíz del sitio, y las dos anteriores archivadas en
+> [`docs/v1/`](docs/v1/index.html) («Qué ver hoy») y [`docs/v2/`](docs/v2/index.html) («Tu número»). Comparten el catálogo
+> `docs/data/catalog.json`; cada una tiene su propio código y una franja que avisa que es una versión archivada.
+>
+> **Versión 2 en el código (la nota personal):** el proyecto empezó prediciendo la nota *personal* a partir de las 127 notas de
 > IMDb de una persona. Con tan pocos datos ningún modelo le ganó a la nota de IMDb, así que la versión 2 cambia la respuesta
 > (la nota pública), la fuente (solo TMDB) y la cantidad de datos. Los módulos de la versión 1 (`build_model.py`,
 > `assess_model.py`, `test_design.py`, `features.py`) siguen en el repositorio y ya no alimentan la web.
