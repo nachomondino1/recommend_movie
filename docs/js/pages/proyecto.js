@@ -5,6 +5,7 @@
 
 (async function () {
   renderSite("proyecto");
+  trackSections(["conclusiones", "flujo", "datos", "resultados"]);
   let R = null;
   try { R = await (await fetch("data/model_results.json")).json(); } catch (e) { /* queda el texto de respaldo */ }
   const $id = (id) => document.getElementById(id);

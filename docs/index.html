@@ -17,6 +17,7 @@
 </head>
 <body>
 <header id="siteHeader"></header>
+<script src="js/config.js"></script>
 <script src="js/shared.js"></script>
 <script>renderHeader()</script>
 
@@ -45,6 +46,8 @@
     <a href="#flujo">Cómo se hizo</a>
     <a href="#datos">Los datos</a>
     <a href="#resultados">Los modelos</a>
+    <span class="grp">Historia</span>
+    <a href="#versiones">Versiones</a>
   </nav>
 
   <!-- ================= CONCLUSIONES ================= -->
@@ -388,12 +391,43 @@
     </div>
   </section>
 
+  <!-- ================= VERSIONES ================= -->
+  <section id="versiones" aria-labelledby="h-versiones">
+    <p class="phase-tag">La historia del proyecto</p>
+    <h2 class="part" id="h-versiones">Cómo evolucionó el proyecto</h2>
+    <p class="part-sub">Tres versiones, cada una a partir de lo que se aprendió en la anterior. Las dos primeras quedan disponibles para probarlas.</p>
+
+    <div class="versions">
+      <article class="vcard">
+        <p class="vnum">Versión 1</p>
+        <h3>Qué ver hoy</h3>
+        <p>Cargás tus notas de IMDb y elegís tus plataformas de streaming. La web te muestra qué podés ver hoy, ordenado por nota y sin repetir lo que ya viste.</p>
+        <p class="vlearn"><b>Qué se aprendió.</b> JustWatch ya filtra por plataforma, así que faltaba algo que no existiera todavía.</p>
+        <a class="btn btn--ghost" href="v1/index.html">Probar la versión 1</a>
+      </article>
+      <article class="vcard">
+        <p class="vnum">Versión 2</p>
+        <h3>Tu número</h3>
+        <p>Cuánto te desviás, en promedio, de la nota de IMDb. Con ese número se estima qué nota le pondrías a cualquier película. Antes se probaron nueve modelos para mejorar esa regla.</p>
+        <p class="vlearn"><b>Qué se aprendió.</b> Ningún modelo le ganó a la nota de IMDb: con las 127 notas de una persona, la muestra es muy chica.</p>
+        <a class="btn btn--ghost" href="v2/index.html">Probar la versión 2</a>
+      </article>
+      <article class="vcard current">
+        <p class="vnum">Versión 3 · estás acá</p>
+        <h3>¿Qué hace que una película tenga buena nota?</h3>
+        <p>Sin notas personales y con una sola fuente, TMDB: miles de películas y series para ver qué características pesan más en la nota pública.</p>
+        <p class="vlearn"><b>Qué se aprendió.</b> Con más datos aparecen patrones claros: el género, la duración y el elenco.</p>
+        <a class="btn" href="#conclusiones">Ver las conclusiones</a>
+      </article>
+    </div>
+  </section>
+
   <section class="invite" aria-labelledby="h-invite">
     <h2 class="part" id="h-invite">Reproducilo</h2>
     <p class="part-sub">El código y los datos están en el repositorio. Con una clave gratuita de la API de TMDB se vuelve a correr todo.</p>
     <pre class="cmd">make drivers   # prepara los datos y entrena los modelos
 make results   # deja los números listos para esta página</pre>
-    <a class="btn btn--hero" href="https://github.com/nachomondino1/recommend_movie" target="_blank" rel="noopener">Ver el código en GitHub</a>
+    <a class="btn btn--hero" href="https://github.com/nachomondino1/recommend_movie" target="_blank" rel="noopener" data-track="enlace/codigo">Ver el código en GitHub</a>
   </section>
 </main>
 

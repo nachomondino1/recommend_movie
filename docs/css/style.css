@@ -177,3 +177,10 @@ input[type=search]:focus { outline: none; border-color: var(--accent); box-shado
 #predecir { margin-top: 12px; }
 #predecir .block-title { margin-top: 36px; }
 #predecir input[type=search] { margin-top: 8px; }
+
+/* ---- Contacto (pie) ------------------------------------------------------------------------------------ */
+.contact { margin: 8px 0 20px; padding: 20px; border: 1px solid var(--border-soft); border-radius: var(--radius); background: var(--card); }
+.contact-title { font-weight: 700; margin: 0 0 12px; }
+.contact-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.contact-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 18px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
+.contact-btn:hover { background: var(--accent-soft); }

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qué ver hoy · versión 1</title>
+<meta name="description" content="Sumá tu historial de IMDb y elegí tus plataformas: te mostramos qué ver hoy entre lo que ya tenés disponible, ordenado por nota y por votos. Todo se procesa en tu navegador.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<link rel="preload" as="image" href="media/hero.jpg" fetchpriority="high">
+<link rel="stylesheet" href="css/style.css">
+<link rel="prefetch" as="fetch" href="../data/catalog.json" crossorigin="anonymous">
+<script type="speculationrules">{"prerender":[{"urls":["index.html","que-ver.html","mi-gusto.html"],"eagerness":"moderate"}]}</script>
+</head>
+<body>
+<div class="oldbanner" role="note"><span><b>Versión 1, archivada.</b> «Qué ver hoy»: tu watchlist de IMDb filtrada por tus plataformas. Usa el catálogo del 11/11/2026 y no se actualiza.</span> <a href="../index.html#versiones">Ver la versión actual</a></div>
+<header id="siteHeader"></header>
+<script src="js/storage.js"></script>
+<script src="js/shared.js"></script>
+<script>renderHeader("inicio")</script>
+
+<section class="hero" id="inicio">
+  <div class="hero-inner">
+    <h1 class="hero-title">Encontr&aacute; <span class="kw kw--a">qu&eacute; ver hoy</span> en <span class="kw kw--b">tus plataformas</span></h1>
+    <p class="hero-sub">Sum&aacute; tu historial de IMDb y eleg&iacute; tus plataformas. Te mostramos lo que ya ten&eacute;s disponible, ordenado por nota y por votos, sin repetir lo que ya viste.</p>
+    <a class="btn btn--hero" id="heroCta" href="#pasos">Empezar</a>
+  </div>
+  <div class="hero-credit">Foto: Denise Jans / Unsplash</div>
+</section>
+
+<main>
+  <section class="section" id="pasos">
+    <div class="wrap">
+      <h2 class="section-title">Carg&aacute; tus datos de IMDb</h2>
+      <p class="lead">Tus archivos no salen de tu navegador.</p>
+
+      <div class="banner" id="loadedBanner" hidden>
+        <div class="banner-icon" aria-hidden="true">&#9989;</div>
+        <div>
+          <div class="banner-title">&iexcl;Perfecto, ya cargaste tus datos!</div>
+          <p class="banner-text" id="loadedText"></p>
+          <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+        </div>
+      </div>
+
+      <div class="steps-row">
+        <div class="step">
+          <h3><span class="step-n">1</span> Baj&aacute; tus datos de IMDb</h3>
+          <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>.</p>
+          <p class="hint"><b>&iquest;Desde el celular no ves &ldquo;Exportar&rdquo;?</b> En la app de IMDb no es f&aacute;cil encontrarlo. Abr&iacute; imdb.com desde el navegador del celular y ah&iacute; s&iacute; aparece (si la app intercepta el link, desinstalala un rato) o hacelo desde una computadora.</p>
+          <div class="actions">
+            <a class="btn" href="https://www.imdb.com/list/ratings" target="_blank" rel="noopener">Mis notas &#8599;</a>
+            <a class="btn btn--ghost" href="https://www.imdb.com/list/watchlist" target="_blank" rel="noopener">Mi watchlist &#8599;</a>
+          </div>
+        </div>
+
+        <div class="step">
+          <h3><span class="step-n">2</span> Arrastr&aacute; los archivos ac&aacute;</h3>
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Elegir o arrastrar los archivos de IMDb">
+            <div class="dropzone-icon">&#128194;</div>
+            <div>Arrastr&aacute; tus dos archivos o <u>eleg&iacute;los</u></div>
+          </div>
+          <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
+          <div id="uploadMsg" class="msg" role="status"></div>
+          <div id="uploadDone" class="upload-done" role="status" hidden>
+            <div aria-hidden="true">&#9989;</div>
+            <div>
+              <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
+              <p id="uploadDoneText"></p>
+              <a class="btn" href="que-ver.html">Ver mis recomendaciones</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="siteFooter"></footer>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script defer src="js/csv.js"></script>
+<script defer src="js/catalog.js"></script>
+<script defer src="js/pages/home.js"></script>
+</body>
+</html>

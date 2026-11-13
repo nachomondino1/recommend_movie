@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mis puntuaciones · Qué ver hoy · versión 1</title>
+<meta name="description" content="Un resumen de tus notas de IMDb: géneros, directores y títulos que mejor y peor puntuaste.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="css/style.css">
+<link rel="preload" as="fetch" href="../data/catalog.json" crossorigin="anonymous">
+<script type="speculationrules">{"prerender":[{"urls":["index.html","que-ver.html","mi-gusto.html"],"eagerness":"moderate"}]}</script>
+</head>
+<body>
+<div class="oldbanner" role="note"><span><b>Versión 1, archivada.</b> «Qué ver hoy»: tu watchlist de IMDb filtrada por tus plataformas. Usa el catálogo del 11/11/2026 y no se actualiza.</span> <a href="../index.html#versiones">Ver la versión actual</a></div>
+<header id="siteHeader"></header>
+<script src="js/storage.js"></script>
+<script src="js/shared.js"></script>
+<script>renderHeader("mi-gusto")</script>
+
+<main class="wrap page">
+  <h1 class="page-title">Mis puntuaciones</h1>
+  <p class="lead">Un resumen de tus notas de IMDb.</p>
+
+  <div id="noData" class="empty-state" hidden>
+    Todav&iacute;a no cargaste tus datos. <a href="index.html#pasos">Cargá tus datos de IMDb</a>.
+  </div>
+  <div id="analysisEmpty" class="empty-state" hidden>Todav&iacute;a no hay notas para analizar.</div>
+  <div id="analysisBody" hidden>
+    <div class="cards">
+      <div class="card"><div class="n" id="tNRated"></div><div class="l">t&iacute;tulos puntuados</div></div>
+      <div class="card"><div class="n" id="tMean"></div><div class="l">tu nota promedio</div></div>
+      <div class="card"><div class="n" id="tDev"></div><div class="l">vs. IMDb</div></div>
+      <div class="card"><div class="n" id="tHours"></div><div class="l">horas de pel&iacute;culas</div></div>
+    </div>
+    <p class="note" id="devText"></p>
+    <div class="taste-grid">
+    <section class="taste-col">
+    <h2 class="block-title">&#128202; C&oacute;mo puntu&aacute;s</h2>
+    <p class="note">Cu&aacute;ntos t&iacute;tulos pusiste en cada nota. </p>
+    <div id="histo" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#9201;&#65039; Seg&uacute;n la duraci&oacute;n</h2>
+    <p class="note">Nota promedio y cantidad de pel&iacute;culas por duraci&oacute;n (las series no entran: la duraci&oacute;n es la de un episodio).</p>
+    <div id="byRuntime" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#128197; Seg&uacute;n la d&eacute;cada</h2>
+    <p class="note">Nota promedio y cantidad de t&iacute;tulos por d&eacute;cada de estreno (solo d&eacute;cadas con al menos 3).</p>
+    <div id="byDecade" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#9878;&#65039; Vos contra IMDb</h2>
+    <p class="note">Donde m&aacute;s te separaste de la nota de IMDb.</p>
+    <div id="vsImdb" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#127917; G&eacute;neros que mejor puntu&aacute;s</h2>
+    <p class="note">Nota media y cantidad de t&iacute;tulos que cuentan. Toc&aacute; un g&eacute;nero para ver cu&aacute;les son. Solo entran g&eacute;neros con al menos 3 t&iacute;tulos tuyos; los 3 primeros se marcan en &ldquo;Qu&eacute; ver&rdquo;.</p>
+    <div id="rankGenre" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#127916; Directores favoritos</h2>
+    <p class="note">Toc&aacute; un director para ver qu&eacute; t&iacute;tulos tuyos cuentan. Solo entran los que tienen al menos 2 t&iacute;tulos tuyos; los de nota por encima de tu promedio suben un poco en &ldquo;Qu&eacute; ver&rdquo;.</p>
+    <div id="rankDirector" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#127942; Tus mejor puntuadas</h2>
+    <div id="topList" class="block"></div>
+    </section>
+    <section class="taste-col">
+    <h2 class="block-title">&#128078; Tus peor puntuadas</h2>
+    <div id="bottomList" class="block"></div>
+    </section>
+    </div>
+  </div>
+</main>
+
+<footer id="siteFooter"></footer>
+
+<script defer src="js/catalog.js"></script>
+<script defer src="js/taste.js"></script>
+<script defer src="js/profile.js"></script>
+<script defer src="js/pages/mi-gusto.js"></script>
+</body>
+</html>
