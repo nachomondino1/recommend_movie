@@ -1,10 +1,32 @@
-# Qué ver hoy
+# ¿Qué hace que una película tenga buena nota?
 
-Sitio para decidir qué ver: subís tu export de IMDb, elegís tus plataformas de streaming y te muestra tu watchlist y títulos
-nuevos que no viste, solo en tus plataformas, ordenados por nota ponderada por votos. Se procesa todo en el navegador; el sitio
-no llama a ninguna API.
+Proyecto de datos con Machine Learning y una sola fuente, la API de TMDB: con la nota pública de miles de películas y
+series (8.493, de las plataformas disponibles en Argentina) se entrena un modelo y se mide qué características pesan más.
+La web publica el flujo CRISP-DM completo, las conclusiones y los resultados. No hay servidor: todo sale de un archivo de
+resultados (`docs/v3/data/model_results.json`).
 
 **Sitio en vivo:** https://nachomondino1.github.io/recommend_movie/
+
+> **Las tres versiones están publicadas:** la actual en la raíz del sitio, y las dos anteriores archivadas en
+> [`docs/v1/`](docs/v1/index.html) («Qué ver hoy») y [`docs/v2/`](docs/v2/index.html) («Tu número»). Comparten el catálogo
+> `docs/data/catalog.json`; cada una tiene su propio código y una franja que avisa que es una versión archivada.
+>
+> **Versión 2 en el código (la nota personal):** el proyecto empezó prediciendo la nota *personal* a partir de las 127 notas de
+> IMDb de una persona. Con tan pocos datos ningún modelo le ganó a la nota de IMDb, así que la versión 2 cambia la respuesta
+> (la nota pública), la fuente (solo TMDB) y la cantidad de datos. Los módulos de la versión 1 (`build_model.py`,
+> `assess_model.py`, `test_design.py`, `features.py`) siguen en el repositorio y ya no alimentan la web.
+
+## Versión 2: cómo correrla
+
+```bash
+make drivers     # prepare_titles.py (fase 02) + drivers_model.py (fase 03): data/03_modeling/drivers_results.json
+make results     # deja docs/v3/data/model_results.json listo para la web
+make serve       # http://localhost:8765
+```
+
+Para bajar los datos crudos hace falta `TMDB_TOKEN` en `.env`:
+`python3 01_data_understanding/collect_initial_data/tmdb/refresh_tmdb_data.py` (catálogo) y
+`python3 01_data_understanding/collect_initial_data/tmdb/fetch_credits.py` (elencos y equipo).
 
 ## Comandos
 
@@ -17,8 +39,7 @@ cd docs
 python3 -m http.server 8765
 ```
 
-Necesita un servidor (no abre con doble clic) porque el sitio carga `data/catalog.json`. Para probarlo con tus datos: elegí plataformas en
-el inicio y arrastrá `data/01_data_understanding/imdb/ratings.csv` y `watchlist.csv`.
+Necesita un servidor (no abre con doble clic) porque la versión 3 carga `data/model_results.json`.
 
 **Actualizar el catálogo de películas y series** (recolecta de TMDB, arma `docs/data/catalog.json` y commitea en `staging`):
 
@@ -78,6 +99,7 @@ make explore     # análisis exploratorio (el sitio público se actualiza con ./
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
 | `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas (`assess_model.py`). |
 | `make robust` | Prueba de robustez (~80 s): ¿algún modelo le gana de verdad a la nota de IMDb? |
+| `make results` | Deja los resultados de `make robust` listos para la portada de la web (`docs/v3/data/model_results.json`). |
 | `make explore` | Análisis exploratorio (gráficos en `data/01_data_understanding/exploration/`). |
 
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
@@ -112,6 +134,7 @@ data/                              todo lo que entra y sale de cada fase, en la 
   models/          modelos entrenados (git-ignored)
 04_evaluation/     narrativa de la evaluación contra los criterios de éxito (evaluation.md)
 05_deployment/
+  build_results.py  datos de la página Proyecto de la web (make results)
   dashboard.py   generar el dashboard personal (data/05_deployment/, no se publica)
 docs/            el sitio publicado por Pages: HTML + css/ + js/ + data/ + media/ (sin .md)
 ```

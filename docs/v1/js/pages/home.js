@@ -1,5 +1,5 @@
-// Página de inicio: hero "Conocé tu número" + los 2 pasos de IMDb (descargar y arrastrar los archivos).
-// Requiere shared.js, csv.js y storage.js.
+// Página de inicio: hero + los 2 pasos de IMDb (descargar y arrastrar los archivos).
+// Las plataformas se eligen en "Qué ver". Requiere shared.js, csv.js, catalog.js y storage.js.
 
 function setMsg(text, isError) {
   $("uploadMsg").textContent = text;
@@ -10,9 +10,8 @@ function setMsg(text, isError) {
 function updateLoadedState() {
   const data = loadData();
   const loaded = data.ratings.length > 0;
-  // Sin datos, el CTA lleva a la carga; con datos ya cargados, directo a tu número
-  $("heroCta").textContent = loaded ? "Ver mi número" : "Calcular mi número";
-  $("heroCta").href = loaded ? "numero.html" : "#pasos";
+  // El CTA siempre lleva a los pasos: primero se cargan los datos; con datos ya cargados, ahí mismo está el botón a las recomendaciones
+  $("heroCta").textContent = loaded ? "Ver mi carga" : "Empezar";
   $("loadedBanner").hidden = !loaded;
   if (loaded) {
     const when = data.savedAt ? ` el ${new Date(data.savedAt).toLocaleDateString("es-AR")}` : "";
@@ -46,13 +45,14 @@ async function ingest(fileList) {
   showDone(data);
 }
 
-// Avisa que ya está todo cargado y ofrece ir a tu número (no redirige solo).
+// Avisa que ya está todo cargado y ofrece ir a las recomendaciones (no redirige solo).
 function showDone(data) {
   $("uploadDoneText").textContent = `Cargamos ${data.ratings.length} notas y ${data.watchlist.length} títulos de tu watchlist.` +
     (data.watchlist.length ? "" : " Todavía falta tu watchlist (es opcional): con ella te marcamos lo que ya guardaste.");
   $("uploadDone").hidden = false;
   updateLoadedState();   // primero se actualiza el layout (aparece el cuadro de arriba) y después se scrollea
-  renderHeader("inicio");  // el menú ahora incluye Mi número y Predecir
+  renderHeader("inicio");  // el menú ahora incluye Qué ver y Mis puntuaciones
+  if (catalog.data) showCatalogInfo();
   $("uploadDone").scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
 }
 
@@ -69,3 +69,7 @@ function wireUpload() {
 renderSite("inicio");
 wireUpload();
 updateLoadedState();
+// El catálogo (2,5 MB) no frena la portada: se baja cuando el navegador está libre, para llenar el dato del pie
+// y dejarlo en la caché HTTP para "Qué ver".
+const warmCatalog = () => loadCatalog().catch(() => {});
+if ("requestIdleCallback" in window) requestIdleCallback(warmCatalog, { timeout: 3000 }); else setTimeout(warmCatalog, 1500);

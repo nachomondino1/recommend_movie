@@ -1,5 +1,7 @@
 """
-CRISP-DM · Preparación de datos: del JSON crudo de TMDB a tablas listas para el modelado.
+CRISP-DM · Preparación de datos, VERSIÓN 1 (nota personal). La versión 2 usa prepare_titles.py.
+
+Del JSON crudo de TMDB de los títulos de tus exportaciones de IMDb (~288) a una tabla lista para el modelado.
 
   - Format data     : aplanar el JSON de TMDB a una fila por título (parse_detail) y a columnas "estilo IMDb"
                       para títulos que no vienen de una exportación de IMDb (imdb_like_fields)

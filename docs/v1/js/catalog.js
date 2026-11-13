@@ -8,7 +8,7 @@ function normTitle(s) {
 }
 
 async function loadCatalog() {
-  const res = await fetch("data/catalog.json");
+  const res = await fetch("../data/catalog.json");
   if (!res.ok) throw new Error("No encontré el catálogo (data/catalog.json).");
   catalog.data = await res.json();
   catalog.data.providers.forEach((p) => catalog.providerName.set(p.id, p.name));

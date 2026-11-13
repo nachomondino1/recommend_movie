@@ -3,86 +3,124 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tu número · La nota de IMDb, ajustada a vos</title>
-<meta name="description" content="La mejor pista para saber si una película te va a gustar es su nota de IMDb más tu desvío. Calculá tu número con tu historial y mirá qué nota le pondrías a lo que no viste. Todo en tu navegador.">
+<title>Un proyecto de películas en tres versiones</title>
+<meta name="description" content="Un proyecto personal de datos y Machine Learning que cambió de pregunta tres veces: de un recomendador de películas a un análisis de qué hace buena a una película. La historia, con lo que se aprendió en cada versión.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="preload" as="image" href="media/hero.jpg" fetchpriority="high">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="css/style.css">
-<link rel="prefetch" as="fetch" href="data/catalog.json" crossorigin="anonymous">
-<script type="speculationrules">{"prerender":[{"urls":["index.html","que-ver.html","mi-gusto.html"],"eagerness":"moderate"}]}</script>
+<link rel="stylesheet" href="css/landing.css">
+<link rel="preload" as="image" href="media/hero.jpg" fetchpriority="high">
 </head>
 <body>
 <header id="siteHeader"></header>
-<script src="js/storage.js"></script>
+<script src="js/config.js"></script>
 <script src="js/shared.js"></script>
-<script>renderHeader("inicio")</script>
+<script>renderHeader()</script>
 
+<!-- Landing de todo el proyecto: la historia de las tres versiones. Cada versión vive en su carpeta (v1, v2, v3).
+     Los números de las tarjetas son los de cada versión al momento de publicarla. -->
 <section class="hero" id="inicio">
   <div class="hero-inner">
-    <p class="eyebrow">Conoc&eacute; tu n&uacute;mero</p>
-    <h1 class="hero-title">La nota de IMDb, <span class="kw">ajustada a vos</span></h1>
-    <p class="hero-sub">La mejor pista para saber si una pel&iacute;cula te va a gustar es su nota de IMDb m&aacute;s tu desv&iacute;o: cu&aacute;nto te alej&aacute;s, en promedio, de esa nota. Calculamos tu desv&iacute;o con tu historial y te decimos qu&eacute; nota le pondr&iacute;as a lo que todav&iacute;a no viste.</p>
-    <a class="btn btn--hero" id="heroCta" href="#pasos">Calcular mi número</a>
+    <p class="eyebrow">Proyecto personal de datos y Machine Learning · películas y series</p>
+    <h1 class="hero-title">Un proyecto que <span class="kw">cambió de pregunta tres veces</span></h1>
+    <p class="hero-sub">Empezó como un recomendador de películas y terminó siendo un análisis de qué hace buena a una película. Esta es la historia, con lo que aprendí en cada versión.</p>
+    <div class="hero-actions">
+      <a class="btn btn--hero" href="v3/index.html" data-track="landing/v3">Ver la versión actual</a>
+      <a class="btn btn--ghost btn--hero" href="#historia">Recorrer la historia</a>
+    </div>
   </div>
   <div class="hero-credit">Foto: Denise Jans / Unsplash</div>
 </section>
 
-<main>
-  <section class="section" id="pasos">
-    <div class="wrap">
-      <h2 class="section-title">Carg&aacute; tus datos de IMDb</h2>
-      <p class="lead">Con tus notas calculamos tu n&uacute;mero. Tus archivos no salen de tu navegador.</p>
+<main class="wrap landing">
+  <section id="historia" aria-labelledby="h-historia">
+    <h2 class="part" id="h-historia">La historia en tres versiones</h2>
+    <p class="part-sub">Cada versión salió de lo que se aprendió en la anterior. Las tres se pueden abrir.</p>
 
-      <div class="banner" id="loadedBanner" hidden>
-        <div class="banner-icon" aria-hidden="true">&#9989;</div>
-        <div>
-          <div class="banner-title">&iexcl;Perfecto, ya cargaste tus datos!</div>
-          <p class="banner-text" id="loadedText"></p>
-          <a class="btn" href="numero.html">Ver mi n&uacute;mero</a>
+    <ol class="timeline">
+      <li class="step-v">
+        <div class="step-head"><span class="step-tag">Versión 1</span><span class="step-state">Archivada</span></div>
+        <h3>Qué ver hoy</h3>
+        <p class="question">¿Qué película veo hoy con lo que tengo disponible?</p>
+        <div class="step-cols">
+          <div>
+            <div class="label">Qué hice</div>
+            <p>Una web donde cargás tu historial de IMDb y elegís tus plataformas de streaming. Cruza todo con un catálogo de más de 5.000 películas y series de TMDB y te muestra qué podés ver hoy, ordenado por nota y sin repetir lo que ya viste. Todo corre en el navegador.</p>
+          </div>
+          <div>
+            <div class="label">Qué aprendí</div>
+            <p>Funcionaba, pero JustWatch ya resuelve muy bien lo de filtrar por plataforma. Faltaba algo propio: usar tu gusto, no solo la disponibilidad.</p>
+          </div>
         </div>
+        <a class="btn btn--ghost" href="v1/index.html" data-track="landing/v1">Probar la versión 1</a>
+      </li>
+
+      <li class="step-v">
+        <div class="step-head"><span class="step-tag">Versión 2</span><span class="step-state">Archivada</span></div>
+        <h3>Tu número</h3>
+        <p class="question">¿Puedo predecir qué nota le voy a poner a una película?</p>
+        <div class="step-cols">
+          <div>
+            <div class="label">Qué hice</div>
+            <p>Probé nueve modelos de Machine Learning con mis 127 notas de IMDb y datos de TMDB (géneros, director, sinopsis), contra una regla simple: la nota de IMDb más cuánto me desvío de ella, mi número.</p>
+          </div>
+          <div>
+            <div class="label">Qué encontré</div>
+            <p>Ningún modelo le ganó a la regla simple con evidencia suficiente. Mi número es −1,5, con un error típico de ±1,3 puntos. Con las notas de una sola persona, la muestra es muy chica.</p>
+          </div>
+        </div>
+        <a class="btn btn--ghost" href="v2/index.html" data-track="landing/v2">Probar la versión 2</a>
+      </li>
+
+      <li class="step-v current">
+        <div class="step-head"><span class="step-tag">Versión 3</span><span class="step-state">La actual</span></div>
+        <h3>¿Qué hace que una película tenga buena nota?</h3>
+        <p class="question">Con muchos datos, ¿qué características se asocian con una nota alta?</p>
+        <div class="step-cols">
+          <div>
+            <div class="label">Qué hice</div>
+            <p>Dejé las notas personales y usé una sola fuente, TMDB: 8.493 películas y series, con su elenco y equipo. Entrené un modelo para predecir la nota pública y medí qué grupos de variables pesan más.</p>
+          </div>
+          <div>
+            <div class="label">Qué encontré</div>
+            <p>La nota se explica en un 61 % solo con características, sin mirar un voto. Pesan el género, la duración y el elenco; el guion, la música y la fotografía no aportan nada distinguible.</p>
+          </div>
+        </div>
+        <a class="btn" href="v3/index.html" data-track="landing/v3b">Ver la versión 3</a>
+      </li>
+    </ol>
+  </section>
+
+  <section class="threads" aria-labelledby="h-hilo">
+    <h2 class="part" id="h-hilo">Lo que se repite en las tres</h2>
+    <div class="read">
+      <div>
+        <h3>Cambiar la pregunta cuando los datos lo piden</h3>
+        <p>Cada versión nació de un resultado que no cerraba. En vez de forzar el modelo, se cambió lo que se preguntaba.</p>
       </div>
-
-      <div class="steps-row">
-        <div class="step">
-          <h3><span class="step-n">1</span> Baj&aacute; tus datos de IMDb</h3>
-          <p class="hint">En cada p&aacute;gina: men&uacute; <b>&hellip;</b> y despu&eacute;s <b>Exportar</b>. Con tus notas alcanza; la watchlist es opcional (sirve para ordenar tus pendientes por nota predicha).</p>
-          <p class="hint"><b>&iquest;Desde el celular no ves &ldquo;Exportar&rdquo;?</b> En la app de IMDb no es f&aacute;cil encontrarlo. Abr&iacute; imdb.com desde el navegador del celular y ah&iacute; s&iacute; aparece (si la app intercepta el link, desinstalala un rato) o hacelo desde una computadora.</p>
-          <div class="actions">
-            <a class="btn" href="https://www.imdb.com/list/ratings" target="_blank" rel="noopener">Mis notas &#8599;</a>
-            <a class="btn btn--ghost" href="https://www.imdb.com/list/watchlist" target="_blank" rel="noopener">Mi watchlist &#8599;</a>
-          </div>
-        </div>
-
-        <div class="step">
-          <h3><span class="step-n">2</span> Arrastr&aacute; los archivos ac&aacute;</h3>
-          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Elegir o arrastrar los archivos de IMDb">
-            <div class="dropzone-icon">&#128194;</div>
-            <div>Arrastr&aacute; tus dos archivos o <u>eleg&iacute;los</u></div>
-          </div>
-          <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
-          <div id="uploadMsg" class="msg" role="status"></div>
-          <div id="uploadDone" class="upload-done" role="status" hidden>
-            <div aria-hidden="true">&#9989;</div>
-            <div>
-              <div class="upload-done-title">&iexcl;Listo, ya cargaste tus datos!</div>
-              <p id="uploadDoneText"></p>
-              <a class="btn" href="numero.html">Ver mi n&uacute;mero</a>
-            </div>
-          </div>
-        </div>
+      <div>
+        <h3>Medir antes de prometer</h3>
+        <p>Comparar contra una base justa, validar en datos que el modelo no vio y mostrar intervalos de confianza evitó creer en mejoras que eran ruido.</p>
+      </div>
+      <div>
+        <h3>Los datos mandan</h3>
+        <p>Con 127 notas no apareció nada. Con miles de títulos, patrones claros. La cantidad de datos fue la diferencia entre una versión y otra.</p>
       </div>
     </div>
+  </section>
+
+  <section class="tools" aria-labelledby="h-tools">
+    <h2 class="part" id="h-tools">Cómo está hecho</h2>
+    <p class="part-sub">Metodología CRISP-DM, de la recolección a la publicación. Datos de TMDB (API) y exportaciones de IMDb en las primeras versiones; Python y scikit-learn para el análisis; páginas estáticas en HTML, CSS y JavaScript, sin servidor.</p>
+    <a class="btn btn--ghost" href="https://github.com/nachomondino1/recommend_movie" target="_blank" rel="noopener" data-track="enlace/codigo">Ver el código en GitHub</a>
   </section>
 </main>
 
 <footer id="siteFooter"></footer>
 
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script defer src="js/csv.js"></script>
-<script defer src="js/pages/home.js"></script>
+<script>renderSite()</script>
 </body>
 </html>
