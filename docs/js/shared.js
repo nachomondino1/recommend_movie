@@ -45,11 +45,22 @@ function syncNavHeight() {
   document.documentElement.style.setProperty("--nav-h", document.querySelector(".top").offsetHeight + "px");
 }
 
+// Pestañas de versión: el mismo selector en las tres versiones del sitio (V1, V2 y V3 = la actual, en la raíz).
+// Los enlaces son relativos: desde /v1/ o /v2/ se sube un nivel; desde la raíz se baja.
+function versionTabs() {
+  const here = /\/v([12])\//.exec(location.pathname);
+  const current = here ? Number(here[1]) : 3, up = here ? "../" : "";
+  const tabs = [[1, `${up}v1/index.html`, "«Qué ver hoy»"], [2, `${up}v2/index.html`, "«Tu número»"], [3, `${up}index.html`, "la actual"]];
+  return `<nav class="vtabs" aria-label="Versiones del proyecto">${tabs.map(([n, href, name]) =>
+    `<a href="${href}" title="Versión ${n}, ${name}"${n === current ? ' aria-current="true"' : ""}${n === 3 ? ' data-track="version/v3"' : ` data-track="version/v${n}"`}><span class="vlong">Versión</span><span class="vshort">V</span><span>${n}</span></a>`).join("")}</nav>`;
+}
+
 function renderHeader() {
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
     <div class="top-inner">
       <a class="brand" href="index.html" aria-label="Qué hace buena a una película, inicio">&#127916;<span class="brand-text"> Qu&eacute; hace buena a una pel&iacute;cula</span></a>
+      ${versionTabs()}
       <nav class="top-nav" aria-label="Enlaces">
         <a href="${REPO}" target="_blank" rel="noopener">C&oacute;digo &#8599;</a>
       </nav>

@@ -33,6 +33,7 @@ const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
 const NAV = [
+  { id: "inicio", href: "index.html", label: "Inicio", needsProfile: false },
   { id: "que-ver", href: "que-ver.html", label: "Qué ver", needsProfile: true },
   { id: "mi-gusto", href: "mi-gusto.html", label: "Mis puntuaciones", needsProfile: true },
 ];
@@ -41,19 +42,34 @@ function syncNavHeight() {
   document.documentElement.style.setProperty("--nav-h", document.querySelector(".top").offsetHeight + "px");
 }
 
+// Pestañas de versión: el mismo selector en las tres versiones del sitio (V1, V2 y V3 = la actual, en la raíz).
+// Los enlaces son relativos: desde /v1/ o /v2/ se sube un nivel; desde la raíz se baja.
+function versionTabs() {
+  const here = /\/v([12])\//.exec(location.pathname);
+  const current = here ? Number(here[1]) : 3, up = here ? "../" : "";
+  const tabs = [[1, `${up}v1/index.html`, "«Qué ver hoy»"], [2, `${up}v2/index.html`, "«Tu número»"], [3, `${up}index.html`, "la actual"]];
+  return `<nav class="vtabs" aria-label="Versiones del proyecto">${tabs.map(([n, href, name]) =>
+    `<a href="${href}" title="Versión ${n}, ${name}"${n === current ? ' aria-current="true"' : ""}${n === 3 ? ' data-track="version/v3"' : ` data-track="version/v${n}"`}><span class="vlong">Versión</span><span class="vshort">V</span><span>${n}</span></a>`).join("")}</nav>`;
+}
+
 // El encabezado se dibuja ANTES del primer pintado: cada página llama renderHeader("<id>") en un <script> sincrónico
 // justo debajo de <header id="siteHeader">, así el menú no aparece tarde ni empuja el contenido.
 function renderHeader(active) {
   const profile = hasProfile();
+  const items = NAV.filter((n) => !n.needsProfile || profile);
+  const up = /\/v[12]\//.test(location.pathname) ? "../" : "";
   $("siteHeader").className = "top";
+  // Barra principal: igual en las tres versiones. Subbarra: las pestañas de ESTA versión (solo si tiene más de una).
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="index.html" aria-label="Qué ver hoy, inicio">&#127916;<span class="brand-text"> Qu&eacute; ver hoy</span></a>
-      <nav class="top-nav" aria-label="Secciones">
-        ${NAV.filter((n) => !n.needsProfile || profile).map((n) =>
-          `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}
+      <a class="brand" href="${up}index.html" aria-label="Qué hace buena a una película, inicio">&#127916;<span class="brand-text"> Qu&eacute; hace buena a una pel&iacute;cula</span></a>
+      ${versionTabs()}
+      <nav class="top-nav" aria-label="Enlaces">
+        <a href="https://github.com/nachomondino1/recommend_movie" target="_blank" rel="noopener">C&oacute;digo &#8599;</a>
       </nav>
-    </div>`;
+    </div>
+    ${items.length > 1 ? `<nav class="subnav" aria-label="Páginas de esta versión"><div class="subnav-inner">${items.map((n) =>
+      `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}</div></nav>` : ""}`;
   syncNavHeight();
 }
 
