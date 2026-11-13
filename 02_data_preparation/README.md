@@ -1,6 +1,7 @@
 # Fase 2 — Preparar los datos
 
-Convierte los datos crudos de TMDB en el catálogo que lee el sitio.
+Convierte los datos crudos de TMDB en la tabla de variables del análisis (`prepare_titles.py` → `titles_features.csv`, ver
+`data_preparation.md`) y, aparte, en el catálogo del MVP anterior (`build_catalog.py`).
 
 ```bash
 python3 02_data_preparation/build_catalog.py           # data/01_data_understanding/*.jsonl -> docs/data/catalog.json

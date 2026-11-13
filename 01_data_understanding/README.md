@@ -5,7 +5,8 @@ De dónde sale todo lo que muestra el sitio público (`docs/`).
 ## Fuente
 
 **TMDB** (API v3): películas y series que están en streaming por suscripción en una región
-(por defecto `AR`), con en qué plataforma está cada una. El historial del usuario (IMDb) no se
+(por defecto `AR`), con en qué plataforma está cada una. Además, `fetch_credits.py` baja el elenco y el equipo de cada título
+(`data/01_data_understanding/tmdb/credits.jsonl`), que usa el análisis de la nota (ver `data_understanding.md`). El historial del usuario (IMDb) no se
 recolecta acá: cada visitante lo trae de su cuenta y se procesa en su navegador.
 
 ## Cómo se actualiza
