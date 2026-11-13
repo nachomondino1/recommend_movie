@@ -16,13 +16,14 @@ function colorFor(v) {
   return `hsl(${t * 120}, 40%, 33%)`;
 }
 
-// ¿Ya cargó sus archivos? (entonces se habilitan Mi número y Predecir)
+// ¿Ya cargó sus archivos? (para mostrar tu número y las predicciones)
 const hasProfile = () => loadData().ratings.length > 0;
 
 // Para sumar una página: agregar una fila acá y crear su .html con <header id="siteHeader"> y <footer id="siteFooter">.
+// index.html es la portada (el proyecto: flujo y resultados); numero.html junta cargar datos, tu número y predecir.
 const NAV = [
-  { id: "numero", href: "numero.html", label: "Mi número", needsProfile: true },
-  { id: "predecir", href: "predecir.html", label: "Predecir", needsProfile: true },
+  { id: "proyecto", href: "index.html", label: "Proyecto", needsProfile: false },
+  { id: "numero", href: "numero.html", label: "Mi número", needsProfile: false },
 ];
 
 function syncNavHeight() {
@@ -36,7 +37,7 @@ function renderHeader(active) {
   $("siteHeader").className = "top";
   $("siteHeader").innerHTML = `
     <div class="top-inner">
-      <a class="brand" href="index.html" aria-label="Tu número, inicio">&#127916;<span class="brand-text"> Tu n&uacute;mero</span></a>
+      <a class="brand" href="index.html" aria-label="Recomendador de películas y series, inicio">&#127916;<span class="brand-text"> Recomendador de pel&iacute;culas y series</span></a>
       <nav class="top-nav" aria-label="Secciones">
         ${NAV.filter((n) => !n.needsProfile || profile).map((n) =>
           `<a href="${n.href}"${n.id === active ? ' aria-current="page"' : ""}>${esc(n.label)}</a>`).join("")}

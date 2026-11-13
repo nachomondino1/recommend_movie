@@ -78,6 +78,7 @@ make explore     # análisis exploratorio (el sitio público se actualiza con ./
 | `make predict TITLE="X"` | Nota predicha para un título por nombre (aunque no esté en la watchlist). |
 | `make eval` | Diagnósticos: modelos (CV) + curva de aprendizaje + trayectoria real de scores + reseñas (`assess_model.py`). |
 | `make robust` | Prueba de robustez (~80 s): ¿algún modelo le gana de verdad a la nota de IMDb? |
+| `make results` | Deja los resultados de `make robust` listos para la portada de la web (`docs/data/model_results.json`). |
 | `make explore` | Análisis exploratorio (gráficos en `data/01_data_understanding/exploration/`). |
 
 No hace falta acordarse de qué correr cuando cambia `ratings.csv` vs `watchlist.csv`:
@@ -112,6 +113,7 @@ data/                              todo lo que entra y sale de cada fase, en la 
   models/          modelos entrenados (git-ignored)
 04_evaluation/     narrativa de la evaluación contra los criterios de éxito (evaluation.md)
 05_deployment/
+  build_results.py  datos de la página Proyecto de la web (make results)
   dashboard.py   generar el dashboard personal (data/05_deployment/, no se publica)
 docs/            el sitio publicado por Pages: HTML + css/ + js/ + data/ + media/ (sin .md)
 ```

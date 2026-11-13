@@ -1,0 +1,16 @@
+modelo,n_train,mae,se
+IMDb calibrada,30,1.4039,0.0478
+IMDb calibrada,50,1.3683,0.0431
+IMDb calibrada,70,1.352,0.0446
+IMDb calibrada,90,1.3451,0.0444
+IMDb calibrada,100,1.3412,0.0452
+Ridge simple,30,1.433,0.0477
+Ridge simple,50,1.3795,0.0425
+Ridge simple,70,1.3697,0.0451
+Ridge simple,90,1.3528,0.0455
+Ridge simple,100,1.3493,0.0455
+RandomForest,30,1.487,0.0447
+RandomForest,50,1.3975,0.0414
+RandomForest,70,1.3644,0.0431
+RandomForest,90,1.3452,0.0445
+RandomForest,100,1.3391,0.0432
