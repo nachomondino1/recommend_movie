@@ -184,3 +184,14 @@ input[type=search]:focus { outline: none; border-color: var(--accent); box-shado
 .contact-links { display: flex; flex-wrap: wrap; gap: 10px; }
 .contact-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 18px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
 .contact-btn:hover { background: var(--accent-soft); }
+
+/* ---- Pestañas de versión (V1 · V2 · V3) en el menú ------------------------------------------------------ */
+.top-inner { gap: 10px 14px; }
+.vtabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg-subtle); border-radius: 999px; margin-left: auto; }
+.vtabs a { padding: 6px 12px; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: .85rem; min-height: 34px; display: inline-flex; align-items: center; white-space: nowrap; }
+.vtabs a:hover { color: var(--ink); }
+.vtabs a[aria-current] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-xs); }
+.vshort { display: none; }
+@media (max-width: 700px) { .vlong { display: none; } .vshort { display: inline; } .vtabs a { padding: 6px 10px; } }
+.vtabs a { gap: .3em; }
+@media (max-width: 700px) { .vtabs a { gap: 0; } }

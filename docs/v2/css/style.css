@@ -181,3 +181,23 @@ input[type=search]:focus { outline: none; border-color: var(--accent); box-shado
 /* Franja de versión archivada */
 .oldbanner { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; padding: 10px 16px; background: var(--accent-soft); color: var(--ink); font-size: .85rem; text-align: center; border-bottom: 1px solid var(--border-soft); }
 .oldbanner a { font-weight: 600; white-space: nowrap; }
+
+/* ---- Pestañas de versión (V1 · V2 · V3) en el menú ------------------------------------------------------ */
+.top-inner { gap: 10px 14px; }
+.vtabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg-subtle); border-radius: 999px; margin-left: auto; }
+.vtabs a { padding: 6px 12px; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: .85rem; min-height: 34px; display: inline-flex; align-items: center; white-space: nowrap; }
+.vtabs a:hover { color: var(--ink); }
+.vtabs a[aria-current] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-xs); }
+.vshort { display: none; }
+@media (max-width: 700px) { .vlong { display: none; } .vshort { display: inline; } .vtabs a { padding: 6px 10px; } }
+.vtabs a { gap: .3em; }
+@media (max-width: 700px) { .vtabs a { gap: 0; } }
+
+/* ---- Subbarra: las pestañas de esta versión (la barra principal es igual en las tres) ------------------------ */
+.subnav { border-top: 1px solid var(--border-soft); }
+.subnav-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 20px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.subnav-inner::-webkit-scrollbar { display: none; }
+.subnav a { flex: none; padding: 10px 14px; min-height: 44px; display: inline-flex; align-items: center; color: var(--muted); text-decoration: none; font-weight: 600; border-bottom: 2px solid transparent; }
+.subnav a:hover { color: var(--ink); }
+.subnav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+@media (max-width: 520px) { .subnav-inner { padding: 0 8px; } }

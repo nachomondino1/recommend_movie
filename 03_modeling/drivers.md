@@ -7,7 +7,7 @@ nota más alta o más baja, no qué nota le pondría una persona.
 
 ```
 make drivers      # prepare_titles.py (02) + drivers_model.py (03): data/03_modeling/drivers_results.json
-make results      # docs/data/model_results.json para la web
+make results      # docs/v3/data/model_results.json para la web
 ```
 
 Para el elenco y el equipo hace falta antes `fetch_credits.py` (01), que baja los créditos de TMDB.
